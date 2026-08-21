@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}排行榜 · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head row">
+  <div>
+    <p class="eyebrow">Leaderboard</p>
+    <h1>排行榜</h1>
+  </div>
+  <form class="inline-form" method="get">
+    <select name="season_id" onchange="this.form.submit()">
+      {% for season in seasons %}
+        <option value="{{ season.id }}" {% if selected_season and season.id == selected_season.id %}selected{% endif %}>{{ season.name }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</section>
+<section class="panel">
+  {% if rows %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>玩家</th><th>积分</th><th>对局</th><th>平均顺位</th><th>一位率</th><th>四位率</th></tr></thead>
+        <tbody>
+          {% for row in rows %}
+            <tr class="{% if loop.index <= 4 %}top-rank{% elif loop.revindex <= 4 %}low-rank{% endif %}">
+              <td>{{ loop.index }}</td>
+              <td><a href="{{ url_for('player_profile', user_id=row.user_id) }}">{{ row.display_name }}</a></td>
+              <td class="strong">{{ row.total_points }}</td>
+              <td>{{ row.matches }}</td>
+              <td>{{ row.avg_place }}</td>
+              <td>{{ row.first_rate }}%</td>
+              <td>{{ row.fourth_rate }}%</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty">该赛季还没有排行榜数据。</div>
+  {% endif %}
+</section>
+
+<section class="panel penalty-ledger">
+  <div class="section-head">
+    <h2>罚分记录</h2>
+    <span class="muted">{{ penalty_records|length }} 条</span>
+  </div>
+  {% if penalty_records %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>时间</th><th>玩家</th><th>扣分</th><th>类型</th><th>原因</th><th>裁判</th></tr></thead>
+        <tbody>
+          {% for item in penalty_records %}
+            <tr>
+              <td>{{ item.played_at }}</td>
+              <td><a href="{{ url_for('player_profile', user_id=item.user_id) }}">{{ item.player_name }}</a></td>
+              <td class="strong">-{{ item.points }}</td>
+              <td>{{ item.penalty_type }}</td>
+              <td>{{ item.reason }}</td>
+              <td>{{ item.referee_name or '-' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty">该赛季暂无罚分记录。</div>
+  {% endif %}
+</section>
+{% endblock %}

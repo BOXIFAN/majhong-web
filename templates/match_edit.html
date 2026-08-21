@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}编辑比赛 · Brisbane Riichi{% endblock %}
+{% block content %}
+{% set score_total = rules.points.default_starting_points * 4 %}
+<section class="page-head">
+  <p class="eyebrow">{{ match.season_name }}</p>
+  <h1>编辑比赛</h1>
+  <p>修改后会按当前赛季规则重新计算顺位、pt、马点和罚分。</p>
+</section>
+
+<form method="post" class="form wide" data-score-total="{{ score_total }}">
+  <section class="panel form-grid">
+    <label>比赛时间<input name="played_at" type="datetime-local" value="{{ match_time }}"></label>
+    <label>对局类型
+      <select name="table_name">
+        {% for type in ['机打', '手打'] %}
+          <option value="{{ type }}" {% if match.table_name == type %}selected{% endif %}>{{ type }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>备注<input name="memo" value="{{ match.memo or '' }}" placeholder="可选"></label>
+  </section>
+
+  <section class="player-entry-grid">
+    {% for idx in range(4) %}
+      {% set row = rows[idx] if rows|length > idx else none %}
+      {% set entry = row.entry if row else none %}
+      {% set penalty = row.penalty if row and row.penalty else none %}
+      <article class="entry-card">
+        <h2>玩家 {{ idx + 1 }}</h2>
+        <label>玩家
+          <select name="player_{{ idx }}" required>
+            <option value="">选择玩家</option>
+            {% for player in players %}
+              <option value="{{ player.id }}" {% if entry and player.id == entry.user_id %}selected{% endif %}>
+                {{ player.display_name }} · {{ roles[player.role] }}{% if player.is_deleted %} · 已删除{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>最终分数<input class="score-input" name="score_{{ idx }}" type="number" value="{{ entry.final_score if entry else 0 }}" required></label>
+        <label>罚分（直接扣入最终积分）<input name="penalty_{{ idx }}" type="number" value="{{ penalty.points if penalty else 0 }}" min="0"></label>
+        <label>违规类型<input name="penalty_type_{{ idx }}" value="{{ penalty.penalty_type if penalty else '' }}" placeholder="终局报分错误"></label>
+        <label>罚分原因<input name="penalty_reason_{{ idx }}" value="{{ penalty.reason if penalty else '' }}" placeholder="有罚分时必填"></label>
+      </article>
+    {% endfor %}
+  </section>
+
+  <div class="score-meter">
+    <span>当前总分：<strong id="score-total">{{ score_total }}</strong></span>
+    <span>目标总分：{{ score_total }}</span>
+  </div>
+  <div class="form-actions">
+    <a class="ghost-link" href="{{ url_for('match_detail', match_id=match.id) }}">取消</a>
+    <button class="button sticky-save" type="submit">保存并重算</button>
+  </div>
+</form>
+{% endblock %}

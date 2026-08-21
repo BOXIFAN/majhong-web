@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}后台管理 · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head">
+  <p class="eyebrow">Admin</p>
+  <h1>后台管理</h1>
+  <p>编辑用户名称、角色与账号状态。删除用户不会移除已录入战绩。</p>
+</section>
+
+<section class="panel admin-users-panel">
+  <div class="section-head">
+    <h2>用户</h2>
+    <span class="muted">{{ users|length }} 人</span>
+  </div>
+  <div class="admin-user-list">
+    {% for user in users %}
+      <article class="admin-user-card {% if user.is_deleted %}is-deleted{% endif %}">
+        <div class="account-avatar">{{ user.display_name[:1] }}</div>
+        <div class="admin-user-main">
+          <div class="admin-user-title">
+            <strong>{{ user.display_name }}</strong>
+            <span class="badge {{ 'archived' if user.is_deleted else 'active' }}">{{ '已删除' if user.is_deleted else '正常' }}</span>
+          </div>
+          <small>{{ user.email }} · {{ roles[user.role] }} · 注册于 {{ user.created_at }}</small>
+        </div>
+        <div class="admin-user-actions">
+          {% if not user.is_deleted %}
+            <form method="post" action="{{ url_for('admin_user_update', user_id=user.id) }}" class="user-edit-form">
+              <input name="display_name" value="{{ user.display_name }}" required aria-label="用户名称">
+              {% if user.role != 'super_admin' %}
+                <select name="role" aria-label="用户角色">
+                  <option value="user" {% if user.role == 'user' %}selected{% endif %}>普通用户</option>
+                  <option value="referee" {% if user.role == 'referee' %}selected{% endif %}>裁判</option>
+                </select>
+              {% else %}
+                <input value="超级管理员" disabled aria-label="用户角色">
+              {% endif %}
+              <button class="button slim" type="submit">保存</button>
+            </form>
+            {% if user.role != 'super_admin' %}
+              <form method="post" action="{{ url_for('admin_user_delete', user_id=user.id) }}">
+                <button class="danger-button" type="submit" data-confirm="确认删除 {{ user.display_name }}？历史战绩会保留。">删除</button>
+              </form>
+            {% endif %}
+          {% else %}
+            <span class="muted">历史战绩保留中</span>
+          {% endif %}
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

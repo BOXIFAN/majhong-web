@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ user.display_name }} · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head">
+  <p class="eyebrow">{{ roles[user.role] }}</p>
+  <h1>{{ user.display_name }}</h1>
+</section>
+<section class="metric-grid">
+  <div class="metric"><span>当前积分</span><strong>{{ stats.total_points if stats else 0 }}</strong></div>
+  <div class="metric"><span>对局数</span><strong>{{ stats.matches if stats else 0 }}</strong></div>
+  <div class="metric"><span>平均顺位</span><strong>{{ stats.avg_place if stats else '-' }}</strong></div>
+  <div class="metric"><span>一位 / 四位</span><strong>{{ (stats.first_rate ~ '% / ' ~ stats.fourth_rate ~ '%') if stats else '-' }}</strong></div>
+</section>
+<section class="grid two">
+  <div class="panel">
+    <h2>近 10 场趋势</h2>
+    {% if history %}
+      <div class="sparkline">
+        {% for item in history|reverse %}
+          <div class="bar" style="height: {{ 30 + item.rank_points|abs * 2 }}px" title="{{ item.rank_points }}"></div>
+        {% endfor %}
+      </div>
+      <div class="match-list">
+        {% for item in history %}
+          <div class="match-card"><span>{{ item.played_at }}</span><strong>{{ item.rank_points }}</strong><small>{{ item.placement }} 位 · {{ item.final_score }}</small></div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty">暂无对局。</div>
+    {% endif %}
+  </div>
+  <div class="panel">
+    <h2>罚则</h2>
+    {% if penalties %}
+      <div class="match-list">
+        {% for item in penalties %}
+          <div class="match-card"><span>{{ item.penalty_type }}</span><strong>-{{ item.points }}</strong><small>{{ item.reason }}</small></div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty">暂无罚则记录。</div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}登录 · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <h1>登录</h1>
+  <form method="post" class="form">
+    <label>邮箱<input name="email" type="email" required></label>
+    <label>密码<input name="password" type="password" required></label>
+    <button class="button" type="submit">登录</button>
+  </form>
+</section>
+{% endblock %}

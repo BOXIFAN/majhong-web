@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}赛季编辑 · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head">
+  <p class="eyebrow">Rules Admin</p>
+  <h1>{{ '编辑赛季' if season else '新建赛季' }}</h1>
+</section>
+<form method="post" class="form wide">
+  <section class="panel form-grid">
+    <label>赛季名称<input name="name" value="{{ season.name if season else '' }}" required></label>
+    <label>状态
+      <select name="status">
+        {% for status in ['draft', 'active', 'archived'] %}
+          <option value="{{ status }}" {% if season and season.status == status %}selected{% elif not season and status == 'draft' %}selected{% endif %}>{{ status }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>开始日期<input name="start_date" type="date" value="{{ season.start_date if season else '2026-04-01' }}" required></label>
+  </section>
+  <section class="rules-grid">
+    {% for group, fields in rules.items() %}
+      <article class="panel">
+        <h2>{{ rule_labels[group] }}</h2>
+        <div class="rule-form">
+          {% for key, value in fields.items() %}
+            {% if value is sameas true or value is sameas false %}
+              <label class="toggle">
+                <span>{{ field_labels[key] }}</span>
+                <input type="checkbox" name="rule__{{ group }}__{{ key }}" {% if value %}checked{% endif %}>
+              </label>
+            {% else %}
+              <label>{{ field_labels[key] }}<input name="rule__{{ group }}__{{ key }}" value="{{ value }}"></label>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </article>
+    {% endfor %}
+  </section>
+  <button class="button sticky-save" type="submit">保存赛季规则</button>
+</form>
+{% endblock %}

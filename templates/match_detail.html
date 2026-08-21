@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}比赛 #{{ match.id }} · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head">
+  <p class="eyebrow">{{ match.season_name }}</p>
+  <h1>{{ match.table_name or '比赛 #' ~ match.id }}</h1>
+  <p>{{ match.played_at }} · 裁判：{{ match.referee_name or '系统' }}</p>
+</section>
+<section class="panel">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>顺位</th><th>玩家</th><th>终局点数</th><th>结算积分</th><th>已计入罚分</th></tr></thead>
+      <tbody>
+        {% for entry in entries %}
+          <tr>
+            <td>{{ entry.placement }}</td>
+            <td><a href="{{ url_for('player_profile', user_id=entry.user_id) }}">{{ entry.display_name }}</a></td>
+            <td>{{ entry.final_score }}</td>
+            <td class="strong">{{ entry.rank_points }}</td>
+            <td>{{ entry.penalty_points }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+<section class="panel penalty-section">
+  <h2>罚则记录</h2>
+  {% if penalties %}
+    <div class="match-list">
+      {% for item in penalties %}
+        <div class="match-card">
+          <span>{{ item.display_name }} · {{ item.penalty_type }}</span>
+          <strong>-{{ item.points }}</strong>
+          <small>{{ item.reason }}</small>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty">暂无罚则记录。</div>
+  {% endif %}
+  {% if current_user and current_user.role == 'super_admin' %}
+    <div class="penalty-actions">
+      <a class="button secondary" href="{{ url_for('match_edit', match_id=match.id) }}">编辑比赛</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

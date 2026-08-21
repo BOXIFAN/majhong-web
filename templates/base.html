@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Brisbane Riichi{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script defer src="{{ url_for('static', filename='app.js') }}"></script>
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="mobile-topbar">
+        <a class="brand compact" href="{{ url_for('index') }}">
+          <span class="brand-mark logo-image"><img src="{{ url_for('static', filename='web_logo.jpg') }}" alt=""></span>
+          <span>
+            <strong>Brisbane Riichi</strong>
+            <small>Mahjong League</small>
+          </span>
+        </a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="打开导航菜单">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </header>
+      <div class="mobile-menu" id="mobile-menu">
+        <nav class="nav">
+          <a href="{{ url_for('index') }}">首页</a>
+          <a href="{{ url_for('leaderboard') }}">排行榜</a>
+          <a href="{{ url_for('seasons') }}">赛季规则</a>
+          {% if current_user %}
+            {% if current_user.role in ['super_admin', 'referee'] %}
+              <a href="{{ url_for('match_new') }}">录入比赛</a>
+            {% endif %}
+            {% if current_user.role == 'super_admin' %}
+              <a href="{{ url_for('admin_users') }}">后台管理</a>
+              <a href="{{ url_for('invites') }}">邀请码</a>
+            {% endif %}
+          {% endif %}
+        </nav>
+        <div class="account-card">
+          {% if current_user %}
+            <div class="account-avatar">{{ current_user.display_name[:1] }}</div>
+            <div class="account-meta">
+              <strong>{{ current_user.display_name }}</strong>
+              <small>{{ roles[current_user.role] }}</small>
+            </div>
+            <a class="logout-button" href="{{ url_for('logout') }}">退出</a>
+          {% else %}
+            <div class="account-meta">
+              <strong>访客</strong>
+              <small>登录后可录入或发布</small>
+            </div>
+            <a class="logout-button" href="{{ url_for('login') }}">登录</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <aside class="sidebar">
+        <a class="brand" href="{{ url_for('index') }}">
+          <span class="brand-mark logo-image"><img src="{{ url_for('static', filename='web_logo.jpg') }}" alt=""></span>
+          <span>
+            <strong>Brisbane Riichi</strong>
+            <small>Mahjong League</small>
+          </span>
+        </a>
+        <nav class="nav">
+          <a href="{{ url_for('index') }}">首页</a>
+          <a href="{{ url_for('leaderboard') }}">排行榜</a>
+          <a href="{{ url_for('seasons') }}">赛季规则</a>
+          {% if current_user %}
+            {% if current_user.role in ['super_admin', 'referee'] %}
+              <a href="{{ url_for('match_new') }}">录入比赛</a>
+            {% endif %}
+            {% if current_user.role == 'super_admin' %}
+              <a href="{{ url_for('admin_users') }}">后台管理</a>
+              <a href="{{ url_for('invites') }}">邀请码</a>
+            {% endif %}
+          {% endif %}
+        </nav>
+        <div class="sidebar-footer">
+          {% if current_user %}
+            <div class="account-card desktop-account">
+              <div class="account-avatar">{{ current_user.display_name[:1] }}</div>
+              <div class="account-meta">
+                <strong>{{ current_user.display_name }}</strong>
+                <small>{{ roles[current_user.role] }}</small>
+              </div>
+              <a class="logout-button" href="{{ url_for('logout') }}">退出</a>
+            </div>
+          {% else %}
+            <div class="account-card desktop-account">
+              <div class="account-meta">
+                <strong>访客</strong>
+                <small>加入社群后可记录成绩</small>
+              </div>
+              <a class="logout-button" href="{{ url_for('login') }}">登录</a>
+            </div>
+            <a class="ghost-link" href="{{ url_for('register') }}">注册</a>
+          {% endif %}
+        </div>
+      </aside>
+
+      <main class="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack">
+              {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </body>
+</html>

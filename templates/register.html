@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}注册 · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <h1>注册</h1>
+  <form method="post" class="form">
+    <label>显示名称<input name="display_name" required></label>
+    <label>邮箱<input name="email" type="email" required></label>
+    <label>密码<input name="password" type="password" minlength="8" required></label>
+    <label>邀请码<input name="invite_code" required></label>
+    <button class="button" type="submit">创建账号</button>
+  </form>
+</section>
+{% endblock %}

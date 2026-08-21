@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}赛季规则 · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head row">
+  <div>
+    <p class="eyebrow">Rules</p>
+    <h1>赛季规则</h1>
+  </div>
+  {% if current_user and current_user.role == 'super_admin' %}
+    <a class="button" href="{{ url_for('season_new') }}">新建赛季</a>
+  {% endif %}
+</section>
+
+{% if active_season %}
+  <section class="rules-layout">
+    <article class="rules-document">
+      <div class="rules-document-head">
+        <span class="badge {{ active_season.status }}">{{ active_season.status }}</span>
+        <h2>{{ active_season.name }}</h2>
+        <p>开始日期：{{ active_season.start_date }} · 规则版本 v{{ active_season.version }}</p>
+      </div>
+
+      {% for group, fields in active_rules.items() %}
+        <section class="rules-prose-section">
+          <h3>{{ rule_labels[group] }}</h3>
+          <dl class="rules-param-list">
+            {% for key, value in fields.items() %}
+              <div>
+                <dt>{{ field_labels[key] }}</dt>
+                <dd>{{ '开启' if value is sameas true else '关闭' if value is sameas false else value }}</dd>
+              </div>
+            {% endfor %}
+          </dl>
+        </section>
+      {% endfor %}
+
+      {% if current_user and current_user.role == 'super_admin' %}
+        <div class="document-actions">
+          <a class="button secondary" href="{{ url_for('season_edit', season_id=active_season.id) }}">编辑当前规则</a>
+          <a class="ghost-link" href="{{ url_for('season_new', copy=active_season.id) }}">复制为新赛季</a>
+          <a class="ghost-link" href="{{ url_for('export_season', season_id=active_season.id) }}">导出排行榜 CSV</a>
+        </div>
+      {% endif %}
+    </article>
+
+    <aside class="season-archive panel">
+      <div class="section-head">
+        <h2>往期规则</h2>
+        <span class="muted">{{ past_seasons|length }} 个</span>
+      </div>
+      {% if past_seasons %}
+        <div class="archive-list">
+          {% for season in past_seasons %}
+            <a class="archive-item" href="{{ url_for('season_detail', season_id=season.id) }}">
+              <span class="badge {{ season.status }}">{{ season.status }}</span>
+              <strong>{{ season.name }}</strong>
+              <small>{{ season.start_date }} · v{{ season.version }}</small>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty">还没有往期赛季。</div>
+      {% endif %}
+    </aside>
+  </section>
+{% else %}
+  <section class="panel">
+    <div class="empty">还没有创建赛季规则。</div>
+  </section>
+{% endif %}
+{% endblock %}
