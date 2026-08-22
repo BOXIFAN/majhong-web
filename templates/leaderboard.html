@@ -39,31 +39,36 @@
   {% endif %}
 </section>
 
-<section class="panel penalty-ledger">
+<section class="panel finals-status-card">
   <div class="section-head">
-    <h2>罚分记录</h2>
-    <span class="muted">{{ penalty_records|length }} 条</span>
+    <h2>决赛资格</h2>
   </div>
-  {% if penalty_records %}
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>时间</th><th>玩家</th><th>扣分</th><th>类型</th><th>原因</th><th>裁判</th></tr></thead>
-        <tbody>
-          {% for item in penalty_records %}
-            <tr>
-              <td>{{ item.played_at }}</td>
-              <td><a href="{{ url_for('player_profile', user_id=item.user_id) }}">{{ item.player_name }}</a></td>
-              <td class="strong">-{{ item.points }}</td>
-              <td>{{ item.penalty_type }}</td>
-              <td>{{ item.reason }}</td>
-              <td>{{ item.referee_name or '-' }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+  {% if finals_status %}
+    <div class="finals-status-grid">
+      <div class="finals-status-item">
+        <span>您距离决赛还有</span>
+        {% if finals_status.matches_met %}
+          <strong>您已满足局数要求</strong>
+          <small>已完成 {{ finals_status.matches }} 个半庄，需要 {{ finals_status.required_matches }} 个。</small>
+        {% else %}
+          <strong>{{ finals_status.remaining_matches }} 个半庄</strong>
+          <small>需要 {{ finals_status.required_matches }} 个，当前已完成 {{ finals_status.matches }} 个。</small>
+        {% endif %}
+      </div>
+      <div class="finals-status-item">
+        <span>决赛资格</span>
+        <strong>{{ finals_status.cup_status }}</strong>
+        {% if finals_status.championship_gap is not none and finals_status.yakitori_gap is not none and finals_status.championship_gap > 0 %}
+          <small>距离冠军杯还差 {{ finals_status.championship_gap }} pt；距离烧鸡杯还差 {{ finals_status.yakitori_gap }} pt。</small>
+        {% elif finals_status.championship_gap is not none and finals_status.yakitori_gap is not none and finals_status.yakitori_gap > 0 %}
+          <small>距离冠军杯还差 {{ finals_status.championship_gap }} pt；距离烧鸡杯还需下降 {{ finals_status.yakitori_gap }} pt。</small>
+        {% elif finals_status.rank %}
+          <small>当前排名第 {{ finals_status.rank }} 位，积分 {{ finals_status.points }} pt。</small>
+        {% endif %}
+      </div>
     </div>
   {% else %}
-    <div class="empty">该赛季暂无罚分记录。</div>
+    <div class="empty">请选择赛季后查看决赛资格。</div>
   {% endif %}
 </section>
 {% endblock %}

@@ -15,12 +15,27 @@
   <div class="panel">
     <h2>近 10 场趋势</h2>
     {% if history %}
-      <div class="sparkline">
-        {% for item in history|reverse %}
-          <div class="bar" style="height: {{ 30 + item.rank_points|abs * 2 }}px" title="{{ item.rank_points }}"></div>
-        {% endfor %}
+      <div class="trend-chart" role="img" aria-label="近 10 场顺位折线图">
+        <div class="trend-plot">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            {% for placement in [1, 2, 3, 4] %}
+              {% set y = 14 + ((placement - 1) / 3 * 72) %}
+              <line class="trend-grid" x1="12" y1="{{ y }}" x2="98" y2="{{ y }}"></line>
+            {% endfor %}
+            <polyline class="trend-line" points="{{ trend.points }}"></polyline>
+          </svg>
+          {% for node in trend.nodes %}
+            <span class="trend-point" style="left: {{ node.x }}%; top: {{ node.y }}%;" title="{{ node.played_at }} · {{ node.placement }} 位 · {{ node.rank_points }}pt"></span>
+          {% endfor %}
+        </div>
+        <div class="trend-axis" aria-hidden="true">
+          <span>1</span>
+          <span>2</span>
+          <span>3</span>
+          <span>4</span>
+        </div>
       </div>
-      <div class="match-list">
+      <div class="match-list player-history-list">
         {% for item in history %}
           <div class="match-card"><span>{{ item.played_at }}</span><strong>{{ item.rank_points }}</strong><small>{{ item.placement }} 位 · {{ item.final_score }}</small></div>
         {% endfor %}

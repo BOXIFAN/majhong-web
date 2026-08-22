@@ -50,3 +50,35 @@ document.querySelectorAll("[data-confirm]").forEach((button) => {
     }
   });
 });
+
+document.querySelectorAll("[data-select-filter]").forEach((input) => {
+  const select = document.getElementById(input.dataset.selectFilter);
+  const options = select ? Array.from(select.options) : [];
+  input.addEventListener("input", () => {
+    const keyword = input.value.trim().toLowerCase();
+    options.forEach((option) => {
+      if (!option.value) {
+        option.hidden = false;
+        return;
+      }
+      const text = option.textContent.trim().toLowerCase();
+      const visible = !keyword || text.includes(keyword);
+      option.hidden = !visible;
+      option.disabled = !visible;
+    });
+    if (select.selectedOptions[0]?.disabled) {
+      select.value = "";
+    }
+  });
+});
+
+const aRulesToggle = document.querySelector("[data-a-rules-toggle]");
+const aRulesForm = aRulesToggle?.closest(".rule-form");
+
+function refreshARulesState() {
+  if (!aRulesToggle || !aRulesForm) return;
+  aRulesForm.classList.toggle("is-a-rules-enabled", aRulesToggle.checked);
+}
+
+aRulesToggle?.addEventListener("change", refreshARulesState);
+refreshARulesState();

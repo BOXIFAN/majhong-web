@@ -24,7 +24,8 @@
       <article class="entry-card">
         <h2>玩家 {{ idx + 1 }}</h2>
         <label>玩家
-          <select name="player_{{ idx }}" required>
+          <input class="select-search" data-select-filter="player_{{ idx }}" placeholder="输入姓名或角色搜索">
+          <select name="player_{{ idx }}" required data-filterable-select id="player_{{ idx }}">
             <option value="">选择玩家</option>
             {% for player in players %}
               <option value="{{ player.id }}">{{ player.display_name }} · {{ roles[player.role] }}</option>

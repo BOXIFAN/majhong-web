@@ -26,7 +26,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 
 BASE_DIR = Path(__file__).resolve().parent
-DATABASE = BASE_DIR / "instance" / "mahjong.db"
+DATABASE = Path(os.environ.get("DATABASE_PATH", BASE_DIR / "instance" / "mahjong.db"))
 
 ROLES = {
     "super_admin": "超级管理员",
@@ -37,17 +37,32 @@ ROLES = {
 DEFAULT_RULES = {
     "points": {
         "default_starting_points": 25000,
+        "return_points": 30000,
         "minimum_points_to_win": 1000,
+        "final_required_matches": 8,
         "continue_after_negative": True,
         "riichi_bet_points": 1000,
         "repeat_counter_points": 300,
         "noten_penalty_1_tenpai": 3000,
         "noten_penalty_2_tenpai": 1500,
         "noten_penalty_3_tenpai": 1000,
+        "use_a_rules": False,
         "uma_1st": 20,
         "uma_2nd": 10,
         "uma_3rd": -10,
         "uma_4th": -20,
+        "a_uma_1_positive_1st": 12,
+        "a_uma_1_positive_2nd": -1,
+        "a_uma_1_positive_3rd": -3,
+        "a_uma_1_positive_4th": -8,
+        "a_uma_2_positive_1st": 8,
+        "a_uma_2_positive_2nd": 4,
+        "a_uma_2_positive_3rd": -4,
+        "a_uma_2_positive_4th": -8,
+        "a_uma_3_positive_1st": 8,
+        "a_uma_3_positive_2nd": 3,
+        "a_uma_3_positive_3rd": 1,
+        "a_uma_3_positive_4th": -12,
     },
     "dora": {
         "open_dora": True,
@@ -90,9 +105,11 @@ DEFAULT_RULES = {
         "ippatsu": True,
         "west_extension": False,
         "local_yaku": False,
-        "swap_calling": False,
         "last_turn_riichi": False,
         "double_wind_4_fu": True,
+    },
+    "penalties": {
+        "penalty_policy": "诈和：-4pt\n迟到：-2pt\n终局报分错误：-1pt\n违规操作：由裁判记录原因并按管理决定扣分",
     },
 }
 
@@ -104,21 +121,37 @@ RULE_LABELS = {
     "abortive_draws": "中途流局规则",
     "yakuman": "役满规则",
     "others": "其他规则",
+    "penalties": "罚则",
 }
 
 FIELD_LABELS = {
     "default_starting_points": "四家起始分数 / Default Starting Points",
-    "minimum_points_to_win": "和牌最低点数门槛 / Minimum Points to Win",
+    "return_points": "原点 / Return Points",
+    "minimum_points_to_win": "终场分数最低要求 / Minimum Final Score",
+    "final_required_matches": "参与决赛需要场次",
     "continue_after_negative": "负分后是否继续 / Continue After Negative Score",
     "riichi_bet_points": "立直棒点数 / Riichi Bet Points",
     "repeat_counter_points": "本场棒点数 / Repeat Counter Points",
     "noten_penalty_1_tenpai": "流局罚符：1人听牌",
     "noten_penalty_2_tenpai": "流局罚符：2人听牌",
     "noten_penalty_3_tenpai": "流局罚符：3人听牌",
+    "use_a_rules": "是否 A 规",
     "uma_1st": "顺位马点：1位",
     "uma_2nd": "顺位马点：2位",
     "uma_3rd": "顺位马点：3位",
     "uma_4th": "顺位马点：4位",
+    "a_uma_1_positive_1st": "A规马点：1人正分 1位",
+    "a_uma_1_positive_2nd": "A规马点：1人正分 2位",
+    "a_uma_1_positive_3rd": "A规马点：1人正分 3位",
+    "a_uma_1_positive_4th": "A规马点：1人正分 4位",
+    "a_uma_2_positive_1st": "A规马点：2人正分 1位",
+    "a_uma_2_positive_2nd": "A规马点：2人正分 2位",
+    "a_uma_2_positive_3rd": "A规马点：2人正分 3位",
+    "a_uma_2_positive_4th": "A规马点：2人正分 4位",
+    "a_uma_3_positive_1st": "A规马点：3人正分 1位",
+    "a_uma_3_positive_2nd": "A规马点：3人正分 2位",
+    "a_uma_3_positive_3rd": "A规马点：3人正分 3位",
+    "a_uma_3_positive_4th": "A规马点：3人正分 4位",
     "open_dora": "开启表宝牌 / Open Dora",
     "ura_dora": "开启里宝牌 / Ura Dora",
     "kan_dora": "开启杠宝牌 / Kan Dora",
@@ -149,9 +182,9 @@ FIELD_LABELS = {
     "ippatsu": "一发 / Ippatsu",
     "west_extension": "西入 / Extension to South/West",
     "local_yaku": "古役 / Local Yaku",
-    "swap_calling": "换碰 / Swap Calling",
     "last_turn_riichi": "最后一巡立直",
     "double_wind_4_fu": "双风4符",
+    "penalty_policy": "罚则内容",
 }
 
 
@@ -162,6 +195,7 @@ def create_app() -> Flask:
 
     @app.before_request
     def load_user() -> None:
+        ensure_database_initialized()
         ensure_user_soft_delete_columns()
         user_id = session.get("user_id")
         g.user = query_one("select * from users where id = ? and is_deleted = 0", (user_id,)) if user_id else None
@@ -177,6 +211,7 @@ def create_app() -> Flask:
             "current_season": season,
             "rule_labels": RULE_LABELS,
             "field_labels": FIELD_LABELS,
+            "today_date": today_date(),
         }
 
     @app.cli.command("init-db")
@@ -360,6 +395,25 @@ def create_app() -> Flask:
         else:
             execute("update users set is_deleted = 1, deleted_at = ? where id = ?", (now(), user_id))
             flash(f"{user['display_name']} 已删除，历史战绩已保留。", "success")
+        return redirect(url_for("admin_users"))
+
+    @app.route("/admin/users/<int:user_id>/reset-password", methods=("POST",))
+    @role_required("super_admin")
+    def admin_user_reset_password(user_id: int):
+        user = query_one("select * from users where id = ?", (user_id,))
+        if not user:
+            flash("用户不存在。", "error")
+        elif user["is_deleted"]:
+            flash("已删除用户不能重置密码。", "error")
+        elif user["role"] == "super_admin":
+            flash("超级管理员密码请由本人修改，避免误锁定后台。", "error")
+        else:
+            temporary_password = generate_temporary_password()
+            execute(
+                "update users set password_hash = ? where id = ?",
+                (generate_password_hash(temporary_password, method="pbkdf2:sha256"), user_id),
+            )
+            flash(f"{user['display_name']} 的临时密码：{temporary_password}。请只告知本人并提醒尽快更改。", "success")
         return redirect(url_for("admin_users"))
 
     @app.route("/seasons")
@@ -581,13 +635,13 @@ def create_app() -> Flask:
         season_id = request.args.get("season_id", type=int)
         season = query_one("select * from seasons where id = ?", (season_id,)) if season_id else current_season()
         rows = get_leaderboard(season["id"]) if season else []
-        penalty_records = get_penalty_records(season["id"]) if season else []
+        finals_status = build_finals_status(season, rows, g.user) if season else None
         return render_template(
             "leaderboard.html",
             seasons=seasons_data,
             selected_season=season,
             rows=rows,
-            penalty_records=penalty_records,
+            finals_status=finals_status,
         )
 
     @app.route("/players/<int:user_id>")
@@ -612,7 +666,15 @@ def create_app() -> Flask:
             "select * from penalties where user_id = ? order by created_at desc limit 8",
             (user_id,),
         )
-        return render_template("player.html", user=user, stats=player_stats, history=history, penalties=penalties)
+        trend = build_placement_trend(history)
+        return render_template(
+            "player.html",
+            user=user,
+            stats=player_stats,
+            history=history,
+            trend=trend,
+            penalties=penalties,
+        )
 
     @app.route("/export/season/<int:season_id>.csv")
     @role_required("super_admin")
@@ -649,10 +711,17 @@ def create_app() -> Flask:
 
 def get_db() -> sqlite3.Connection:
     if "db" not in g:
+        ensure_database_initialized()
         DATABASE.parent.mkdir(parents=True, exist_ok=True)
         g.db = sqlite3.connect(DATABASE)
         g.db.row_factory = sqlite3.Row
     return g.db
+
+
+def ensure_database_initialized() -> None:
+    if DATABASE.exists():
+        return
+    init_db()
 
 
 def ensure_user_soft_delete_columns() -> None:
@@ -683,10 +752,19 @@ def now() -> str:
     return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
 
+def today_date() -> str:
+    return datetime.now().strftime("%Y-%m-%d")
+
+
 def normalize_datetime(value: str) -> str:
     if not value:
         return now()
     return value.replace("T", " ") + (":00" if len(value) == 16 else "")
+
+
+def generate_temporary_password(length: int = 12) -> str:
+    alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"
+    return "".join(secrets.choice(alphabet) for _ in range(length))
 
 
 def generate_invite_code(role: str) -> str:
@@ -752,6 +830,7 @@ def normalize_rules(rules: dict) -> dict:
         for key in normalized[group]:
             if key in fields:
                 normalized[group][key] = fields[key]
+    normalized.get("others", {}).pop("swap_calling", None)
     return normalized
 
 
@@ -882,21 +961,37 @@ def calculate_placements(scores: list[int]) -> list[float]:
 
 def calculate_rank_points(scores: list[int], placements: list[float], rules: dict, penalties: list[int]) -> list[float]:
     point_rules = rules["points"]
-    starting_points = int(point_rules["default_starting_points"])
-    uma = {
-        1: int(point_rules["uma_1st"]),
-        2: int(point_rules["uma_2nd"]),
-        3: int(point_rules["uma_3rd"]),
-        4: int(point_rules["uma_4th"]),
-    }
+    return_points = int(point_rules.get("return_points", point_rules["default_starting_points"]))
+    uma = get_uma_points(scores, return_points, point_rules)
     results = []
     sorted_scores = sorted(scores, reverse=True)
     for score, placement, penalty in zip(scores, placements, penalties):
         tied_places = [idx + 1 for idx, item in enumerate(sorted_scores) if item == score]
         avg_uma = sum(uma[place] for place in tied_places) / len(tied_places)
-        base = (score - starting_points) / 1000
+        base = (score - return_points) / 1000
         results.append(round(base + avg_uma - penalty, 1))
     return results
+
+
+def get_uma_points(scores: list[int], return_points: int, point_rules: dict) -> dict[int, int]:
+    if point_rules.get("use_a_rules"):
+        positive_count = max(1, min(3, sum(1 for score in scores if score >= return_points)))
+        return {
+            place: int(point_rules[f"a_uma_{positive_count}_positive_{place}st"])
+            if place == 1
+            else int(point_rules[f"a_uma_{positive_count}_positive_{place}nd"])
+            if place == 2
+            else int(point_rules[f"a_uma_{positive_count}_positive_{place}rd"])
+            if place == 3
+            else int(point_rules[f"a_uma_{positive_count}_positive_{place}th"])
+            for place in range(1, 5)
+        }
+    return {
+        1: int(point_rules["uma_1st"]),
+        2: int(point_rules["uma_2nd"]),
+        3: int(point_rules["uma_3rd"]),
+        4: int(point_rules["uma_4th"]),
+    }
 
 
 def placement_to_places(placement: float) -> list[int]:
@@ -915,6 +1010,34 @@ def placement_to_places(placement: float) -> list[int]:
     if placement == 3.5:
         return [3, 4]
     return [1, 2, 3, 4]
+
+
+def build_placement_trend(history: list[sqlite3.Row]) -> dict:
+    ordered = list(reversed(history))
+    if not ordered:
+        return {"points": "", "nodes": []}
+    left, right = 16, 96
+    top, bottom = 14, 86
+    span_x = right - left
+    span_y = bottom - top
+    nodes = []
+    for idx, row in enumerate(ordered):
+        x = (left + span_x / 2) if len(ordered) == 1 else left + (span_x * idx / (len(ordered) - 1))
+        placement = float(row["placement"])
+        y = top + ((placement - 1) / 3) * span_y
+        nodes.append(
+            {
+                "x": round(x, 2),
+                "y": round(y, 2),
+                "placement": placement,
+                "rank_points": row["rank_points"],
+                "played_at": row["played_at"],
+            }
+        )
+    return {
+        "points": " ".join(f"{node['x']},{node['y']}" for node in nodes),
+        "nodes": nodes,
+    }
 
 
 def get_leaderboard(season_id: int) -> list[dict]:
@@ -939,6 +1062,74 @@ def get_leaderboard(season_id: int) -> list[dict]:
         (season_id,),
     )
     return [dict(row) for row in rows]
+
+
+def build_finals_status(season: sqlite3.Row, rows: list[dict], user: sqlite3.Row | None) -> dict:
+    rules = normalize_rules(json.loads(season["rules_json"]))
+    required_matches = int(rules["points"].get("final_required_matches", 8))
+    if user is None:
+        return {
+            "logged_in": False,
+            "required_matches": required_matches,
+            "matches": 0,
+            "remaining_matches": required_matches,
+            "matches_met": False,
+            "cup_status": "登录后查看您的决赛资格。",
+            "championship_gap": None,
+            "yakitori_gap": None,
+        }
+
+    user_row = next((row for row in rows if row["user_id"] == user["id"]), None)
+    user_rank = next((idx for idx, row in enumerate(rows, start=1) if row["user_id"] == user["id"]), None)
+    if user_row is None:
+        normalized_name = user["display_name"].strip().lower()
+        user_rank, user_row = next(
+            (
+                (idx, row)
+                for idx, row in enumerate(rows, start=1)
+                if row["display_name"].strip().lower() == normalized_name
+            ),
+            (None, None),
+        )
+    matches = int(user_row["matches"]) if user_row else 0
+    points = float(user_row["total_points"]) if user_row else 0.0
+    remaining_matches = max(required_matches - matches, 0)
+    matches_met = remaining_matches == 0
+
+    bottom_start_rank = max(len(rows) - 3, 1)
+    is_top_four = user_rank is not None and user_rank <= 4
+    is_bottom_four = user_rank is not None and user_rank >= bottom_start_rank and len(rows) >= 4
+    championship_cutoff = float(rows[3]["total_points"]) if len(rows) >= 4 else None
+    yakitori_cutoff = float(rows[bottom_start_rank - 1]["total_points"]) if len(rows) >= 4 else None
+
+    if is_top_four:
+        cup_status = "您已满足冠军杯决赛标准。"
+        championship_gap = 0
+        yakitori_gap = None
+    elif is_bottom_four:
+        cup_status = "您已满足烧鸡杯要求。"
+        championship_gap = None
+        yakitori_gap = 0
+    else:
+        championship_gap = max(round((championship_cutoff or 0) - points, 1), 0) if championship_cutoff is not None else None
+        yakitori_gap = max(round(points - (yakitori_cutoff or 0), 1), 0) if yakitori_cutoff is not None else None
+        if championship_gap is None or yakitori_gap is None:
+            cup_status = "该赛季暂时没有足够的排行榜数据计算杯赛分界线。"
+        else:
+            cup_status = "您尚未满足冠军杯或烧鸡杯标准。"
+
+    return {
+        "logged_in": True,
+        "required_matches": required_matches,
+        "matches": matches,
+        "remaining_matches": remaining_matches,
+        "matches_met": matches_met,
+        "rank": user_rank,
+        "points": points,
+        "cup_status": cup_status,
+        "championship_gap": championship_gap,
+        "yakitori_gap": yakitori_gap,
+    }
 
 
 def get_penalty_records(season_id: int) -> list[sqlite3.Row]:
@@ -991,11 +1182,18 @@ def init_db() -> None:
 def seed_demo_data(db: sqlite3.Connection, admin_id: int) -> None:
     season_1_rules = json.loads(json.dumps(DEFAULT_RULES))
     season_2_rules = json.loads(json.dumps(DEFAULT_RULES))
+    season_3_rules = json.loads(json.dumps(DEFAULT_RULES))
     season_2_rules["points"]["uma_2nd"] = 5
     season_2_rules["points"]["uma_3rd"] = -15
     season_2_rules["points"]["uma_4th"] = -30
     season_2_rules["common"]["red_five"] = "4赤"
     season_2_rules["others"]["west_extension"] = True
+    season_3_rules["points"]["default_starting_points"] = 30000
+    season_3_rules["points"]["uma_1st"] = 20
+    season_3_rules["points"]["uma_2nd"] = 5
+    season_3_rules["points"]["uma_3rd"] = -15
+    season_3_rules["points"]["uma_4th"] = -30
+    season_3_rules["common"]["red_five"] = "4赤"
 
     season_1_id = db.execute(
         """
@@ -1007,18 +1205,31 @@ def seed_demo_data(db: sqlite3.Connection, admin_id: int) -> None:
     season_2_id = db.execute(
         """
         insert into seasons (name, status, start_date, rules_json, version, created_at, updated_at)
-        values ('Brisbane Riichi 2026 Winter', 'active', '2026-07-01', ?, 2, ?, ?)
+        values ('Brisbane Riichi 2026 Winter', 'archived', '2026-07-01', ?, 2, ?, ?)
         """,
         (json.dumps(season_2_rules, ensure_ascii=False), now(), now()),
+    ).lastrowid
+    season_3_id = db.execute(
+        """
+        insert into seasons (name, status, start_date, rules_json, version, created_at, updated_at)
+        values ('S11', 'active', '2026-08-21', ?, 3, ?, ?)
+        """,
+        (json.dumps(season_3_rules, ensure_ascii=False), now(), now()),
     ).lastrowid
     db.execute(
         "insert into rule_versions (season_id, rules_json, changed_by, changed_at) values (?, ?, ?, ?)",
         (season_2_id, json.dumps(season_2_rules, ensure_ascii=False), admin_id, now()),
     )
+    db.execute(
+        "insert into rule_versions (season_id, rules_json, changed_by, changed_at) values (?, ?, ?, ?)",
+        (season_3_id, json.dumps(season_3_rules, ensure_ascii=False), admin_id, now()),
+    )
 
     demo_users = [
         ("Mika Chen", "mika@example.com", "referee"),
         ("Daniel Wong", "daniel@example.com", "referee"),
+        ("Wang.C", "wangc@example.com", "referee"),
+        ("Rua", "3474189100@qq.com", "user"),
         ("Aiko Tan", "aiko@example.com", "user"),
         ("Kenji Sato", "kenji@example.com", "user"),
         ("Liam Brown", "liam@example.com", "user"),
@@ -1168,6 +1379,206 @@ def seed_demo_data(db: sqlite3.Connection, admin_id: int) -> None:
             "当前最近比赛",
             "Mika Chen",
             [("Yuki Mori", 37500), ("Sophie Lee", 26200), ("Aiko Tan", 22300), ("Emma Davis", 14000)],
+            [],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-08-21 15:18:00",
+            "S11 手打",
+            "S11 demo 01",
+            "Wang.C",
+            [("Rua", 35000), ("Daniel Wong", 34000), ("Kenji Sato", 34000), ("Noah Smith", 17000)],
+            [{"player": "Rua", "points": 4, "type": "诈和", "reason": "诈和pt-4"}],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-08-22 19:00:00",
+            "S11 机打",
+            "S11 demo 02",
+            "Mika Chen",
+            [("Sophie Lee", 47200), ("Rua", 30600), ("Aiko Tan", 22600), ("Haru Ito", 19600)],
+            [],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-08-24 18:40:00",
+            "S11 手打",
+            "S11 demo 03",
+            "Daniel Wong",
+            [("Liam Brown", 41800), ("Yuki Mori", 33400), ("Rua", 25300), ("Emma Davis", 19500)],
+            [],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-08-26 19:20:00",
+            "S11 机打",
+            "S11 demo 04",
+            "Wang.C",
+            [("Rua", 50100), ("Noah Smith", 29200), ("Kenji Sato", 21100), ("Aiko Tan", 19600)],
+            [],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-08-28 19:05:00",
+            "S11 手打",
+            "S11 demo 05",
+            "Mika Chen",
+            [("Daniel Wong", 45200), ("Sophie Lee", 32700), ("Rua", 24800), ("Haru Ito", 17300)],
+            [{"player": "Haru Ito", "points": 2, "type": "迟到", "reason": "迟到 15 分钟"}],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-08-30 18:50:00",
+            "S11 机打",
+            "S11 demo 06",
+            "Daniel Wong",
+            [("Yuki Mori", 38900), ("Emma Davis", 32500), ("Kenji Sato", 27800), ("Rua", 20800)],
+            [],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-09-01 19:15:00",
+            "S11 手打",
+            "S11 demo 07",
+            "Wang.C",
+            [("Rua", 41300), ("Liam Brown", 33400), ("Sophie Lee", 24700), ("Noah Smith", 20600)],
+            [],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-09-03 19:30:00",
+            "S11 机打",
+            "S11 demo 08",
+            "Mika Chen",
+            [("Aiko Tan", 36000), ("Rua", 35500), ("Daniel Wong", 27500), ("Yuki Mori", 21000)],
+            [],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-09-05 18:35:00",
+            "S11 手打",
+            "S11 demo 09",
+            "Daniel Wong",
+            [("Kenji Sato", 44800), ("Emma Davis", 31500), ("Rua", 23700), ("Liam Brown", 20000)],
+            [{"player": "Rua", "points": 1, "type": "误记分", "reason": "复核后补扣 1pt"}],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-09-07 19:10:00",
+            "S11 机打",
+            "S11 demo 10",
+            "Wang.C",
+            [("Rua", 39800), ("Haru Ito", 34900), ("Noah Smith", 25000), ("Sophie Lee", 20300)],
+            [],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-09-09 18:45:00",
+            "S11 手打",
+            "S11 demo 11",
+            "Mika Chen",
+            [("Daniel Wong", 42100), ("Rua", 31800), ("Aiko Tan", 27200), ("Emma Davis", 18900)],
+            [],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-09-11 19:25:00",
+            "S11 机打",
+            "S11 demo 12",
+            "Daniel Wong",
+            [("Yuki Mori", 44200), ("Kenji Sato", 32600), ("Noah Smith", 23800), ("Rua", 19400)],
+            [],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-09-13 19:00:00",
+            "S11 手打",
+            "S11 demo 13",
+            "Wang.C",
+            [("Rua", 45800), ("Liam Brown", 30400), ("Haru Ito", 23800), ("Aiko Tan", 20000)],
+            [],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-09-15 18:55:00",
+            "S11 机打",
+            "S11 demo 14",
+            "Mika Chen",
+            [("Sophie Lee", 40600), ("Emma Davis", 35600), ("Rua", 24400), ("Kenji Sato", 19400)],
+            [],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-09-17 19:40:00",
+            "S11 手打",
+            "S11 demo 15",
+            "Daniel Wong",
+            [("Rua", 37000), ("Daniel Wong", 34400), ("Noah Smith", 28700), ("Yuki Mori", 19900)],
+            [],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-09-19 18:30:00",
+            "S11 机打",
+            "S11 demo 16",
+            "Wang.C",
+            [("Aiko Tan", 39300), ("Rua", 33100), ("Liam Brown", 26500), ("Haru Ito", 21100)],
+            [{"player": "Liam Brown", "points": 2, "type": "违规操作", "reason": "错摸后按规则扣 2pt"}],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-09-21 19:05:00",
+            "S11 手打",
+            "S11 demo 17",
+            "Mika Chen",
+            [("Rua", 42100), ("Kenji Sato", 33300), ("Emma Davis", 24600), ("Sophie Lee", 20000)],
+            [],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-09-23 19:15:00",
+            "S11 机打",
+            "S11 demo 18",
+            "Daniel Wong",
+            [("Noah Smith", 38600), ("Daniel Wong", 34200), ("Rua", 28300), ("Aiko Tan", 18900)],
+            [],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-09-25 18:50:00",
+            "S11 手打",
+            "S11 demo 19",
+            "Wang.C",
+            [("Rua", 48600), ("Yuki Mori", 29600), ("Haru Ito", 22400), ("Liam Brown", 19400)],
+            [],
+        ),
+        (
+            season_3_id,
+            season_3_rules,
+            "2026-09-27 19:30:00",
+            "S11 机打",
+            "S11 demo 20",
+            "Mika Chen",
+            [("Sophie Lee", 37200), ("Rua", 34900), ("Kenji Sato", 26700), ("Emma Davis", 21200)],
             [],
         ),
     ]

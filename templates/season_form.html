@@ -15,21 +15,25 @@
         {% endfor %}
       </select>
     </label>
-    <label>开始日期<input name="start_date" type="date" value="{{ season.start_date if season else '2026-04-01' }}" required></label>
+    <label>开始日期<input name="start_date" type="date" value="{{ season.start_date if season else today_date }}" required></label>
   </section>
   <section class="rules-grid">
     {% for group, fields in rules.items() %}
       <article class="panel">
         <h2>{{ rule_labels[group] }}</h2>
-        <div class="rule-form">
+        <div class="rule-form {% if fields.use_a_rules %}is-a-rules-enabled{% endif %}">
           {% for key, value in fields.items() %}
             {% if value is sameas true or value is sameas false %}
-              <label class="toggle">
+              <label class="toggle {{ 'a-rules-toggle' if key == 'use_a_rules' else '' }}">
                 <span>{{ field_labels[key] }}</span>
-                <input type="checkbox" name="rule__{{ group }}__{{ key }}" {% if value %}checked{% endif %}>
+                <input type="checkbox" name="rule__{{ group }}__{{ key }}" {% if value %}checked{% endif %} {% if key == 'use_a_rules' %}data-a-rules-toggle{% endif %}>
               </label>
+            {% elif group == 'penalties' %}
+              <label class="full-span">{{ field_labels[key] }}<textarea name="rule__{{ group }}__{{ key }}" rows="8">{{ value }}</textarea></label>
             {% else %}
-              <label>{{ field_labels[key] }}<input name="rule__{{ group }}__{{ key }}" value="{{ value }}"></label>
+              <label class="{{ 'normal-uma-field' if key in ['uma_1st', 'uma_2nd', 'uma_3rd', 'uma_4th'] else 'a-uma-field' if key.startswith('a_uma_') else '' }}">
+                {{ field_labels[key] }}<input name="rule__{{ group }}__{{ key }}" value="{{ value }}" {% if key in ['uma_1st', 'uma_2nd', 'uma_3rd', 'uma_4th'] %}data-normal-uma{% endif %}>
+              </label>
             {% endif %}
           {% endfor %}
         </div>

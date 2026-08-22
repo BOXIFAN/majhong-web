@@ -20,15 +20,80 @@ flask --app app init-db
 flask --app app run --debug
 ```
 
-默认会创建 SQLite 数据库 `instance/mahjong.db`，并初始化：
+默认会创建 SQLite 数据库 `instance/mahjong.db`。也可以通过 `DATABASE_PATH` 指定数据库文件：
+
+```bash
+DATABASE_PATH=/tmp/mahjong.db flask --app app run --debug
+```
+
+数据库首次创建时会初始化：
 
 - 超级管理员：`admin@example.com` / `admin1234`
+- 裁判用户：`wangc@example.com` / `demo1234`
 - 裁判邀请码：`REF-2026`
 - 普通用户邀请码：`PLAY-2026`
-- 两个 demo 赛季、一批裁判/玩家、跨赛季比赛和罚则记录
+- 三个 demo 赛季、一批裁判/玩家、跨赛季比赛和罚则记录，其中 S11 赛季包含 20 场比赛记录
 
 完整演示数据账号与比赛清单见 [DEMO_DATA.md](DEMO_DATA.md)。
 
 ## 部署提示
 
-当前版本默认使用 SQLite，适合本地开发和 Render 原型部署。之后迁移 MySQL 时，可将 `db.py` 风格的数据访问替换为 MySQL 连接层，路由与模板可继续沿用。
+当前版本使用 SQLite。部署到 Render 时必须挂载 Persistent Disk，并将 `DATABASE_PATH` 指向 Disk 内的文件，否则 Render 重启或重新部署后会丢失本地写入的数据。
+
+项目已包含 Render 部署所需文件：
+
+- `requirements.txt`：包含 Flask、Werkzeug、Gunicorn
+- `Procfile`：`web: gunicorn app:app`
+- `render.yaml`：声明 Python Web Service、1GB Disk、`DATABASE_PATH=/var/data/mahjong.db`
+- `.python-version`：指定 Python 3.11.9
+
+应用启动时会检查 `DATABASE_PATH` 指向的数据库是否存在；如果不存在，会自动创建表结构并写入初始化账号和 demo 数据。
+
+## Render 部署教程
+
+### 方式一：使用 Blueprint
+
+1. 确认 GitHub 仓库已经包含最新代码，尤其是 `render.yaml`。
+2. 打开 Render Dashboard，选择 `New` → `Blueprint`。
+3. 连接 GitHub 仓库 `majhong-web`。
+4. Render 会读取 `render.yaml` 并创建 Web Service、Persistent Disk 和环境变量。
+5. 确认配置：
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `gunicorn app:app`
+   - Disk Mount Path: `/var/data`
+   - `DATABASE_PATH`: `/var/data/mahjong.db`
+   - `SECRET_KEY`: 自动生成
+6. 创建后等待 Build 和 Deploy 完成。
+7. 打开 Render 提供的 `onrender.com` 地址。
+8. 首次访问会自动初始化数据库，可用 `admin@example.com` / `admin1234` 登录。
+
+### 方式二：手动创建 Web Service
+
+1. Render Dashboard 选择 `New` → `Web Service`。
+2. 连接 GitHub 仓库 `majhong-web`。
+3. 填写：
+   - Runtime: `Python 3`
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `gunicorn app:app`
+4. 选择付费实例类型，因为 Persistent Disk 不能挂载到免费 Web Service。
+5. 在 Advanced / Disks 中新增 Disk：
+   - Name: `mahjong-data`
+   - Mount Path: `/var/data`
+   - Size: `1 GB`
+6. 添加环境变量：
+   - `DATABASE_PATH=/var/data/mahjong.db`
+   - `SECRET_KEY=` 随机长字符串
+7. 创建服务并等待部署完成。
+
+### 上线后检查
+
+1. 登录超级管理员账号并立刻修改默认密码。
+2. 进入“赛季规则”，确认当前赛季、起始分、原点、决赛场次等配置正确。
+3. 录入一场测试比赛，刷新页面后确认排行榜更新。
+4. 在 Render Dashboard 手动 Redeploy 一次，确认数据仍保留。若数据保留，说明 Disk 配置正确。
+
+### 注意事项
+
+- Render 的普通文件系统是临时的，只有 `/var/data` 这类 Disk 挂载路径下的数据会保留。
+- Persistent Disk 不能在 Build Command 或 Pre-Deploy Command 中访问，所以本项目采用“应用首次启动自动初始化数据库”的方式。
+- 使用 Disk 的 Web Service 不能水平扩展到多个实例；SQLite 适合当前社团 MVP。若未来多人高并发录入或需要更强备份恢复，建议迁移到 Render Postgres。

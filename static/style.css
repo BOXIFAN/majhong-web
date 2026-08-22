@@ -226,6 +226,27 @@ p {
   background: rgba(185, 28, 28, 0.13);
 }
 
+.secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  border: 1px solid rgba(15, 118, 110, 0.2);
+  border-radius: 11px;
+  padding: 8px 12px;
+  color: var(--brand);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  background: rgba(15, 118, 110, 0.07);
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.secondary-button:hover {
+  transform: translateY(-1px);
+  background: rgba(15, 118, 110, 0.12);
+}
+
 .main {
   width: min(1180px, 100%);
   padding: 34px;
@@ -350,6 +371,39 @@ p {
 
 .penalty-ledger {
   margin-top: 22px;
+}
+
+.finals-status-card {
+  margin-top: 22px;
+}
+
+.finals-status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.finals-status-item {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.finals-status-item span,
+.finals-status-item small {
+  display: block;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.finals-status-item strong {
+  display: block;
+  margin: 8px 0;
+  color: var(--ink);
+  font-size: 26px;
+  font-weight: 950;
+  line-height: 1.2;
 }
 
 .penalty-section {
@@ -566,6 +620,16 @@ select:focus {
   border-color: var(--brand);
 }
 
+.select-search {
+  min-height: 40px;
+  margin-bottom: 3px;
+  background: rgba(248, 250, 252, 0.92);
+}
+
+.select-search::placeholder {
+  color: rgba(100, 116, 139, 0.72);
+}
+
 .inline-form,
 .form-grid {
   display: grid;
@@ -668,6 +732,13 @@ select:focus {
   color: var(--brand-dark);
   font-weight: 900;
   white-space: nowrap;
+}
+
+.rules-param-list .multiline-rule {
+  max-width: 62ch;
+  line-height: 1.65;
+  text-align: left;
+  white-space: pre-wrap;
 }
 
 .document-actions {
@@ -809,6 +880,33 @@ select:focus {
   gap: 12px;
 }
 
+.rule-form .full-span {
+  grid-column: 1 / -1;
+}
+
+.rule-form .a-rules-toggle {
+  padding: 14px 16px;
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  border-radius: 14px;
+  background: rgba(15, 118, 110, 0.07);
+}
+
+.rule-form:not(.is-a-rules-enabled) .a-uma-field,
+.rule-form.is-a-rules-enabled .normal-uma-field {
+  display: none;
+}
+
+.rule-form .a-uma-field {
+  border-left: 4px solid rgba(248, 223, 139, 0.95);
+  padding-left: 12px;
+}
+
+.rule-form textarea {
+  min-height: 190px;
+  resize: vertical;
+  line-height: 1.55;
+}
+
 .toggle {
   grid-template-columns: 1fr auto;
   align-items: center;
@@ -911,22 +1009,69 @@ select:focus {
   text-align: center;
 }
 
-.sparkline {
-  display: flex;
-  align-items: end;
-  gap: 8px;
-  min-height: 150px;
-  padding: 16px;
-  border-radius: 14px;
+.trend-chart {
+  position: relative;
+  min-height: 210px;
+  margin-top: 14px;
+  padding: 22px 20px 18px 42px;
+  border-radius: 18px;
   background: rgba(15, 118, 110, 0.07);
 }
 
-.bar {
-  flex: 1;
-  min-width: 14px;
-  border-radius: 10px 10px 3px 3px;
-  background: linear-gradient(180deg, var(--brand), var(--accent));
-  animation: grow 560ms ease both;
+.trend-plot {
+  position: relative;
+}
+
+.trend-chart svg {
+  display: block;
+  width: 100%;
+  height: 170px;
+  overflow: visible;
+}
+
+.trend-grid {
+  stroke: rgba(100, 116, 139, 0.22);
+  stroke-width: 0.55;
+  vector-effect: non-scaling-stroke;
+}
+
+.trend-line {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 8px 14px rgba(15, 118, 110, 0.18));
+}
+
+.trend-point {
+  position: absolute;
+  z-index: 2;
+  width: 13px;
+  height: 13px;
+  border: 1px solid #f6c85f;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #fff5c8 0 18%, #f8df8b 42%, #f2bf4f 100%);
+  box-shadow: 0 3px 7px rgba(177, 111, 18, 0.24);
+  transform: translate(-50%, -50%);
+}
+
+.trend-axis {
+  position: absolute;
+  top: 38px;
+  bottom: 31px;
+  left: 17px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.player-history-list {
+  margin-top: 24px;
 }
 
 @keyframes rise {
@@ -962,6 +1107,10 @@ select:focus {
   .site-shell {
     grid-template-columns: 1fr;
     padding-top: 82px;
+  }
+
+  .finals-status-grid {
+    grid-template-columns: 1fr;
   }
 
   .sidebar {

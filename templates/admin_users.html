@@ -38,6 +38,9 @@
               <button class="button slim" type="submit">保存</button>
             </form>
             {% if user.role != 'super_admin' %}
+              <form method="post" action="{{ url_for('admin_user_reset_password', user_id=user.id) }}">
+                <button class="secondary-button" type="submit" data-confirm="确认重置 {{ user.display_name }} 的密码？新临时密码只会显示一次。">重置密码</button>
+              </form>
               <form method="post" action="{{ url_for('admin_user_delete', user_id=user.id) }}">
                 <button class="danger-button" type="submit" data-confirm="确认删除 {{ user.display_name }}？历史战绩会保留。">删除</button>
               </form>
