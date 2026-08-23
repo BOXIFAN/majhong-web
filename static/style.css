@@ -435,6 +435,20 @@ p {
   animation: rise 420ms ease both;
 }
 
+.seat-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 10px;
+}
+
+.seat-heading small {
+  color: var(--brand-dark);
+  font-size: 0.62em;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
 .penalty-ledger {
   margin-top: 22px;
 }
@@ -723,6 +737,7 @@ select:focus {
 }
 
 .rules-document {
+  min-width: 0;
   padding: 34px;
   border: 1px solid rgba(219, 226, 238, 0.78);
   border-radius: 22px;
@@ -739,6 +754,7 @@ select:focus {
 }
 
 .rules-document-head h2 {
+  overflow-wrap: anywhere;
   max-width: 780px;
   margin: 18px 0 10px;
   font-size: 38px;
@@ -779,6 +795,7 @@ select:focus {
 }
 
 .rules-param-list div {
+  min-width: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) max-content;
   gap: 18px;
@@ -794,6 +811,7 @@ select:focus {
   color: var(--ink);
   font-weight: 850;
   line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .rules-param-list dd {
@@ -1512,6 +1530,10 @@ select:focus {
     grid-template-columns: 1fr;
     gap: 6px;
     padding: 10px 11px;
+  }
+
+  .rules-document-head h2 {
+    font-size: clamp(28px, 9vw, 36px);
   }
 
   .rules-param-list dd {

@@ -20,11 +20,14 @@
     <label>{{ t('match.memo') }}<input name="memo" placeholder="{{ t('match.optional') }}"></label>
   </section>
   <section class="player-entry-grid">
+    {% set seats = [('东', 'East'), ('南', 'South'), ('西', 'West'), ('北', 'North')] %}
     {% for idx in range(4) %}
       <article class="entry-card">
-        <h2>{{ t('match.player_n', number=idx + 1) }}</h2>
+        <h2 class="seat-heading">
+          <span>{{ t('match.player_n', number=idx + 1) }}</span>
+          <small>{{ seats[idx][0] }} / {{ seats[idx][1] }}</small>
+        </h2>
         <label>{{ t('table.player') }}
-          <input class="select-search" data-select-filter="player_{{ idx }}" placeholder="{{ t('match.search_player') }}">
           <select name="player_{{ idx }}" required data-filterable-select id="player_{{ idx }}">
             <option value="">{{ t('match.choose_player') }}</option>
             {% for player in players %}
