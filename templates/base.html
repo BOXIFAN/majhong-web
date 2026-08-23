@@ -42,7 +42,7 @@
           <a class="{{ 'active' if locale == 'zh' else '' }}" href="{{ url_for('set_language', locale='zh') }}">中</a>
           <a class="{{ 'active' if locale == 'en' else '' }}" href="{{ url_for('set_language', locale='en') }}">EN</a>
         </div>
-        <div class="account-card">
+        <div class="account-card{% if not current_user %} guest-account{% endif %}">
           {% if current_user %}
             <div class="account-avatar">{{ current_user.display_name[:1] }}</div>
             <div class="account-meta">
@@ -100,14 +100,16 @@
               <a class="logout-button" href="{{ url_for('logout') }}">{{ t('auth.logout') }}</a>
             </div>
           {% else %}
-            <div class="account-card desktop-account">
+            <div class="account-card desktop-account guest-account">
               <div class="account-meta">
                 <strong>{{ t('account.guest') }}</strong>
                 <small>{{ t('account.guest_desktop_hint') }}</small>
               </div>
-              <a class="logout-button" href="{{ url_for('login') }}">{{ t('auth.login') }}</a>
+              <div class="account-actions">
+                <a class="logout-button" href="{{ url_for('login') }}">{{ t('auth.login') }}</a>
+                <a class="logout-button subtle" href="{{ url_for('register') }}">{{ t('auth.register') }}</a>
+              </div>
             </div>
-            <a class="ghost-link" href="{{ url_for('register') }}">{{ t('auth.register') }}</a>
           {% endif %}
         </div>
       </aside>

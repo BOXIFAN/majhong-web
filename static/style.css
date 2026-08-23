@@ -193,6 +193,12 @@ p {
   box-shadow: var(--soft-shadow);
 }
 
+.account-card.guest-account {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
 .account-avatar {
   display: grid;
   place-items: center;
@@ -227,8 +233,10 @@ p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
+  min-width: 76px;
   min-height: 34px;
-  padding: 7px 10px;
+  padding: 8px 14px;
   border-radius: 10px;
   color: var(--brand-dark);
   font-weight: 900;
@@ -249,10 +257,18 @@ p {
 }
 
 .account-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-  justify-content: flex-end;
-  flex-wrap: wrap;
+  width: 100%;
+}
+
+.guest-account .account-actions .logout-button {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding-inline: 8px;
+  border-radius: 12px;
 }
 
 .danger-button {
