@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block title %}比赛 #{{ match.id }} · Brisbane Riichi{% endblock %}
+{% block title %}{{ t('match.unknown_title', id=match.id) }} · Brisbane Riichi{% endblock %}
 {% block content %}
 <section class="page-head">
   <p class="eyebrow">{{ match.season_name }}</p>
-  <h1>{{ match.table_name or '比赛 #' ~ match.id }}</h1>
-  <p>{{ match.played_at }} · 裁判：{{ match.referee_name or '系统' }}</p>
+  <h1>{{ match.table_name or t('match.unknown_title', id=match.id) }}</h1>
+  <p>{{ t('match.meta', time=match.played_at, referee=(match.referee_name or t('home.system'))) }}</p>
 </section>
 <section class="panel">
   <div class="table-wrap">
     <table>
-      <thead><tr><th>顺位</th><th>玩家</th><th>终局点数</th><th>结算积分</th><th>已计入罚分</th></tr></thead>
+      <thead><tr><th>{{ t('table.placement') }}</th><th>{{ t('table.player') }}</th><th>{{ t('table.final_score') }}</th><th>{{ t('table.rank_points') }}</th><th>{{ t('table.penalty_points') }}</th></tr></thead>
       <tbody>
         {% for entry in entries %}
           <tr>
@@ -25,7 +25,7 @@
   </div>
 </section>
 <section class="panel penalty-section">
-  <h2>罚则记录</h2>
+  <h2>{{ t('match.penalty_records') }}</h2>
   {% if penalties %}
     <div class="match-list">
       {% for item in penalties %}
@@ -37,13 +37,13 @@
       {% endfor %}
     </div>
   {% else %}
-    <div class="empty">暂无罚则记录。</div>
+    <div class="empty">{{ t('match.no_penalty_records') }}</div>
   {% endif %}
   {% if current_user and current_user.role == 'super_admin' %}
     <div class="penalty-actions">
-      <a class="button secondary" href="{{ url_for('match_edit', match_id=match.id) }}">编辑比赛</a>
-      <form method="post" action="{{ url_for('match_delete', match_id=match.id) }}" onsubmit="return confirm('确认删除这场对局？删除后排行榜会重新计算。');">
-        <button class="danger-button" type="submit">删除对局</button>
+      <a class="button secondary" href="{{ url_for('match_edit', match_id=match.id) }}">{{ t('match.edit') }}</a>
+      <form method="post" action="{{ url_for('match_delete', match_id=match.id) }}" onsubmit="return confirm({{ t('match.delete_confirm')|tojson }});">
+        <button class="danger-button" type="submit">{{ t('match.delete') }}</button>
       </form>
     </div>
   {% endif %}

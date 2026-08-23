@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% block title %}后台管理 · Brisbane Riichi{% endblock %}
+{% block title %}{{ t('admin.title') }} · Brisbane Riichi{% endblock %}
 {% block content %}
 <section class="page-head">
   <p class="eyebrow">Admin</p>
-  <h1>后台管理</h1>
-  <p>编辑用户名称、角色与账号状态。删除用户不会移除已录入战绩。</p>
+  <h1>{{ t('admin.title') }}</h1>
+  <p>{{ t('admin.subtitle') }}</p>
 </section>
 
 <section class="panel admin-users-panel">
   <div class="section-head">
-    <h2>用户</h2>
-    <span class="muted">{{ users|length }} 人</span>
+    <h2>{{ t('admin.users') }}</h2>
+    <span class="muted">{{ t('admin.user_count', count=users|length) }}</span>
   </div>
   <div class="admin-user-list">
     {% for user in users %}
@@ -19,34 +19,34 @@
         <div class="admin-user-main">
           <div class="admin-user-title">
             <strong>{{ user.display_name }}</strong>
-            <span class="badge {{ 'archived' if user.is_deleted else 'active' }}">{{ '已删除' if user.is_deleted else '正常' }}</span>
+            <span class="badge {{ 'archived' if user.is_deleted else 'active' }}">{{ t('status.deleted') if user.is_deleted else t('status.normal') }}</span>
           </div>
-          <small>{{ user.email }} · {{ roles[user.role] }} · 注册于 {{ user.created_at }}</small>
+          <small>{{ t('admin.registered_at', email=user.email, role=roles[user.role], created_at=user.created_at) }}</small>
         </div>
         <div class="admin-user-actions">
           {% if not user.is_deleted %}
             <form method="post" action="{{ url_for('admin_user_update', user_id=user.id) }}" class="user-edit-form">
-              <input name="display_name" value="{{ user.display_name }}" required aria-label="用户名称">
+              <input name="display_name" value="{{ user.display_name }}" required aria-label="{{ t('admin.name_label') }}">
               {% if user.role != 'super_admin' %}
-                <select name="role" aria-label="用户角色">
-                  <option value="user" {% if user.role == 'user' %}selected{% endif %}>普通用户</option>
-                  <option value="referee" {% if user.role == 'referee' %}selected{% endif %}>裁判</option>
+                <select name="role" aria-label="{{ t('admin.role_label') }}">
+                  <option value="user" {% if user.role == 'user' %}selected{% endif %}>{{ roles.user }}</option>
+                  <option value="referee" {% if user.role == 'referee' %}selected{% endif %}>{{ roles.referee }}</option>
                 </select>
               {% else %}
-                <input value="超级管理员" disabled aria-label="用户角色">
+                <input value="{{ roles.super_admin }}" disabled aria-label="{{ t('admin.role_label') }}">
               {% endif %}
-              <button class="button slim" type="submit">保存</button>
+              <button class="button slim" type="submit">{{ t('admin.save') }}</button>
             </form>
             {% if user.role != 'super_admin' %}
               <form method="post" action="{{ url_for('admin_user_reset_password', user_id=user.id) }}">
-                <button class="secondary-button" type="submit" data-confirm="确认重置 {{ user.display_name }} 的密码？新临时密码只会显示一次。">重置密码</button>
+                <button class="secondary-button" type="submit" data-confirm="{{ t('admin.reset_confirm', name=user.display_name) }}">{{ t('admin.reset_password') }}</button>
               </form>
               <form method="post" action="{{ url_for('admin_user_delete', user_id=user.id) }}">
-                <button class="danger-button" type="submit" data-confirm="确认删除 {{ user.display_name }}？历史战绩会保留。">删除</button>
+                <button class="danger-button" type="submit" data-confirm="{{ t('admin.delete_confirm', name=user.display_name) }}">{{ t('admin.delete') }}</button>
               </form>
             {% endif %}
           {% else %}
-            <span class="muted">历史战绩保留中</span>
+            <span class="muted">{{ t('status.preserved') }}</span>
           {% endif %}
         </div>
       </article>

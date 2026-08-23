@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="{{ 'zh-CN' if locale == 'zh' else 'en' }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,7 +17,7 @@
             <small>Mahjong League</small>
           </span>
         </a>
-        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="打开导航菜单">
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="{{ t('nav.open_menu') }}">
           <span></span>
           <span></span>
           <span></span>
@@ -25,19 +25,23 @@
       </header>
       <div class="mobile-menu" id="mobile-menu">
         <nav class="nav">
-          <a href="{{ url_for('index') }}">首页</a>
-          <a href="{{ url_for('leaderboard') }}">排行榜</a>
-          <a href="{{ url_for('seasons') }}">赛季规则</a>
+          <a href="{{ url_for('index') }}">{{ t('nav.home') }}</a>
+          <a href="{{ url_for('leaderboard') }}">{{ t('nav.leaderboard') }}</a>
+          <a href="{{ url_for('seasons') }}">{{ t('nav.rules') }}</a>
           {% if current_user %}
             {% if current_user.role in ['super_admin', 'referee'] %}
-              <a href="{{ url_for('match_new') }}">录入比赛</a>
+              <a href="{{ url_for('match_new') }}">{{ t('nav.match_entry') }}</a>
             {% endif %}
             {% if current_user.role == 'super_admin' %}
-              <a href="{{ url_for('admin_users') }}">后台管理</a>
-              <a href="{{ url_for('invites') }}">邀请码</a>
+              <a href="{{ url_for('admin_users') }}">{{ t('nav.admin') }}</a>
+              <a href="{{ url_for('invites') }}">{{ t('nav.invites') }}</a>
             {% endif %}
           {% endif %}
         </nav>
+        <div class="language-switch" aria-label="{{ t('language.switch') }}">
+          <a class="{{ 'active' if locale == 'zh' else '' }}" href="{{ url_for('set_language', locale='zh') }}">中</a>
+          <a class="{{ 'active' if locale == 'en' else '' }}" href="{{ url_for('set_language', locale='en') }}">EN</a>
+        </div>
         <div class="account-card">
           {% if current_user %}
             <div class="account-avatar">{{ current_user.display_name[:1] }}</div>
@@ -45,15 +49,15 @@
               <strong>{{ current_user.display_name }}</strong>
               <small>{{ roles[current_user.role] }}</small>
             </div>
-            <a class="logout-button" href="{{ url_for('logout') }}">退出</a>
+            <a class="logout-button" href="{{ url_for('logout') }}">{{ t('auth.logout') }}</a>
           {% else %}
             <div class="account-meta">
-              <strong>访客</strong>
-              <small>登录后可录入或发布</small>
+              <strong>{{ t('account.guest') }}</strong>
+              <small>{{ t('account.guest_mobile_hint') }}</small>
             </div>
             <div class="account-actions">
-              <a class="logout-button" href="{{ url_for('login') }}">登录</a>
-              <a class="logout-button subtle" href="{{ url_for('register') }}">注册</a>
+              <a class="logout-button" href="{{ url_for('login') }}">{{ t('auth.login') }}</a>
+              <a class="logout-button subtle" href="{{ url_for('register') }}">{{ t('auth.register') }}</a>
             </div>
           {% endif %}
         </div>
@@ -68,19 +72,23 @@
           </span>
         </a>
         <nav class="nav">
-          <a href="{{ url_for('index') }}">首页</a>
-          <a href="{{ url_for('leaderboard') }}">排行榜</a>
-          <a href="{{ url_for('seasons') }}">赛季规则</a>
+          <a href="{{ url_for('index') }}">{{ t('nav.home') }}</a>
+          <a href="{{ url_for('leaderboard') }}">{{ t('nav.leaderboard') }}</a>
+          <a href="{{ url_for('seasons') }}">{{ t('nav.rules') }}</a>
           {% if current_user %}
             {% if current_user.role in ['super_admin', 'referee'] %}
-              <a href="{{ url_for('match_new') }}">录入比赛</a>
+              <a href="{{ url_for('match_new') }}">{{ t('nav.match_entry') }}</a>
             {% endif %}
             {% if current_user.role == 'super_admin' %}
-              <a href="{{ url_for('admin_users') }}">后台管理</a>
-              <a href="{{ url_for('invites') }}">邀请码</a>
+              <a href="{{ url_for('admin_users') }}">{{ t('nav.admin') }}</a>
+              <a href="{{ url_for('invites') }}">{{ t('nav.invites') }}</a>
             {% endif %}
           {% endif %}
         </nav>
+        <div class="language-switch" aria-label="{{ t('language.switch') }}">
+          <a class="{{ 'active' if locale == 'zh' else '' }}" href="{{ url_for('set_language', locale='zh') }}">中</a>
+          <a class="{{ 'active' if locale == 'en' else '' }}" href="{{ url_for('set_language', locale='en') }}">EN</a>
+        </div>
         <div class="sidebar-footer">
           {% if current_user %}
             <div class="account-card desktop-account">
@@ -89,17 +97,17 @@
                 <strong>{{ current_user.display_name }}</strong>
                 <small>{{ roles[current_user.role] }}</small>
               </div>
-              <a class="logout-button" href="{{ url_for('logout') }}">退出</a>
+              <a class="logout-button" href="{{ url_for('logout') }}">{{ t('auth.logout') }}</a>
             </div>
           {% else %}
             <div class="account-card desktop-account">
               <div class="account-meta">
-                <strong>访客</strong>
-                <small>加入社群后可记录成绩</small>
+                <strong>{{ t('account.guest') }}</strong>
+                <small>{{ t('account.guest_desktop_hint') }}</small>
               </div>
-              <a class="logout-button" href="{{ url_for('login') }}">登录</a>
+              <a class="logout-button" href="{{ url_for('login') }}">{{ t('auth.login') }}</a>
             </div>
-            <a class="ghost-link" href="{{ url_for('register') }}">注册</a>
+            <a class="ghost-link" href="{{ url_for('register') }}">{{ t('auth.register') }}</a>
           {% endif %}
         </div>
       </aside>

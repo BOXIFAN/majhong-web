@@ -29,10 +29,396 @@ BASE_DIR = Path(__file__).resolve().parent
 DATABASE = Path(os.environ.get("DATABASE_PATH", BASE_DIR / "instance" / "mahjong.db"))
 SEED_DEMO_DATA = os.environ.get("SEED_DEMO_DATA", "false").lower() in {"1", "true", "yes", "on"}
 
-ROLES = {
-    "super_admin": "超级管理员",
-    "referee": "裁判",
-    "user": "普通用户",
+SUPPORTED_LOCALES = ("zh", "en")
+
+ROLE_LABELS = {
+    "zh": {
+        "super_admin": "超级管理员",
+        "referee": "裁判",
+        "user": "普通用户",
+    },
+    "en": {
+        "super_admin": "Super Admin",
+        "referee": "Referee",
+        "user": "Player",
+    },
+}
+
+ROLES = ROLE_LABELS["zh"]
+
+TRANSLATIONS = {
+    "zh": {
+        "language.switch": "切换语言",
+        "nav.home": "首页",
+        "nav.leaderboard": "排行榜",
+        "nav.rules": "赛季规则",
+        "nav.match_entry": "录入比赛",
+        "nav.admin": "后台管理",
+        "nav.invites": "邀请码",
+        "nav.open_menu": "打开导航菜单",
+        "auth.login": "登录",
+        "auth.logout": "退出",
+        "auth.register": "注册",
+        "auth.email": "邮箱",
+        "auth.password": "密码",
+        "auth.display_name": "显示名称",
+        "auth.invite_code": "邀请码",
+        "auth.create_account": "创建账号",
+        "account.guest": "访客",
+        "account.guest_mobile_hint": "登录后可录入或发布",
+        "account.guest_desktop_hint": "加入社群后可记录成绩",
+        "home.title_fallback": "立直麻将社群平台",
+        "home.subtitle": "赛季规则、比赛录入、自动算分、排行榜和个人数据集中管理。",
+        "home.view_leaderboard": "查看排行榜",
+        "home.current_season": "当前赛季",
+        "home.not_enabled": "未启用",
+        "home.rule_version": "规则版本 v{version}",
+        "home.all": "全部",
+        "home.no_matches": "还没有比赛记录。",
+        "home.recent_matches": "最近对局",
+        "home.match_count": "{count} 场",
+        "home.unnamed_match": "未命名牌桌",
+        "home.referee": "裁判：{name}",
+        "home.system": "系统",
+        "home.first_match_hint": "录入第一场比赛后会显示在这里。",
+        "pagination.recent_matches": "最近对局翻页",
+        "pagination.prev": "上一页",
+        "pagination.next": "下一页",
+        "table.player": "玩家",
+        "table.points": "积分",
+        "table.avg_place": "均顺",
+        "table.matches": "对局",
+        "table.first_rate": "一位率",
+        "table.fourth_rate": "四位率",
+        "table.placement": "顺位",
+        "table.final_score": "终局点数",
+        "table.rank_points": "结算积分",
+        "table.penalty_points": "已计入罚分",
+        "leaderboard.empty": "该赛季还没有排行榜数据。",
+        "finals.title": "决赛资格",
+        "finals.distance": "您距离决赛还有",
+        "finals.matches_met": "您已满足局数要求",
+        "finals.matches_done": "已完成 {matches} 个半庄，需要 {required} 个。",
+        "finals.matches_remaining": "{count} 个半庄",
+        "finals.matches_progress": "需要 {required} 个，当前已完成 {matches} 个。",
+        "finals.status": "决赛资格",
+        "finals.login_to_view": "登录后查看您的决赛资格。",
+        "finals.championship_met": "您已满足冠军杯决赛标准。",
+        "finals.yakitori_met": "您已满足烧鸡杯要求。",
+        "finals.not_enough_data": "该赛季暂时没有足够的排行榜数据计算杯赛分界线。",
+        "finals.not_met": "您尚未满足冠军杯或烧鸡杯标准。",
+        "finals.gap_both": "距离冠军杯还差 {championship} pt；距离烧鸡杯还差 {yakitori} pt。",
+        "finals.gap_yakitori": "距离冠军杯还差 {championship} pt；距离烧鸡杯还需下降 {yakitori} pt。",
+        "finals.rank_points": "当前排名第 {rank} 位，积分 {points} pt。",
+        "finals.select_season": "请选择赛季后查看决赛资格。",
+        "status.enabled": "开启",
+        "status.disabled": "关闭",
+        "status.used": "已使用",
+        "status.available": "可用",
+        "status.deleted": "已删除",
+        "status.normal": "正常",
+        "status.preserved": "历史战绩保留中",
+        "season.rules": "赛季规则",
+        "season.new": "新建赛季",
+        "season.edit": "编辑赛季",
+        "season.edit_rules": "编辑规则",
+        "season.edit_current": "编辑当前规则",
+        "season.copy": "复制为新赛季",
+        "season.export_csv": "导出排行榜 CSV",
+        "season.start_version": "开始日期：{date} · 规则版本 v{version}",
+        "season.archive": "往期规则",
+        "season.archive_count": "{count} 个",
+        "season.no_archive": "还没有往期赛季。",
+        "season.no_rules": "还没有创建赛季规则。",
+        "season.back": "返回赛季列表",
+        "season.name": "赛季名称",
+        "season.status": "状态",
+        "season.start_date": "开始日期",
+        "season.save_rules": "保存赛季规则",
+        "match.entry": "录入比赛",
+        "match.edit": "编辑比赛",
+        "match.edit_hint": "修改后会按当前赛季规则重新计算顺位、pt、马点和罚分。",
+        "match.season_total": "当前赛季总分校验：{total}",
+        "match.time": "比赛时间",
+        "match.type": "对局类型",
+        "match.memo": "备注",
+        "match.optional": "可选",
+        "match.player_n": "玩家 {number}",
+        "match.search_player": "输入姓名或角色搜索",
+        "match.choose_player": "选择玩家",
+        "match.deleted_user": "已删除",
+        "match.final_score": "最终分数",
+        "match.penalty": "罚分（直接扣入最终积分）",
+        "match.penalty_type": "违规类型",
+        "match.penalty_type_placeholder": "终局报分错误",
+        "match.penalty_reason": "罚分原因",
+        "match.penalty_reason_placeholder": "有罚分时必填",
+        "match.current_total": "当前总分：",
+        "match.target_total": "目标总分：{total}",
+        "match.submit": "提交比赛",
+        "match.cancel": "取消",
+        "match.save_recalculate": "保存并重算",
+        "match.unknown_title": "比赛 #{id}",
+        "match.meta": "{time} · 裁判：{referee}",
+        "match.penalty_records": "罚则记录",
+        "match.no_penalty_records": "暂无罚则记录。",
+        "match.delete": "删除对局",
+        "match.delete_confirm": "确认删除这场对局？删除后排行榜会重新计算。",
+        "admin.title": "后台管理",
+        "admin.subtitle": "编辑用户名称、角色与账号状态。删除用户不会移除已录入战绩。",
+        "admin.users": "用户",
+        "admin.user_count": "{count} 人",
+        "admin.registered_at": "{email} · {role} · 注册于 {created_at}",
+        "admin.name_label": "用户名称",
+        "admin.role_label": "用户角色",
+        "admin.save": "保存",
+        "admin.reset_password": "重置密码",
+        "admin.reset_confirm": "确认重置 {name} 的密码？新临时密码只会显示一次。",
+        "admin.delete": "删除",
+        "admin.delete_confirm": "确认删除 {name}？历史战绩会保留。",
+        "invites.title": "邀请码",
+        "invites.generate_title": "生成新邀请码",
+        "invites.generate_hint": "系统会自动创建唯一邀请码。",
+        "invites.generate": "生成",
+        "invites.code": "邀请码",
+        "invites.role": "角色",
+        "invites.status": "状态",
+        "invites.used_by": "使用者",
+        "player.current_points": "当前积分",
+        "player.matches": "对局数",
+        "player.avg_place": "平均顺位",
+        "player.first_fourth": "一位 / 四位",
+        "player.recent_trend": "近 10 场趋势",
+        "player.trend_aria": "近 10 场顺位折线图",
+        "player.placement_detail": "{placement} 位 · {score}",
+        "player.no_matches": "暂无对局。",
+        "player.penalties": "罚则",
+        "player.no_penalties": "暂无罚则记录。",
+        "flash.login_required": "请先登录。",
+        "flash.permission_denied": "当前账号没有操作权限。",
+        "flash.register_missing": "请填写所有注册信息。",
+        "flash.invite_invalid": "邀请码无效或已被使用。",
+        "flash.email_registered": "该邮箱已注册。",
+        "flash.register_success": "注册成功，请登录。",
+        "flash.login_success": "欢迎回来。",
+        "flash.login_invalid": "邮箱或密码不正确。",
+        "flash.logout_success": "已退出登录。",
+        "flash.invite_role_invalid": "邀请码角色不正确。",
+        "flash.invite_created": "邀请码 {code} 已创建。",
+        "flash.invite_conflict": "邀请码生成冲突，请重试。",
+        "flash.user_missing": "用户不存在。",
+        "flash.user_name_required": "用户名称不能为空。",
+        "flash.deleted_user_locked": "已删除用户不能编辑。",
+        "flash.user_role_invalid": "只能将用户设为裁判或普通用户。",
+        "flash.user_updated": "{name} 已更新。",
+        "flash.super_admin_delete_denied": "不能删除超级管理员。",
+        "flash.user_deleted": "{name} 已删除，历史战绩已保留。",
+        "flash.deleted_user_password_locked": "已删除用户不能重置密码。",
+        "flash.super_admin_password_locked": "超级管理员密码请由本人修改，避免误锁定后台。",
+        "flash.temporary_password": "{name} 的临时密码：{password}。请只告知本人并提醒尽快更改。",
+        "flash.season_name_required": "请输入赛季名称。",
+        "flash.season_created": "赛季已创建。",
+        "flash.season_missing": "赛季不存在。",
+        "flash.season_updated": "赛季规则已更新，版本记录已保留。",
+        "flash.season_required": "请先创建并启用赛季。",
+        "flash.match_created": "比赛已录入，排行榜已自动更新。",
+        "flash.match_missing": "比赛不存在。",
+        "flash.match_updated": "比赛结果已更新，并已重新计算积分。",
+        "flash.match_delete_missing": "对局不存在或已被删除。",
+        "flash.match_deleted": "对局已删除，排行榜已按剩余记录重新计算。",
+        "flash.player_missing": "玩家不存在。",
+        "validation.players_required": "必须选择满 4 名玩家。",
+        "validation.players_unique": "玩家不可重复。",
+        "validation.score_total": "四家总分必须等于当前赛季起始分总和：{total}。",
+        "validation.penalty_reason_required": "罚分必须填写原因。",
+        "match.default_penalty_type": "管理处罚",
+    },
+    "en": {
+        "language.switch": "Switch language",
+        "nav.home": "Home",
+        "nav.leaderboard": "Leaderboard",
+        "nav.rules": "Season Rules",
+        "nav.match_entry": "Match Entry",
+        "nav.admin": "Admin",
+        "nav.invites": "Invites",
+        "nav.open_menu": "Open navigation menu",
+        "auth.login": "Log In",
+        "auth.logout": "Log Out",
+        "auth.register": "Register",
+        "auth.email": "Email",
+        "auth.password": "Password",
+        "auth.display_name": "Display Name",
+        "auth.invite_code": "Invite Code",
+        "auth.create_account": "Create Account",
+        "account.guest": "Guest",
+        "account.guest_mobile_hint": "Log in to enter or publish matches",
+        "account.guest_desktop_hint": "Join the club to record results",
+        "home.title_fallback": "Riichi Mahjong League Platform",
+        "home.subtitle": "Manage season rules, match entry, scoring, leaderboards, and player data in one place.",
+        "home.view_leaderboard": "View Leaderboard",
+        "home.current_season": "Current Season",
+        "home.not_enabled": "Not Enabled",
+        "home.rule_version": "Rules v{version}",
+        "home.all": "All",
+        "home.no_matches": "No match records yet.",
+        "home.recent_matches": "Recent Matches",
+        "home.match_count": "{count} matches",
+        "home.unnamed_match": "Untitled Match",
+        "home.referee": "Referee: {name}",
+        "home.system": "System",
+        "home.first_match_hint": "The first entered match will appear here.",
+        "pagination.recent_matches": "Recent match pagination",
+        "pagination.prev": "Previous",
+        "pagination.next": "Next",
+        "table.player": "Player",
+        "table.points": "Points",
+        "table.avg_place": "Avg. Place",
+        "table.matches": "Matches",
+        "table.first_rate": "1st Rate",
+        "table.fourth_rate": "4th Rate",
+        "table.placement": "Place",
+        "table.final_score": "Final Score",
+        "table.rank_points": "PT",
+        "table.penalty_points": "Penalty Included",
+        "leaderboard.empty": "No leaderboard data for this season yet.",
+        "finals.title": "Final Qualification",
+        "finals.distance": "Matches until final",
+        "finals.matches_met": "Match-count requirement met",
+        "finals.matches_done": "{matches} hanchan completed; {required} required.",
+        "finals.matches_remaining": "{count} hanchan",
+        "finals.matches_progress": "{required} required; {matches} completed.",
+        "finals.status": "Final Qualification",
+        "finals.login_to_view": "Log in to view your final qualification.",
+        "finals.championship_met": "You meet the Championship Cup final standard.",
+        "finals.yakitori_met": "You meet the Yakitori Cup requirement.",
+        "finals.not_enough_data": "This season does not have enough leaderboard data to calculate cup cutoffs yet.",
+        "finals.not_met": "You have not met the Championship Cup or Yakitori Cup standard yet.",
+        "finals.gap_both": "{championship} pt short of Championship Cup; {yakitori} pt short of Yakitori Cup.",
+        "finals.gap_yakitori": "{championship} pt short of Championship Cup; drop {yakitori} pt more for Yakitori Cup.",
+        "finals.rank_points": "Current rank #{rank}, {points} pt.",
+        "finals.select_season": "Select a season to view final qualification.",
+        "status.enabled": "Enabled",
+        "status.disabled": "Disabled",
+        "status.used": "Used",
+        "status.available": "Available",
+        "status.deleted": "Deleted",
+        "status.normal": "Active",
+        "status.preserved": "Historical results retained",
+        "season.rules": "Season Rules",
+        "season.new": "New Season",
+        "season.edit": "Edit Season",
+        "season.edit_rules": "Edit Rules",
+        "season.edit_current": "Edit Current Rules",
+        "season.copy": "Copy as New Season",
+        "season.export_csv": "Export Leaderboard CSV",
+        "season.start_version": "Start Date: {date} · Rules v{version}",
+        "season.archive": "Past Rules",
+        "season.archive_count": "{count}",
+        "season.no_archive": "No past seasons yet.",
+        "season.no_rules": "No season rules created yet.",
+        "season.back": "Back to Seasons",
+        "season.name": "Season Name",
+        "season.status": "Status",
+        "season.start_date": "Start Date",
+        "season.save_rules": "Save Season Rules",
+        "match.entry": "Match Entry",
+        "match.edit": "Edit Match",
+        "match.edit_hint": "Changes will recalculate placement, PT, uma, and penalties with the current season rules.",
+        "match.season_total": "Current season total check: {total}",
+        "match.time": "Match Time",
+        "match.type": "Match Type",
+        "match.memo": "Memo",
+        "match.optional": "Optional",
+        "match.player_n": "Player {number}",
+        "match.search_player": "Search by name or role",
+        "match.choose_player": "Choose Player",
+        "match.deleted_user": "Deleted",
+        "match.final_score": "Final Score",
+        "match.penalty": "Penalty (deducted from final PT)",
+        "match.penalty_type": "Penalty Type",
+        "match.penalty_type_placeholder": "Score reporting error",
+        "match.penalty_reason": "Penalty Reason",
+        "match.penalty_reason_placeholder": "Required when penalty exists",
+        "match.current_total": "Current Total: ",
+        "match.target_total": "Target Total: {total}",
+        "match.submit": "Submit Match",
+        "match.cancel": "Cancel",
+        "match.save_recalculate": "Save and Recalculate",
+        "match.unknown_title": "Match #{id}",
+        "match.meta": "{time} · Referee: {referee}",
+        "match.penalty_records": "Penalty Records",
+        "match.no_penalty_records": "No penalty records.",
+        "match.delete": "Delete Match",
+        "match.delete_confirm": "Delete this match? The leaderboard will be recalculated.",
+        "admin.title": "Admin",
+        "admin.subtitle": "Edit user names, roles, and account status. Deleting users does not remove recorded results.",
+        "admin.users": "Users",
+        "admin.user_count": "{count}",
+        "admin.registered_at": "{email} · {role} · Registered {created_at}",
+        "admin.name_label": "User Name",
+        "admin.role_label": "User Role",
+        "admin.save": "Save",
+        "admin.reset_password": "Reset Password",
+        "admin.reset_confirm": "Reset {name}'s password? The temporary password is shown only once.",
+        "admin.delete": "Delete",
+        "admin.delete_confirm": "Delete {name}? Historical results will be retained.",
+        "invites.title": "Invites",
+        "invites.generate_title": "Generate New Invite",
+        "invites.generate_hint": "The system creates a unique invite code automatically.",
+        "invites.generate": "Generate",
+        "invites.code": "Invite Code",
+        "invites.role": "Role",
+        "invites.status": "Status",
+        "invites.used_by": "Used By",
+        "player.current_points": "Current Points",
+        "player.matches": "Matches",
+        "player.avg_place": "Avg. Place",
+        "player.first_fourth": "1st / 4th",
+        "player.recent_trend": "Last 10 Trend",
+        "player.trend_aria": "Last 10 placement line chart",
+        "player.placement_detail": "{placement} place · {score}",
+        "player.no_matches": "No matches yet.",
+        "player.penalties": "Penalties",
+        "player.no_penalties": "No penalty records.",
+        "flash.login_required": "Please log in first.",
+        "flash.permission_denied": "This account does not have permission.",
+        "flash.register_missing": "Please complete all registration fields.",
+        "flash.invite_invalid": "The invite code is invalid or has already been used.",
+        "flash.email_registered": "This email is already registered.",
+        "flash.register_success": "Registration complete. Please log in.",
+        "flash.login_success": "Welcome back.",
+        "flash.login_invalid": "Email or password is incorrect.",
+        "flash.logout_success": "Logged out.",
+        "flash.invite_role_invalid": "Invite role is invalid.",
+        "flash.invite_created": "Invite code {code} created.",
+        "flash.invite_conflict": "Invite code collision. Please try again.",
+        "flash.user_missing": "User not found.",
+        "flash.user_name_required": "User name is required.",
+        "flash.deleted_user_locked": "Deleted users cannot be edited.",
+        "flash.user_role_invalid": "Users can only be set as Referee or Player.",
+        "flash.user_updated": "{name} updated.",
+        "flash.super_admin_delete_denied": "The super admin cannot be deleted.",
+        "flash.user_deleted": "{name} deleted. Historical results were retained.",
+        "flash.deleted_user_password_locked": "Deleted users cannot have passwords reset.",
+        "flash.super_admin_password_locked": "The super admin password should be changed by the owner to avoid locking the admin account.",
+        "flash.temporary_password": "{name}'s temporary password: {password}. Share it only with that user and remind them to change it soon.",
+        "flash.season_name_required": "Please enter a season name.",
+        "flash.season_created": "Season created.",
+        "flash.season_missing": "Season not found.",
+        "flash.season_updated": "Season rules updated and version history retained.",
+        "flash.season_required": "Please create and activate a season first.",
+        "flash.match_created": "Match entered and leaderboard recalculated.",
+        "flash.match_missing": "Match not found.",
+        "flash.match_updated": "Match result updated and points recalculated.",
+        "flash.match_delete_missing": "Match not found or already deleted.",
+        "flash.match_deleted": "Match deleted and leaderboard recalculated from remaining records.",
+        "flash.player_missing": "Player not found.",
+        "validation.players_required": "Please choose all 4 players.",
+        "validation.players_unique": "Players cannot be duplicated.",
+        "validation.score_total": "The four final scores must equal the season starting total: {total}.",
+        "validation.penalty_reason_required": "Penalty reason is required when penalty points are entered.",
+        "match.default_penalty_type": "Admin penalty",
+    },
 }
 
 DEFAULT_RULES = {
@@ -206,13 +592,16 @@ def create_app() -> Flask:
     @app.context_processor
     def inject_globals() -> dict:
         season = current_season()
+        locale = get_locale()
         return {
             "current_user": g.get("user"),
-            "roles": ROLES,
+            "roles": ROLE_LABELS[locale],
             "current_season": season,
             "rule_labels": RULE_LABELS,
             "field_labels": FIELD_LABELS,
             "today_date": today_date(),
+            "locale": locale,
+            "t": translate,
         }
 
     @app.cli.command("init-db")
@@ -259,6 +648,12 @@ def create_app() -> Flask:
     def favicon():
         return redirect(url_for("static", filename="web_logo.jpg"))
 
+    @app.route("/language/<locale>")
+    def set_language(locale: str):
+        if locale in SUPPORTED_LOCALES:
+            session["locale"] = locale
+        return redirect(request.referrer or url_for("index"))
+
     @app.route("/register", methods=("GET", "POST"))
     def register():
         if request.method == "POST":
@@ -272,11 +667,11 @@ def create_app() -> Flask:
             )
             error = None
             if not display_name or not email or not password:
-                error = "请填写所有注册信息。"
+                error = translate("flash.register_missing")
             elif not invite:
-                error = "邀请码无效或已被使用。"
+                error = translate("flash.invite_invalid")
             elif query_one("select id from users where email = ? and is_deleted = 0", (email,)):
-                error = "该邮箱已注册。"
+                error = translate("flash.email_registered")
 
             if error:
                 flash(error, "error")
@@ -300,7 +695,7 @@ def create_app() -> Flask:
                     (cur.lastrowid, now(), invite["id"]),
                 )
                 db.commit()
-                flash("注册成功，请登录。", "success")
+                flash(translate("flash.register_success"), "success")
                 return redirect(url_for("login"))
         return render_template("register.html")
 
@@ -311,17 +706,23 @@ def create_app() -> Flask:
             password = request.form["password"]
             user = query_one("select * from users where email = ? and is_deleted = 0", (email,))
             if user and check_password_hash(user["password_hash"], password):
+                selected_locale = session.get("locale")
                 session.clear()
+                if selected_locale in SUPPORTED_LOCALES:
+                    session["locale"] = selected_locale
                 session["user_id"] = user["id"]
-                flash("欢迎回来。", "success")
+                flash(translate("flash.login_success"), "success")
                 return redirect(url_for("index"))
-            flash("邮箱或密码不正确。", "error")
+            flash(translate("flash.login_invalid"), "error")
         return render_template("login.html")
 
     @app.route("/logout")
     def logout():
+        selected_locale = session.get("locale")
         session.clear()
-        flash("已退出登录。", "success")
+        if selected_locale in SUPPORTED_LOCALES:
+            session["locale"] = selected_locale
+        flash(translate("flash.logout_success"), "success")
         return redirect(url_for("index"))
 
     @app.route("/dashboard")
@@ -335,7 +736,7 @@ def create_app() -> Flask:
         if request.method == "POST":
             role = request.form["role"]
             if role not in ("referee", "user"):
-                flash("邀请码角色不正确。", "error")
+                flash(translate("flash.invite_role_invalid"), "error")
             else:
                 code = generate_invite_code(role)
                 try:
@@ -343,9 +744,9 @@ def create_app() -> Flask:
                         "insert into invite_codes (code, role, created_by, created_at) values (?, ?, ?, ?)",
                         (code, role, g.user["id"], now()),
                     )
-                    flash(f"邀请码 {code} 已创建。", "success")
+                    flash(translate("flash.invite_created", code=code), "success")
                 except sqlite3.IntegrityError:
-                    flash("邀请码生成冲突，请重试。", "error")
+                    flash(translate("flash.invite_conflict"), "error")
         codes = query_all(
             """
             select i.*, u.display_name as used_by_name
@@ -374,19 +775,19 @@ def create_app() -> Flask:
         role = request.form.get("role", "")
         user = query_one("select * from users where id = ?", (user_id,))
         if not user:
-            flash("用户不存在。", "error")
+            flash(translate("flash.user_missing"), "error")
         elif not display_name:
-            flash("用户名称不能为空。", "error")
+            flash(translate("flash.user_name_required"), "error")
         elif user["is_deleted"]:
-            flash("已删除用户不能编辑。", "error")
+            flash(translate("flash.deleted_user_locked"), "error")
         elif user["role"] != "super_admin" and role not in ("referee", "user"):
-            flash("只能将用户设为裁判或普通用户。", "error")
+            flash(translate("flash.user_role_invalid"), "error")
         elif user["role"] == "super_admin":
             execute("update users set display_name = ? where id = ?", (display_name, user_id))
-            flash(f"{display_name} 已更新。", "success")
+            flash(translate("flash.user_updated", name=display_name), "success")
         else:
             execute("update users set display_name = ?, role = ? where id = ?", (display_name, role, user_id))
-            flash(f"{display_name} 已更新。", "success")
+            flash(translate("flash.user_updated", name=display_name), "success")
         return redirect(url_for("admin_users"))
 
     @app.route("/admin/users/<int:user_id>/delete", methods=("POST",))
@@ -394,12 +795,12 @@ def create_app() -> Flask:
     def admin_user_delete(user_id: int):
         user = query_one("select * from users where id = ?", (user_id,))
         if not user:
-            flash("用户不存在。", "error")
+            flash(translate("flash.user_missing"), "error")
         elif user["role"] == "super_admin":
-            flash("不能删除超级管理员。", "error")
+            flash(translate("flash.super_admin_delete_denied"), "error")
         else:
             execute("update users set is_deleted = 1, deleted_at = ? where id = ?", (now(), user_id))
-            flash(f"{user['display_name']} 已删除，历史战绩已保留。", "success")
+            flash(translate("flash.user_deleted", name=user["display_name"]), "success")
         return redirect(url_for("admin_users"))
 
     @app.route("/admin/users/<int:user_id>/reset-password", methods=("POST",))
@@ -407,18 +808,21 @@ def create_app() -> Flask:
     def admin_user_reset_password(user_id: int):
         user = query_one("select * from users where id = ?", (user_id,))
         if not user:
-            flash("用户不存在。", "error")
+            flash(translate("flash.user_missing"), "error")
         elif user["is_deleted"]:
-            flash("已删除用户不能重置密码。", "error")
+            flash(translate("flash.deleted_user_password_locked"), "error")
         elif user["role"] == "super_admin":
-            flash("超级管理员密码请由本人修改，避免误锁定后台。", "error")
+            flash(translate("flash.super_admin_password_locked"), "error")
         else:
             temporary_password = generate_temporary_password()
             execute(
                 "update users set password_hash = ? where id = ?",
                 (generate_password_hash(temporary_password, method="pbkdf2:sha256"), user_id),
             )
-            flash(f"{user['display_name']} 的临时密码：{temporary_password}。请只告知本人并提醒尽快更改。", "success")
+            flash(
+                translate("flash.temporary_password", name=user["display_name"], password=temporary_password),
+                "success",
+            )
         return redirect(url_for("admin_users"))
 
     @app.route("/seasons")
@@ -448,7 +852,7 @@ def create_app() -> Flask:
             status = request.form["status"]
             parsed_rules = parse_rules_form(request.form)
             if not name:
-                flash("请输入赛季名称。", "error")
+                flash(translate("flash.season_name_required"), "error")
             else:
                 if status == "active":
                     execute("update seasons set status = 'archived' where status = 'active'")
@@ -466,7 +870,7 @@ def create_app() -> Flask:
                         now(),
                     ),
                 )
-                flash("赛季已创建。", "success")
+                flash(translate("flash.season_created"), "success")
                 return redirect(url_for("seasons"))
         return render_template("season_form.html", season=None, rules=rules)
 
@@ -474,7 +878,7 @@ def create_app() -> Flask:
     def season_detail(season_id: int):
         season = query_one("select * from seasons where id = ?", (season_id,))
         if not season:
-            flash("赛季不存在。", "error")
+            flash(translate("flash.season_missing"), "error")
             return redirect(url_for("seasons"))
         return render_template("season_detail.html", season=season, rules=normalize_rules(json.loads(season["rules_json"])))
 
@@ -483,7 +887,7 @@ def create_app() -> Flask:
     def season_edit(season_id: int):
         season = query_one("select * from seasons where id = ?", (season_id,))
         if not season:
-            flash("赛季不存在。", "error")
+            flash(translate("flash.season_missing"), "error")
             return redirect(url_for("seasons"))
         rules = normalize_rules(json.loads(season["rules_json"]))
         if request.method == "POST":
@@ -509,7 +913,7 @@ def create_app() -> Flask:
                 "insert into rule_versions (season_id, rules_json, changed_by, changed_at) values (?, ?, ?, ?)",
                 (season_id, json.dumps(parsed_rules, ensure_ascii=False), g.user["id"], now()),
             )
-            flash("赛季规则已更新，版本记录已保留。", "success")
+            flash(translate("flash.season_updated"), "success")
             return redirect(url_for("season_detail", season_id=season_id))
         return render_template("season_form.html", season=season, rules=rules)
 
@@ -518,13 +922,13 @@ def create_app() -> Flask:
     def match_new():
         season = current_season()
         if not season:
-            flash("请先创建并启用赛季。", "error")
+            flash(translate("flash.season_required"), "error")
             return redirect(url_for("seasons"))
         players = query_all("select * from users where role in ('referee', 'user') and is_deleted = 0 order by display_name")
         if request.method == "POST":
             result = create_match_from_form(season, request.form)
             if result["ok"]:
-                flash("比赛已录入，排行榜已自动更新。", "success")
+                flash(translate("flash.match_created"), "success")
                 return redirect(url_for("match_detail", match_id=result["match_id"]))
             for error in result["errors"]:
                 flash(error, "error")
@@ -543,7 +947,7 @@ def create_app() -> Flask:
             (match_id,),
         )
         if not match:
-            flash("比赛不存在。", "error")
+            flash(translate("flash.match_missing"), "error")
             return redirect(url_for("index"))
         entries = query_all(
             """
@@ -577,7 +981,7 @@ def create_app() -> Flask:
             (match_id,),
         )
         if not match:
-            flash("比赛不存在。", "error")
+            flash(translate("flash.match_missing"), "error")
             return redirect(url_for("index"))
         entries = query_all(
             "select * from match_entries where match_id = ? order by id",
@@ -601,7 +1005,7 @@ def create_app() -> Flask:
             result = parse_match_result_form(match, request.form)
             if result["ok"]:
                 update_match_from_result(match_id, match, request.form, result)
-                flash("比赛结果已更新，并已重新计算积分。", "success")
+                flash(translate("flash.match_updated"), "success")
                 return redirect(url_for("match_detail", match_id=match_id))
             for error in result["errors"]:
                 flash(error, "error")
@@ -639,7 +1043,7 @@ def create_app() -> Flask:
     def match_delete(match_id: int):
         match = query_one("select * from matches where id = ?", (match_id,))
         if not match:
-            flash("对局不存在或已被删除。", "error")
+            flash(translate("flash.match_delete_missing"), "error")
             return redirect(url_for("index"))
 
         db = get_db()
@@ -647,7 +1051,7 @@ def create_app() -> Flask:
         db.execute("delete from match_entries where match_id = ?", (match_id,))
         db.execute("delete from matches where id = ?", (match_id,))
         db.commit()
-        flash("对局已删除，排行榜已按剩余记录重新计算。", "success")
+        flash(translate("flash.match_deleted"), "success")
         return redirect(url_for("leaderboard", season_id=match["season_id"]))
 
     @app.route("/leaderboard")
@@ -669,7 +1073,7 @@ def create_app() -> Flask:
     def player_profile(user_id: int):
         user = query_one("select * from users where id = ?", (user_id,))
         if not user:
-            flash("玩家不存在。", "error")
+            flash(translate("flash.player_missing"), "error")
             return redirect(url_for("leaderboard"))
         season = current_season()
         leaderboard = get_leaderboard(season["id"]) if season else []
@@ -777,6 +1181,20 @@ def today_date() -> str:
     return datetime.now().strftime("%Y-%m-%d")
 
 
+def get_locale() -> str:
+    selected = session.get("locale")
+    if selected in SUPPORTED_LOCALES:
+        return selected
+    best = request.accept_languages.best_match(SUPPORTED_LOCALES)
+    return best if best in SUPPORTED_LOCALES else "zh"
+
+
+def translate(key: str, **kwargs) -> str:
+    locale = get_locale()
+    text = TRANSLATIONS.get(locale, {}).get(key, TRANSLATIONS["zh"].get(key, key))
+    return text.format(**kwargs) if kwargs else text
+
+
 def normalize_datetime(value: str) -> str:
     if not value:
         return now()
@@ -802,7 +1220,7 @@ def login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:
-            flash("请先登录。", "error")
+            flash(translate("flash.login_required"), "error")
             return redirect(url_for("login"))
         return view(**kwargs)
     return wrapped_view
@@ -813,10 +1231,10 @@ def role_required(*roles: str):
         @functools.wraps(view)
         def wrapped_view(**kwargs):
             if g.user is None:
-                flash("请先登录。", "error")
+                flash(translate("flash.login_required"), "error")
                 return redirect(url_for("login"))
             if g.user["role"] not in roles:
-                flash("当前账号没有操作权限。", "error")
+                flash(translate("flash.permission_denied"), "error")
                 return redirect(url_for("index"))
             return view(**kwargs)
         return wrapped_view
@@ -861,19 +1279,20 @@ def parse_match_result_form(season, form) -> dict:
     players = [int(form.get(f"player_{idx}") or 0) for idx in range(4)]
     scores = [int(form.get(f"score_{idx}") or 0) for idx in range(4)]
     penalty_values = [int(form.get(f"penalty_{idx}") or 0) for idx in range(4)]
-    penalty_types = [form.get(f"penalty_type_{idx}", "管理处罚").strip() or "管理处罚" for idx in range(4)]
+    default_penalty_type = translate("match.default_penalty_type")
+    penalty_types = [form.get(f"penalty_type_{idx}", default_penalty_type).strip() or default_penalty_type for idx in range(4)]
     penalty_reasons = [form.get(f"penalty_reason_{idx}", "").strip() for idx in range(4)]
     errors = []
 
     if any(player == 0 for player in players):
-        errors.append("必须选择满 4 名玩家。")
+        errors.append(translate("validation.players_required"))
     if len(set(players)) != 4:
-        errors.append("玩家不可重复。")
+        errors.append(translate("validation.players_unique"))
     if sum(scores) != start_total:
-        errors.append(f"四家总分必须等于当前赛季起始分总和：{start_total}。")
+        errors.append(translate("validation.score_total", total=start_total))
     for value, reason in zip(penalty_values, penalty_reasons):
         if value and not reason:
-            errors.append("罚分必须填写原因。")
+            errors.append(translate("validation.penalty_reason_required"))
             break
     if errors:
         return {"ok": False, "errors": errors}
@@ -1095,7 +1514,7 @@ def build_finals_status(season: sqlite3.Row, rows: list[dict], user: sqlite3.Row
             "matches": 0,
             "remaining_matches": required_matches,
             "matches_met": False,
-            "cup_status": "登录后查看您的决赛资格。",
+            "cup_status": translate("finals.login_to_view"),
             "championship_gap": None,
             "yakitori_gap": None,
         }
@@ -1124,20 +1543,20 @@ def build_finals_status(season: sqlite3.Row, rows: list[dict], user: sqlite3.Row
     yakitori_cutoff = float(rows[bottom_start_rank - 1]["total_points"]) if len(rows) >= 4 else None
 
     if is_top_four:
-        cup_status = "您已满足冠军杯决赛标准。"
+        cup_status = translate("finals.championship_met")
         championship_gap = 0
         yakitori_gap = None
     elif is_bottom_four:
-        cup_status = "您已满足烧鸡杯要求。"
+        cup_status = translate("finals.yakitori_met")
         championship_gap = None
         yakitori_gap = 0
     else:
         championship_gap = max(round((championship_cutoff or 0) - points, 1), 0) if championship_cutoff is not None else None
         yakitori_gap = max(round(points - (yakitori_cutoff or 0), 1), 0) if yakitori_cutoff is not None else None
         if championship_gap is None or yakitori_gap is None:
-            cup_status = "该赛季暂时没有足够的排行榜数据计算杯赛分界线。"
+            cup_status = translate("finals.not_enough_data")
         else:
-            cup_status = "您尚未满足冠军杯或烧鸡杯标准。"
+            cup_status = translate("finals.not_met")
 
     return {
         "logged_in": True,

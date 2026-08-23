@@ -1,48 +1,48 @@
 {% extends "base.html" %}
-{% block title %}录入比赛 · Brisbane Riichi{% endblock %}
+{% block title %}{{ t('match.entry') }} · Brisbane Riichi{% endblock %}
 {% block content %}
 {% set score_total = rules.points.default_starting_points * 4 %}
 {% set default_score = score_total // 4 %}
 <section class="page-head">
   <p class="eyebrow">Match Entry</p>
-  <h1>录入比赛</h1>
-  <p>当前赛季总分校验：{{ score_total }}</p>
+  <h1>{{ t('match.entry') }}</h1>
+  <p>{{ t('match.season_total', total=score_total) }}</p>
 </section>
 <form method="post" class="form wide" data-score-total="{{ score_total }}">
   <section class="panel form-grid">
-    <label>比赛时间<input name="played_at" type="datetime-local"></label>
-    <label>对局类型
+    <label>{{ t('match.time') }}<input name="played_at" type="datetime-local"></label>
+    <label>{{ t('match.type') }}
       <select name="table_name">
         <option value="机打">机打</option>
         <option value="手打">手打</option>
       </select>
     </label>
-    <label>备注<input name="memo" placeholder="可选"></label>
+    <label>{{ t('match.memo') }}<input name="memo" placeholder="{{ t('match.optional') }}"></label>
   </section>
   <section class="player-entry-grid">
     {% for idx in range(4) %}
       <article class="entry-card">
-        <h2>玩家 {{ idx + 1 }}</h2>
-        <label>玩家
-          <input class="select-search" data-select-filter="player_{{ idx }}" placeholder="输入姓名或角色搜索">
+        <h2>{{ t('match.player_n', number=idx + 1) }}</h2>
+        <label>{{ t('table.player') }}
+          <input class="select-search" data-select-filter="player_{{ idx }}" placeholder="{{ t('match.search_player') }}">
           <select name="player_{{ idx }}" required data-filterable-select id="player_{{ idx }}">
-            <option value="">选择玩家</option>
+            <option value="">{{ t('match.choose_player') }}</option>
             {% for player in players %}
               <option value="{{ player.id }}">{{ player.display_name }} · {{ roles[player.role] }}</option>
             {% endfor %}
           </select>
         </label>
-        <label>最终分数<input class="score-input" name="score_{{ idx }}" type="number" value="{{ default_score }}" required></label>
-        <label>罚分（直接扣入最终积分）<input name="penalty_{{ idx }}" type="number" value="0" min="0"></label>
-        <label>违规类型<input name="penalty_type_{{ idx }}" placeholder="终局报分错误"></label>
-        <label>罚分原因<input name="penalty_reason_{{ idx }}" placeholder="有罚分时必填"></label>
+        <label>{{ t('match.final_score') }}<input class="score-input" name="score_{{ idx }}" type="number" value="{{ default_score }}" required></label>
+        <label>{{ t('match.penalty') }}<input name="penalty_{{ idx }}" type="number" value="0" min="0"></label>
+        <label>{{ t('match.penalty_type') }}<input name="penalty_type_{{ idx }}" placeholder="{{ t('match.penalty_type_placeholder') }}"></label>
+        <label>{{ t('match.penalty_reason') }}<input name="penalty_reason_{{ idx }}" placeholder="{{ t('match.penalty_reason_placeholder') }}"></label>
       </article>
     {% endfor %}
   </section>
   <div class="score-meter">
-    <span>当前总分：<strong id="score-total">{{ score_total }}</strong></span>
-    <span>目标总分：{{ score_total }}</span>
+    <span>{{ t('match.current_total') }}<strong id="score-total">{{ score_total }}</strong></span>
+    <span>{{ t('match.target_total', total=score_total) }}</span>
   </div>
-  <button class="button sticky-save" type="submit">提交比赛</button>
+  <button class="button sticky-save" type="submit">{{ t('match.submit') }}</button>
 </form>
 {% endblock %}

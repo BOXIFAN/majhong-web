@@ -7,14 +7,14 @@
     <h1>{{ season.name }}</h1>
   </div>
   {% if current_user and current_user.role == 'super_admin' %}
-    <a class="button" href="{{ url_for('season_edit', season_id=season.id) }}">编辑规则</a>
+    <a class="button" href="{{ url_for('season_edit', season_id=season.id) }}">{{ t('season.edit_rules') }}</a>
   {% endif %}
 </section>
 <article class="rules-document">
   <div class="rules-document-head">
     <span class="badge {{ season.status }}">{{ season.status }}</span>
     <h2>{{ season.name }}</h2>
-    <p>开始日期：{{ season.start_date }} · 规则版本 v{{ season.version }}</p>
+    <p>{{ t('season.start_version', date=season.start_date, version=season.version) }}</p>
   </div>
 
   {% for group, fields in rules.items() %}
@@ -27,7 +27,7 @@
           {% if not (group == 'points' and ((fields.use_a_rules and is_normal_uma) or (not fields.use_a_rules and is_a_uma))) %}
           <div>
             <dt>{{ field_labels[key] }}</dt>
-            <dd class="{{ 'multiline-rule' if group == 'penalties' else '' }}">{{ '开启' if value is sameas true else '关闭' if value is sameas false else value }}</dd>
+            <dd class="{{ 'multiline-rule' if group == 'penalties' else '' }}">{{ t('status.enabled') if value is sameas true else t('status.disabled') if value is sameas false else value }}</dd>
           </div>
           {% endif %}
         {% endfor %}
@@ -36,10 +36,10 @@
   {% endfor %}
 
   <div class="document-actions">
-    <a class="ghost-link" href="{{ url_for('seasons') }}">返回赛季列表</a>
+    <a class="ghost-link" href="{{ url_for('seasons') }}">{{ t('season.back') }}</a>
     {% if current_user and current_user.role == 'super_admin' %}
-      <a class="ghost-link" href="{{ url_for('season_new', copy=season.id) }}">复制为新赛季</a>
-      <a class="ghost-link" href="{{ url_for('export_season', season_id=season.id) }}">导出排行榜 CSV</a>
+      <a class="ghost-link" href="{{ url_for('season_new', copy=season.id) }}">{{ t('season.copy') }}</a>
+      <a class="ghost-link" href="{{ url_for('export_season', season_id=season.id) }}">{{ t('season.export_csv') }}</a>
     {% endif %}
   </div>
 </article>

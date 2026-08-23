@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% block title %}赛季规则 · Brisbane Riichi{% endblock %}
+{% block title %}{{ t('season.rules') }} · Brisbane Riichi{% endblock %}
 {% block content %}
 <section class="page-head row">
   <div>
     <p class="eyebrow">Rules</p>
-    <h1>赛季规则</h1>
+    <h1>{{ t('season.rules') }}</h1>
   </div>
   {% if current_user and current_user.role == 'super_admin' %}
-    <a class="button" href="{{ url_for('season_new') }}">新建赛季</a>
+    <a class="button" href="{{ url_for('season_new') }}">{{ t('season.new') }}</a>
   {% endif %}
 </section>
 
@@ -17,7 +17,7 @@
       <div class="rules-document-head">
         <span class="badge {{ active_season.status }}">{{ active_season.status }}</span>
         <h2>{{ active_season.name }}</h2>
-        <p>开始日期：{{ active_season.start_date }} · 规则版本 v{{ active_season.version }}</p>
+        <p>{{ t('season.start_version', date=active_season.start_date, version=active_season.version) }}</p>
       </div>
 
       {% for group, fields in active_rules.items() %}
@@ -30,7 +30,7 @@
               {% if not (group == 'points' and ((fields.use_a_rules and is_normal_uma) or (not fields.use_a_rules and is_a_uma))) %}
               <div>
                 <dt>{{ field_labels[key] }}</dt>
-                <dd class="{{ 'multiline-rule' if group == 'penalties' else '' }}">{{ '开启' if value is sameas true else '关闭' if value is sameas false else value }}</dd>
+                <dd class="{{ 'multiline-rule' if group == 'penalties' else '' }}">{{ t('status.enabled') if value is sameas true else t('status.disabled') if value is sameas false else value }}</dd>
               </div>
               {% endif %}
             {% endfor %}
@@ -40,17 +40,17 @@
 
       {% if current_user and current_user.role == 'super_admin' %}
         <div class="document-actions">
-          <a class="button secondary" href="{{ url_for('season_edit', season_id=active_season.id) }}">编辑当前规则</a>
-          <a class="ghost-link" href="{{ url_for('season_new', copy=active_season.id) }}">复制为新赛季</a>
-          <a class="ghost-link" href="{{ url_for('export_season', season_id=active_season.id) }}">导出排行榜 CSV</a>
+          <a class="button secondary" href="{{ url_for('season_edit', season_id=active_season.id) }}">{{ t('season.edit_current') }}</a>
+          <a class="ghost-link" href="{{ url_for('season_new', copy=active_season.id) }}">{{ t('season.copy') }}</a>
+          <a class="ghost-link" href="{{ url_for('export_season', season_id=active_season.id) }}">{{ t('season.export_csv') }}</a>
         </div>
       {% endif %}
     </article>
 
     <aside class="season-archive panel">
       <div class="section-head">
-        <h2>往期规则</h2>
-        <span class="muted">{{ past_seasons|length }} 个</span>
+        <h2>{{ t('season.archive') }}</h2>
+        <span class="muted">{{ t('season.archive_count', count=past_seasons|length) }}</span>
       </div>
       {% if past_seasons %}
         <div class="archive-list">
@@ -63,13 +63,13 @@
           {% endfor %}
         </div>
       {% else %}
-        <div class="empty">还没有往期赛季。</div>
+        <div class="empty">{{ t('season.no_archive') }}</div>
       {% endif %}
     </aside>
   </section>
 {% else %}
   <section class="panel">
-    <div class="empty">还没有创建赛季规则。</div>
+    <div class="empty">{{ t('season.no_rules') }}</div>
   </section>
 {% endif %}
 {% endblock %}

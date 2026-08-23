@@ -6,16 +6,16 @@
   <h1>{{ user.display_name }}</h1>
 </section>
 <section class="metric-grid">
-  <div class="metric"><span>当前积分</span><strong>{{ stats.total_points if stats else 0 }}</strong></div>
-  <div class="metric"><span>对局数</span><strong>{{ stats.matches if stats else 0 }}</strong></div>
-  <div class="metric"><span>平均顺位</span><strong>{{ stats.avg_place if stats else '-' }}</strong></div>
-  <div class="metric"><span>一位 / 四位</span><strong>{{ (stats.first_rate ~ '% / ' ~ stats.fourth_rate ~ '%') if stats else '-' }}</strong></div>
+  <div class="metric"><span>{{ t('player.current_points') }}</span><strong>{{ stats.total_points if stats else 0 }}</strong></div>
+  <div class="metric"><span>{{ t('player.matches') }}</span><strong>{{ stats.matches if stats else 0 }}</strong></div>
+  <div class="metric"><span>{{ t('player.avg_place') }}</span><strong>{{ stats.avg_place if stats else '-' }}</strong></div>
+  <div class="metric"><span>{{ t('player.first_fourth') }}</span><strong>{{ (stats.first_rate ~ '% / ' ~ stats.fourth_rate ~ '%') if stats else '-' }}</strong></div>
 </section>
 <section class="grid two">
   <div class="panel">
-    <h2>近 10 场趋势</h2>
+    <h2>{{ t('player.recent_trend') }}</h2>
     {% if history %}
-      <div class="trend-chart" role="img" aria-label="近 10 场顺位折线图">
+      <div class="trend-chart" role="img" aria-label="{{ t('player.trend_aria') }}">
         <div class="trend-plot">
           <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             {% for placement in [1, 2, 3, 4] %}
@@ -25,7 +25,7 @@
             <polyline class="trend-line" points="{{ trend.points }}"></polyline>
           </svg>
           {% for node in trend.nodes %}
-            <span class="trend-point" style="left: {{ node.x }}%; top: {{ node.y }}%;" title="{{ node.played_at }} · {{ node.placement }} 位 · {{ node.rank_points }}pt"></span>
+            <span class="trend-point" style="left: {{ node.x }}%; top: {{ node.y }}%;" title="{{ node.played_at }} · {{ t('player.placement_detail', placement=node.placement, score=node.rank_points ~ 'pt') }}"></span>
           {% endfor %}
         </div>
         <div class="trend-axis" aria-hidden="true">
@@ -37,15 +37,15 @@
       </div>
       <div class="match-list player-history-list">
         {% for item in history %}
-          <div class="match-card"><span>{{ item.played_at }}</span><strong>{{ item.rank_points }}</strong><small>{{ item.placement }} 位 · {{ item.final_score }}</small></div>
+          <div class="match-card"><span>{{ item.played_at }}</span><strong>{{ item.rank_points }}</strong><small>{{ t('player.placement_detail', placement=item.placement, score=item.final_score) }}</small></div>
         {% endfor %}
       </div>
     {% else %}
-      <div class="empty">暂无对局。</div>
+      <div class="empty">{{ t('player.no_matches') }}</div>
     {% endif %}
   </div>
   <div class="panel">
-    <h2>罚则</h2>
+    <h2>{{ t('player.penalties') }}</h2>
     {% if penalties %}
       <div class="match-list">
         {% for item in penalties %}
@@ -53,7 +53,7 @@
         {% endfor %}
       </div>
     {% else %}
-      <div class="empty">暂无罚则记录。</div>
+      <div class="empty">{{ t('player.no_penalties') }}</div>
     {% endif %}
   </div>
 </section>

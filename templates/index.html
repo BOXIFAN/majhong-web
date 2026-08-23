@@ -1,35 +1,35 @@
 {% extends "base.html" %}
-{% block title %}首页 · Brisbane Riichi{% endblock %}
+{% block title %}{{ t('nav.home') }} · Brisbane Riichi{% endblock %}
 {% block content %}
 <section class="hero">
   <div>
     <p class="eyebrow">Brisbane Riichi Mahjong</p>
-    <h1>{{ current_season.name if current_season else '立直麻将社群平台' }}</h1>
-    <p>赛季规则、比赛录入、自动算分、排行榜和个人数据集中管理。</p>
+    <h1>{{ current_season.name if current_season else t('home.title_fallback') }}</h1>
+    <p>{{ t('home.subtitle') }}</p>
     <div class="hero-actions">
-      <a class="button" href="{{ url_for('leaderboard') }}">查看排行榜</a>
+      <a class="button" href="{{ url_for('leaderboard') }}">{{ t('home.view_leaderboard') }}</a>
       {% if current_user and current_user.role in ['super_admin', 'referee'] %}
-        <a class="button secondary" href="{{ url_for('match_new') }}">录入比赛</a>
+        <a class="button secondary" href="{{ url_for('match_new') }}">{{ t('match.entry') }}</a>
       {% endif %}
     </div>
   </div>
   <div class="hero-stat-card">
-    <span>当前赛季</span>
-    <strong>{{ current_season.status if current_season else '未启用' }}</strong>
-    <small>规则版本 v{{ current_season.version if current_season else '-' }}</small>
+    <span>{{ t('home.current_season') }}</span>
+    <strong>{{ current_season.status if current_season else t('home.not_enabled') }}</strong>
+    <small>{{ t('home.rule_version', version=(current_season.version if current_season else '-')) }}</small>
   </div>
 </section>
 
 <section class="grid two">
   <div class="panel">
     <div class="section-head">
-      <h2>排行榜</h2>
-      <a href="{{ url_for('leaderboard') }}">全部</a>
+      <h2>{{ t('nav.leaderboard') }}</h2>
+      <a href="{{ url_for('leaderboard') }}">{{ t('home.all') }}</a>
     </div>
     {% if leaderboard %}
       <div class="table-wrap">
         <table>
-          <thead><tr><th>#</th><th>玩家</th><th>积分</th><th>均顺</th></tr></thead>
+          <thead><tr><th>#</th><th>{{ t('table.player') }}</th><th>{{ t('table.points') }}</th><th>{{ t('table.avg_place') }}</th></tr></thead>
           <tbody>
             {% for row in leaderboard %}
               <tr>
@@ -43,42 +43,42 @@
         </table>
       </div>
     {% else %}
-      <div class="empty">还没有比赛记录。</div>
+      <div class="empty">{{ t('home.no_matches') }}</div>
     {% endif %}
   </div>
 
   <div class="panel">
     <div class="section-head">
-      <h2>最近对局</h2>
-      <span class="muted">{{ recent_pagination.total }} 场</span>
+      <h2>{{ t('home.recent_matches') }}</h2>
+      <span class="muted">{{ t('home.match_count', count=recent_pagination.total) }}</span>
     </div>
     {% if recent_matches %}
       <div class="match-list">
         {% for match in recent_matches %}
           <a class="match-card" href="{{ url_for('match_detail', match_id=match.id) }}">
-            <span>{{ match.table_name or '未命名牌桌' }}</span>
+            <span>{{ match.table_name or t('home.unnamed_match') }}</span>
             <strong>{{ match.played_at }}</strong>
-            <small>裁判：{{ match.referee_name or '系统' }}</small>
+            <small>{{ t('home.referee', name=(match.referee_name or t('home.system'))) }}</small>
           </a>
         {% endfor %}
       </div>
       {% if recent_pagination.pages > 1 %}
-        <nav class="pagination" aria-label="最近对局翻页">
+        <nav class="pagination" aria-label="{{ t('pagination.recent_matches') }}">
           {% if recent_pagination.has_prev %}
-            <a href="{{ url_for('index', recent_page=recent_pagination.prev_page) }}">上一页</a>
+            <a href="{{ url_for('index', recent_page=recent_pagination.prev_page) }}">{{ t('pagination.prev') }}</a>
           {% else %}
-            <span class="disabled">上一页</span>
+            <span class="disabled">{{ t('pagination.prev') }}</span>
           {% endif %}
           <strong>{{ recent_pagination.page }} / {{ recent_pagination.pages }}</strong>
           {% if recent_pagination.has_next %}
-            <a href="{{ url_for('index', recent_page=recent_pagination.next_page) }}">下一页</a>
+            <a href="{{ url_for('index', recent_page=recent_pagination.next_page) }}">{{ t('pagination.next') }}</a>
           {% else %}
-            <span class="disabled">下一页</span>
+            <span class="disabled">{{ t('pagination.next') }}</span>
           {% endif %}
         </nav>
       {% endif %}
     {% else %}
-      <div class="empty">录入第一场比赛后会显示在这里。</div>
+      <div class="empty">{{ t('home.first_match_hint') }}</div>
     {% endif %}
   </div>
 </section>

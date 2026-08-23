@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}排行榜 · Brisbane Riichi{% endblock %}
+{% block title %}{{ t('nav.leaderboard') }} · Brisbane Riichi{% endblock %}
 {% block content %}
 <section class="page-head row">
   <div>
     <p class="eyebrow">Leaderboard</p>
-    <h1>排行榜</h1>
+    <h1>{{ t('nav.leaderboard') }}</h1>
   </div>
   <form class="inline-form" method="get">
     <select name="season_id" onchange="this.form.submit()">
@@ -18,7 +18,7 @@
   {% if rows %}
     <div class="table-wrap">
       <table>
-        <thead><tr><th>#</th><th>玩家</th><th>积分</th><th>对局</th><th>平均顺位</th><th>一位率</th><th>四位率</th></tr></thead>
+        <thead><tr><th>#</th><th>{{ t('table.player') }}</th><th>{{ t('table.points') }}</th><th>{{ t('table.matches') }}</th><th>{{ t('table.avg_place') }}</th><th>{{ t('table.first_rate') }}</th><th>{{ t('table.fourth_rate') }}</th></tr></thead>
         <tbody>
           {% for row in rows %}
             <tr class="{% if loop.index <= 4 %}top-rank{% elif loop.revindex <= 4 %}low-rank{% endif %}">
@@ -35,40 +35,40 @@
       </table>
     </div>
   {% else %}
-    <div class="empty">该赛季还没有排行榜数据。</div>
+    <div class="empty">{{ t('leaderboard.empty') }}</div>
   {% endif %}
 </section>
 
 <section class="panel finals-status-card">
   <div class="section-head">
-    <h2>决赛资格</h2>
+    <h2>{{ t('finals.title') }}</h2>
   </div>
   {% if finals_status %}
     <div class="finals-status-grid">
       <div class="finals-status-item">
-        <span>您距离决赛还有</span>
+        <span>{{ t('finals.distance') }}</span>
         {% if finals_status.matches_met %}
-          <strong>您已满足局数要求</strong>
-          <small>已完成 {{ finals_status.matches }} 个半庄，需要 {{ finals_status.required_matches }} 个。</small>
+          <strong>{{ t('finals.matches_met') }}</strong>
+          <small>{{ t('finals.matches_done', matches=finals_status.matches, required=finals_status.required_matches) }}</small>
         {% else %}
-          <strong>{{ finals_status.remaining_matches }} 个半庄</strong>
-          <small>需要 {{ finals_status.required_matches }} 个，当前已完成 {{ finals_status.matches }} 个。</small>
+          <strong>{{ t('finals.matches_remaining', count=finals_status.remaining_matches) }}</strong>
+          <small>{{ t('finals.matches_progress', required=finals_status.required_matches, matches=finals_status.matches) }}</small>
         {% endif %}
       </div>
       <div class="finals-status-item">
-        <span>决赛资格</span>
+        <span>{{ t('finals.status') }}</span>
         <strong>{{ finals_status.cup_status }}</strong>
         {% if finals_status.championship_gap is not none and finals_status.yakitori_gap is not none and finals_status.championship_gap > 0 %}
-          <small>距离冠军杯还差 {{ finals_status.championship_gap }} pt；距离烧鸡杯还差 {{ finals_status.yakitori_gap }} pt。</small>
+          <small>{{ t('finals.gap_both', championship=finals_status.championship_gap, yakitori=finals_status.yakitori_gap) }}</small>
         {% elif finals_status.championship_gap is not none and finals_status.yakitori_gap is not none and finals_status.yakitori_gap > 0 %}
-          <small>距离冠军杯还差 {{ finals_status.championship_gap }} pt；距离烧鸡杯还需下降 {{ finals_status.yakitori_gap }} pt。</small>
+          <small>{{ t('finals.gap_yakitori', championship=finals_status.championship_gap, yakitori=finals_status.yakitori_gap) }}</small>
         {% elif finals_status.rank %}
-          <small>当前排名第 {{ finals_status.rank }} 位，积分 {{ finals_status.points }} pt。</small>
+          <small>{{ t('finals.rank_points', rank=finals_status.rank, points=finals_status.points) }}</small>
         {% endif %}
       </div>
     </div>
   {% else %}
-    <div class="empty">请选择赛季后查看决赛资格。</div>
+    <div class="empty">{{ t('finals.select_season') }}</div>
   {% endif %}
 </section>
 {% endblock %}

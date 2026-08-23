@@ -1,31 +1,31 @@
 {% extends "base.html" %}
-{% block title %}邀请码 · Brisbane Riichi{% endblock %}
+{% block title %}{{ t('invites.title') }} · Brisbane Riichi{% endblock %}
 {% block content %}
 <section class="page-head">
   <p class="eyebrow">Admin</p>
-  <h1>邀请码</h1>
+  <h1>{{ t('invites.title') }}</h1>
 </section>
 <section class="panel">
   <form method="post" class="inline-form invite-generator">
     <div>
-      <strong>生成新邀请码</strong>
-      <small>系统会自动创建唯一邀请码。</small>
+      <strong>{{ t('invites.generate_title') }}</strong>
+      <small>{{ t('invites.generate_hint') }}</small>
     </div>
     <select name="role">
-      <option value="user">普通用户</option>
-      <option value="referee">裁判</option>
+      <option value="user">{{ roles.user }}</option>
+      <option value="referee">{{ roles.referee }}</option>
     </select>
-    <button class="button" type="submit">生成</button>
+    <button class="button" type="submit">{{ t('invites.generate') }}</button>
   </form>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>邀请码</th><th>角色</th><th>状态</th><th>使用者</th></tr></thead>
+      <thead><tr><th>{{ t('invites.code') }}</th><th>{{ t('invites.role') }}</th><th>{{ t('invites.status') }}</th><th>{{ t('invites.used_by') }}</th></tr></thead>
       <tbody>
         {% for code in codes %}
           <tr>
             <td class="strong">{{ code.code }}</td>
             <td>{{ roles[code.role] }}</td>
-            <td>{{ '已使用' if code.used_by else '可用' }}</td>
+            <td>{{ t('status.used') if code.used_by else t('status.available') }}</td>
             <td>{{ code.used_by_name or '-' }}</td>
           </tr>
         {% endfor %}

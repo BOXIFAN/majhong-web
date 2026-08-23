@@ -1,21 +1,21 @@
 {% extends "base.html" %}
-{% block title %}赛季编辑 · Brisbane Riichi{% endblock %}
+{% block title %}{{ t('season.edit') }} · Brisbane Riichi{% endblock %}
 {% block content %}
 <section class="page-head">
   <p class="eyebrow">Rules Admin</p>
-  <h1>{{ '编辑赛季' if season else '新建赛季' }}</h1>
+  <h1>{{ t('season.edit') if season else t('season.new') }}</h1>
 </section>
 <form method="post" class="form wide">
   <section class="panel form-grid">
-    <label>赛季名称<input name="name" value="{{ season.name if season else '' }}" required></label>
-    <label>状态
+    <label>{{ t('season.name') }}<input name="name" value="{{ season.name if season else '' }}" required></label>
+    <label>{{ t('season.status') }}
       <select name="status">
         {% for status in ['draft', 'active', 'archived'] %}
           <option value="{{ status }}" {% if season and season.status == status %}selected{% elif not season and status == 'draft' %}selected{% endif %}>{{ status }}</option>
         {% endfor %}
       </select>
     </label>
-    <label>开始日期<input name="start_date" type="date" value="{{ season.start_date if season else today_date }}" required></label>
+    <label>{{ t('season.start_date') }}<input name="start_date" type="date" value="{{ season.start_date if season else today_date }}" required></label>
   </section>
   <section class="rules-grid">
     {% for group, fields in rules.items() %}
@@ -40,6 +40,6 @@
       </article>
     {% endfor %}
   </section>
-  <button class="button sticky-save" type="submit">保存赛季规则</button>
+  <button class="button sticky-save" type="submit">{{ t('season.save_rules') }}</button>
 </form>
 {% endblock %}
