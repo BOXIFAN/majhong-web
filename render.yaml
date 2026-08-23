@@ -7,6 +7,8 @@ services:
     envVars:
       - key: DATABASE_PATH
         value: /var/data/mahjong.db
+      - key: SEED_DEMO_DATA
+        value: "false"
       - key: SECRET_KEY
         generateValue: true
     disk:

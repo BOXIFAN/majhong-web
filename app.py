@@ -27,6 +27,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE = Path(os.environ.get("DATABASE_PATH", BASE_DIR / "instance" / "mahjong.db"))
+SEED_DEMO_DATA = os.environ.get("SEED_DEMO_DATA", "false").lower() in {"1", "true", "yes", "on"}
 
 ROLES = {
     "super_admin": "超级管理员",
@@ -253,6 +254,10 @@ def create_app() -> Flask:
             recent_matches=recent,
             recent_pagination=recent_pagination,
         )
+
+    @app.route("/favicon.ico")
+    def favicon():
+        return redirect(url_for("static", filename="web_logo.jpg"))
 
     @app.route("/register", methods=("GET", "POST"))
     def register():
@@ -1166,7 +1171,8 @@ def init_db() -> None:
         """,
         (admin_hash, now()),
     ).lastrowid
-    seed_demo_data(db, admin_id)
+    if SEED_DEMO_DATA:
+        seed_demo_data(db, admin_id)
     db.execute(
         "insert into invite_codes (code, role, created_by, created_at) values ('REF-2026', 'referee', 1, ?)",
         (now(),),

@@ -29,9 +29,18 @@ DATABASE_PATH=/tmp/mahjong.db flask --app app run --debug
 数据库首次创建时会初始化：
 
 - 超级管理员：`admin@example.com` / `admin1234`
-- 裁判用户：`wangc@example.com` / `demo1234`
 - 裁判邀请码：`REF-2026`
 - 普通用户邀请码：`PLAY-2026`
+
+默认不会导入 demo 数据。如果需要本地演示数据，可在初始化前设置：
+
+```bash
+SEED_DEMO_DATA=true flask --app app init-db
+```
+
+demo 数据会额外初始化：
+
+- 裁判用户：`wangc@example.com` / `demo1234`
 - 三个 demo 赛季、一批裁判/玩家、跨赛季比赛和罚则记录，其中 S11 赛季包含 20 场比赛记录
 
 完整演示数据账号与比赛清单见 [DEMO_DATA.md](DEMO_DATA.md)。
@@ -44,10 +53,10 @@ DATABASE_PATH=/tmp/mahjong.db flask --app app run --debug
 
 - `requirements.txt`：包含 Flask、Werkzeug、Gunicorn
 - `Procfile`：`web: gunicorn app:app`
-- `render.yaml`：声明 Python Web Service、1GB Disk、`DATABASE_PATH=/var/data/mahjong.db`
+- `render.yaml`：声明 Python Web Service、1GB Disk、`DATABASE_PATH=/var/data/mahjong.db`，并设置 `SEED_DEMO_DATA=false`
 - `.python-version`：指定 Python 3.11.9
 
-应用启动时会检查 `DATABASE_PATH` 指向的数据库是否存在；如果不存在，会自动创建表结构并写入初始化账号和 demo 数据。
+应用启动时会检查 `DATABASE_PATH` 指向的数据库是否存在；如果不存在，会自动创建表结构、管理员账号和邀请码。Render 默认不会导入 demo 数据。
 
 ## Render 部署教程
 
@@ -62,6 +71,7 @@ DATABASE_PATH=/tmp/mahjong.db flask --app app run --debug
    - Start Command: `gunicorn app:app`
    - Disk Mount Path: `/var/data`
    - `DATABASE_PATH`: `/var/data/mahjong.db`
+   - `SEED_DEMO_DATA`: `false`
    - `SECRET_KEY`: 自动生成
 6. 创建后等待 Build 和 Deploy 完成。
 7. 打开 Render 提供的 `onrender.com` 地址。
@@ -82,6 +92,7 @@ DATABASE_PATH=/tmp/mahjong.db flask --app app run --debug
    - Size: `1 GB`
 6. 添加环境变量：
    - `DATABASE_PATH=/var/data/mahjong.db`
+   - `SEED_DEMO_DATA=false`
    - `SECRET_KEY=` 随机长字符串
 7. 创建服务并等待部署完成。
 
