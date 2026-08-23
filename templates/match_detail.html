@@ -42,6 +42,9 @@
   {% if current_user and current_user.role == 'super_admin' %}
     <div class="penalty-actions">
       <a class="button secondary" href="{{ url_for('match_edit', match_id=match.id) }}">编辑比赛</a>
+      <form method="post" action="{{ url_for('match_delete', match_id=match.id) }}" onsubmit="return confirm('确认删除这场对局？删除后排行榜会重新计算。');">
+        <button class="danger-button" type="submit">删除对局</button>
+      </form>
     </div>
   {% endif %}
 </section>

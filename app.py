@@ -634,6 +634,22 @@ def create_app() -> Flask:
             rules=rules,
         )
 
+    @app.route("/matches/<int:match_id>/delete", methods=("POST",))
+    @role_required("super_admin")
+    def match_delete(match_id: int):
+        match = query_one("select * from matches where id = ?", (match_id,))
+        if not match:
+            flash("对局不存在或已被删除。", "error")
+            return redirect(url_for("index"))
+
+        db = get_db()
+        db.execute("delete from penalties where match_id = ?", (match_id,))
+        db.execute("delete from match_entries where match_id = ?", (match_id,))
+        db.execute("delete from matches where id = ?", (match_id,))
+        db.commit()
+        flash("对局已删除，排行榜已按剩余记录重新计算。", "success")
+        return redirect(url_for("leaderboard", season_id=match["season_id"]))
+
     @app.route("/leaderboard")
     def leaderboard():
         seasons_data = query_all("select * from seasons order by start_date desc, id desc")
@@ -1173,14 +1189,6 @@ def init_db() -> None:
     ).lastrowid
     if SEED_DEMO_DATA:
         seed_demo_data(db, admin_id)
-    db.execute(
-        "insert into invite_codes (code, role, created_by, created_at) values ('REF-2026', 'referee', 1, ?)",
-        (now(),),
-    )
-    db.execute(
-        "insert into invite_codes (code, role, created_by, created_at) values ('PLAY-2026', 'user', 1, ?)",
-        (now(),),
-    )
     db.commit()
     db.close()
 

@@ -51,7 +51,10 @@
               <strong>访客</strong>
               <small>登录后可录入或发布</small>
             </div>
-            <a class="logout-button" href="{{ url_for('login') }}">登录</a>
+            <div class="account-actions">
+              <a class="logout-button" href="{{ url_for('login') }}">登录</a>
+              <a class="logout-button subtle" href="{{ url_for('register') }}">注册</a>
+            </div>
           {% endif %}
         </div>
       </div>

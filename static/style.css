@@ -205,6 +205,19 @@ p {
   background: rgba(15, 118, 110, 0.14);
 }
 
+.logout-button.subtle {
+  color: #344054;
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(219, 226, 238, 0.9);
+}
+
+.account-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
 .danger-button {
   display: inline-flex;
   align-items: center;
@@ -412,6 +425,9 @@ p {
 
 .penalty-actions {
   display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
   justify-content: flex-start;
   margin-top: 18px;
 }

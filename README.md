@@ -29,8 +29,8 @@ DATABASE_PATH=/tmp/mahjong.db flask --app app run --debug
 数据库首次创建时会初始化：
 
 - 超级管理员：`admin@example.com` / `admin1234`
-- 裁判邀请码：`REF-2026`
-- 普通用户邀请码：`PLAY-2026`
+
+默认不会初始化赛季、玩家、裁判或邀请码。请使用超级管理员登录后创建赛季与邀请码。
 
 默认不会导入 demo 数据。如果需要本地演示数据，可在初始化前设置：
 
@@ -56,7 +56,7 @@ demo 数据会额外初始化：
 - `render.yaml`：声明 Python Web Service、1GB Disk、`DATABASE_PATH=/var/data/mahjong.db`，并设置 `SEED_DEMO_DATA=false`
 - `.python-version`：指定 Python 3.11.9
 
-应用启动时会检查 `DATABASE_PATH` 指向的数据库是否存在；如果不存在，会自动创建表结构、管理员账号和邀请码。Render 默认不会导入 demo 数据。
+应用启动时会检查 `DATABASE_PATH` 指向的数据库是否存在；如果不存在，会自动创建表结构和超级管理员账号。Render 默认不会导入 demo 数据。
 
 ## Render 部署教程
 
