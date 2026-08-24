@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ t('announcement.edit') }} · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head"><p class="eyebrow">Admin</p><h1>{{ t('announcement.edit') }}</h1></section>
+<form method="post" class="panel form announcement-form">
+  <label>{{ t('announcement.subject') }}<input name="title" maxlength="160" required value="{{ request.form.get('title', announcement.title) }}"></label>
+  <label>{{ t('announcement.content') }}<textarea name="content" required>{{ request.form.get('content', announcement.content) }}</textarea></label>
+  <div class="form-actions">
+    <a class="secondary-button" href="{{ url_for('announcements') }}">{{ t('match.cancel') }}</a>
+    <button class="button slim" type="submit">{{ t('announcement.save') }}</button>
+  </div>
+</form>
+{% endblock %}

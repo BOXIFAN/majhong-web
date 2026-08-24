@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ t('nav.matches') }} · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head row">
+  <div>
+    <p class="eyebrow">Match History</p>
+    <h1>{{ t('nav.matches') }}</h1>
+  </div>
+  <span class="muted">{{ t('home.match_count', count=pagination.total) }}</span>
+</section>
+<section class="panel">
+  {% if matches %}
+    <div class="match-list matches-page-list">
+      {% for match in matches %}
+        <a class="match-card" href="{{ url_for('match_detail', match_id=match.id) }}">
+          <span>{{ match.table_name or t('home.unnamed_match') }}</span>
+          <strong>{{ match.played_at }}</strong>
+          <small>{{ t('home.referee', name=(match.referee_name or t('home.system'))) }}</small>
+        </a>
+      {% endfor %}
+    </div>
+    {% if pagination.pages > 1 %}
+      <nav class="pagination" aria-label="{{ t('pagination.recent_matches') }}">
+        {% if pagination.has_prev %}<a href="{{ url_for('matches', page=pagination.prev_page) }}">{{ t('pagination.prev') }}</a>{% else %}<span class="disabled">{{ t('pagination.prev') }}</span>{% endif %}
+        <strong>{{ pagination.page }} / {{ pagination.pages }}</strong>
+        {% if pagination.has_next %}<a href="{{ url_for('matches', page=pagination.next_page) }}">{{ t('pagination.next') }}</a>{% else %}<span class="disabled">{{ t('pagination.next') }}</span>{% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <div class="empty">{{ t('home.first_match_hint') }}</div>
+  {% endif %}
+</section>
+{% endblock %}

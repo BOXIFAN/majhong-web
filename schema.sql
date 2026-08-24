@@ -1,6 +1,7 @@
 drop table if exists penalties;
 drop table if exists match_entries;
 drop table if exists matches;
+drop table if exists announcements;
 drop table if exists rule_versions;
 drop table if exists seasons;
 drop table if exists invite_codes;
@@ -15,6 +16,16 @@ create table users (
   created_at text not null,
   is_deleted integer not null default 0,
   deleted_at text
+);
+
+create table announcements (
+  id integer primary key autoincrement,
+  title text not null,
+  content text not null,
+  author_id integer not null,
+  created_at text not null,
+  updated_at text not null,
+  foreign key (author_id) references users(id)
 );
 
 create table invite_codes (

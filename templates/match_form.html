@@ -10,7 +10,11 @@
 </section>
 <form method="post" class="form wide" data-score-total="{{ score_total }}">
   <section class="panel form-grid">
-    <label>{{ t('match.time') }}<input name="played_at" type="datetime-local"></label>
+    <div class="automatic-time">
+      <span>{{ t('match.time') }}</span>
+      <strong>{{ match_time }}</strong>
+      <small>{{ t('match.time_automatic') }}</small>
+    </div>
     <label>{{ t('match.type') }}
       <select name="table_name">
         <option value="机打">机打</option>

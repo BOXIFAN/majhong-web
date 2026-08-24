@@ -20,66 +20,46 @@
   </div>
 </section>
 
-<section class="grid two">
-  <div class="panel">
+<section class="announcement-layout">
+  <article class="panel announcement-featured">
     <div class="section-head">
-      <h2>{{ t('nav.leaderboard') }}</h2>
-      <a href="{{ url_for('leaderboard') }}">{{ t('home.all') }}</a>
-    </div>
-    {% if leaderboard %}
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>#</th><th>{{ t('table.player') }}</th><th>{{ t('table.points') }}</th><th>{{ t('table.avg_place') }}</th></tr></thead>
-          <tbody>
-            {% for row in leaderboard %}
-              <tr>
-                <td>{{ loop.index }}</td>
-                <td><a href="{{ url_for('player_profile', user_id=row.user_id) }}">{{ row.display_name }}</a></td>
-                <td class="strong">{{ row.total_points }}</td>
-                <td>{{ row.avg_place }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div>
+        <p class="eyebrow">Announcement</p>
+        <h2>{{ t('announcement.latest') }}</h2>
       </div>
-    {% else %}
-      <div class="empty">{{ t('home.no_matches') }}</div>
-    {% endif %}
-  </div>
-
-  <div class="panel">
-    <div class="section-head">
-      <h2>{{ t('home.recent_matches') }}</h2>
-      <span class="muted">{{ t('home.match_count', count=recent_pagination.total) }}</span>
+      {% if current_user and current_user.role == 'super_admin' %}
+        <a class="secondary-button" href="{{ url_for('announcements') }}">{{ t('announcement.manage') }}</a>
+      {% endif %}
     </div>
-    {% if recent_matches %}
-      <div class="match-list">
-        {% for match in recent_matches %}
-          <a class="match-card" href="{{ url_for('match_detail', match_id=match.id) }}">
-            <span>{{ match.table_name or t('home.unnamed_match') }}</span>
-            <strong>{{ match.played_at }}</strong>
-            <small>{{ t('home.referee', name=(match.referee_name or t('home.system'))) }}</small>
-          </a>
+    {% if latest_announcement %}
+      <h3>{{ latest_announcement.title }}</h3>
+      <p class="announcement-meta">{{ t('announcement.published_by', date=latest_announcement.created_at, name=(latest_announcement.author_name or t('home.system'))) }}</p>
+      <div class="announcement-content">{{ latest_announcement.content }}</div>
+    {% else %}
+      <div class="empty">{{ t('announcement.none') }}</div>
+    {% endif %}
+  </article>
+
+  <aside class="panel announcement-archive">
+    <div class="section-head">
+      <h2>{{ t('announcement.archive') }}</h2>
+      <span class="muted">{{ past_announcements|length }}</span>
+    </div>
+    {% if past_announcements %}
+      <div class="announcement-list">
+        {% for announcement in past_announcements %}
+          <details class="announcement-item">
+            <summary>
+              <strong>{{ announcement.title }}</strong>
+              <small>{{ announcement.created_at }}</small>
+            </summary>
+            <div class="announcement-content compact">{{ announcement.content }}</div>
+          </details>
         {% endfor %}
       </div>
-      {% if recent_pagination.pages > 1 %}
-        <nav class="pagination" aria-label="{{ t('pagination.recent_matches') }}">
-          {% if recent_pagination.has_prev %}
-            <a href="{{ url_for('index', recent_page=recent_pagination.prev_page) }}">{{ t('pagination.prev') }}</a>
-          {% else %}
-            <span class="disabled">{{ t('pagination.prev') }}</span>
-          {% endif %}
-          <strong>{{ recent_pagination.page }} / {{ recent_pagination.pages }}</strong>
-          {% if recent_pagination.has_next %}
-            <a href="{{ url_for('index', recent_page=recent_pagination.next_page) }}">{{ t('pagination.next') }}</a>
-          {% else %}
-            <span class="disabled">{{ t('pagination.next') }}</span>
-          {% endif %}
-        </nav>
-      {% endif %}
     {% else %}
-      <div class="empty">{{ t('home.first_match_hint') }}</div>
+      <div class="empty">{{ t('announcement.no_archive') }}</div>
     {% endif %}
-  </div>
+  </aside>
 </section>
 {% endblock %}

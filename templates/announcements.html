@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ t('announcement.manage') }} · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head">
+  <p class="eyebrow">Admin</p>
+  <h1>{{ t('announcement.manage') }}</h1>
+  <p>{{ t('announcement.manage_hint') }}</p>
+</section>
+<form method="post" class="panel form announcement-form">
+  <h2>{{ t('announcement.new') }}</h2>
+  <label>{{ t('announcement.subject') }}<input name="title" maxlength="160" required value="{{ request.form.get('title', '') }}"></label>
+  <label>{{ t('announcement.content') }}<textarea name="content" required>{{ request.form.get('content', '') }}</textarea></label>
+  <button class="button slim" type="submit">{{ t('announcement.publish') }}</button>
+</form>
+<section class="panel announcement-admin-list">
+  <div class="section-head"><h2>{{ t('announcement.archive') }}</h2><span class="muted">{{ announcements|length }}</span></div>
+  {% if announcements %}
+    <div class="announcement-list">
+      {% for announcement in announcements %}
+        <article class="announcement-admin-item">
+          <div><strong>{{ announcement.title }}</strong><small>{{ t('announcement.published_by', date=announcement.created_at, name=(announcement.author_name or t('home.system'))) }}</small></div>
+          <a class="secondary-button" href="{{ url_for('announcement_edit', announcement_id=announcement.id) }}">{{ t('announcement.edit') }}</a>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty">{{ t('announcement.none') }}</div>
+  {% endif %}
+</section>
+{% endblock %}

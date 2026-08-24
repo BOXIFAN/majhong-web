@@ -10,6 +10,7 @@ import sqlite3
 import string
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from flask import (
     Flask,
@@ -51,6 +52,7 @@ TRANSLATIONS = {
         "language.switch": "切换语言",
         "nav.home": "首页",
         "nav.leaderboard": "排行榜",
+        "nav.matches": "最近对局",
         "nav.rules": "赛季规则",
         "nav.match_entry": "录入比赛",
         "nav.admin": "后台管理",
@@ -81,6 +83,24 @@ TRANSLATIONS = {
         "home.referee": "裁判：{name}",
         "home.system": "系统",
         "home.first_match_hint": "录入第一场比赛后会显示在这里。",
+        "announcement.title": "公告",
+        "announcement.latest": "最新公告",
+        "announcement.archive": "往期公告",
+        "announcement.none": "暂时还没有公告。",
+        "announcement.no_archive": "暂时还没有往期公告。",
+        "announcement.published_by": "{date} · 由 {name} 发布",
+        "announcement.manage": "管理公告",
+        "announcement.manage_hint": "新公告发布后会显示在首页顶部；已有公告可以继续编辑。",
+        "announcement.new": "发布新公告",
+        "announcement.edit": "编辑公告",
+        "announcement.subject": "公告标题",
+        "announcement.content": "公告内容",
+        "announcement.publish": "发布公告",
+        "announcement.save": "保存修改",
+        "announcement.required": "请填写公告标题和内容。",
+        "announcement.created": "公告已发布。",
+        "announcement.updated": "公告已更新。",
+        "announcement.missing": "公告不存在。",
         "pagination.recent_matches": "最近对局翻页",
         "pagination.prev": "上一页",
         "pagination.next": "下一页",
@@ -140,6 +160,7 @@ TRANSLATIONS = {
         "match.edit_hint": "修改后会按当前赛季规则重新计算顺位、pt、马点和罚分。",
         "match.season_total": "当前赛季总分校验：{total}",
         "match.time": "比赛时间",
+        "match.time_automatic": "提交时自动记录当前时间（布里斯班时间）",
         "match.type": "对局类型",
         "match.memo": "备注",
         "match.optional": "可选",
@@ -237,6 +258,7 @@ TRANSLATIONS = {
         "language.switch": "Switch language",
         "nav.home": "Home",
         "nav.leaderboard": "Leaderboard",
+        "nav.matches": "Recent Matches",
         "nav.rules": "Season Rules",
         "nav.match_entry": "Match Entry",
         "nav.admin": "Admin",
@@ -267,6 +289,24 @@ TRANSLATIONS = {
         "home.referee": "Referee: {name}",
         "home.system": "System",
         "home.first_match_hint": "The first entered match will appear here.",
+        "announcement.title": "Announcements",
+        "announcement.latest": "Latest Announcement",
+        "announcement.archive": "Past Announcements",
+        "announcement.none": "There are no announcements yet.",
+        "announcement.no_archive": "There are no past announcements yet.",
+        "announcement.published_by": "{date} · Published by {name}",
+        "announcement.manage": "Manage Announcements",
+        "announcement.manage_hint": "New announcements appear at the top of the home page; existing announcements can be edited.",
+        "announcement.new": "Publish Announcement",
+        "announcement.edit": "Edit Announcement",
+        "announcement.subject": "Title",
+        "announcement.content": "Content",
+        "announcement.publish": "Publish",
+        "announcement.save": "Save Changes",
+        "announcement.required": "Please enter both a title and content.",
+        "announcement.created": "Announcement published.",
+        "announcement.updated": "Announcement updated.",
+        "announcement.missing": "Announcement not found.",
         "pagination.recent_matches": "Recent match pagination",
         "pagination.prev": "Previous",
         "pagination.next": "Next",
@@ -326,6 +366,7 @@ TRANSLATIONS = {
         "match.edit_hint": "Changes will recalculate placement, PT, uma, and penalties with the current season rules.",
         "match.season_total": "Current season total check: {total}",
         "match.time": "Match Time",
+        "match.time_automatic": "The current Brisbane time is recorded automatically on submission",
         "match.type": "Match Type",
         "match.memo": "Memo",
         "match.optional": "Optional",
@@ -584,6 +625,7 @@ def create_app() -> Flask:
     def load_user() -> None:
         ensure_database_initialized()
         ensure_user_soft_delete_columns()
+        ensure_announcements_table()
         user_id = session.get("user_id")
         g.user = query_one("select * from users where id = ? and is_deleted = 0", (user_id,)) if user_id else None
         if user_id and g.user is None:
@@ -611,38 +653,91 @@ def create_app() -> Flask:
 
     @app.route("/")
     def index():
-        season = current_season()
-        leaderboard = get_leaderboard(season["id"]) if season else []
-        recent_per_page = 6
-        recent_page = max(request.args.get("recent_page", 1, type=int), 1)
-        recent_total = query_one("select count(*) as c from matches")["c"]
-        recent_pages = max((recent_total + recent_per_page - 1) // recent_per_page, 1)
-        if recent_page > recent_pages:
-            return redirect(url_for("index", recent_page=recent_pages))
-        recent_offset = (recent_page - 1) * recent_per_page
-        recent = query_all(
+        announcements = query_all(
+            """
+            select a.*, u.display_name as author_name
+            from announcements a left join users u on u.id = a.author_id
+            order by a.created_at desc, a.id desc
+            """
+        )
+        return render_template(
+            "index.html",
+            latest_announcement=announcements[0] if announcements else None,
+            past_announcements=announcements[1:],
+        )
+
+    @app.route("/matches")
+    def matches():
+        per_page = 12
+        page = max(request.args.get("page", 1, type=int), 1)
+        total = query_one("select count(*) as c from matches")["c"]
+        pages = max((total + per_page - 1) // per_page, 1)
+        if page > pages:
+            return redirect(url_for("matches", page=pages))
+        rows = query_all(
             """
             select m.*, u.display_name as referee_name
             from matches m left join users u on u.id = m.referee_id
-            order by m.played_at desc limit ? offset ?
+            order by m.played_at desc, m.id desc limit ? offset ?
             """,
-            (recent_per_page, recent_offset),
+            (per_page, (page - 1) * per_page),
         )
-        recent_pagination = {
-            "page": recent_page,
-            "pages": recent_pages,
-            "total": recent_total,
-            "has_prev": recent_page > 1,
-            "has_next": recent_page < recent_pages,
-            "prev_page": recent_page - 1,
-            "next_page": recent_page + 1,
+        pagination = {
+            "page": page,
+            "pages": pages,
+            "total": total,
+            "has_prev": page > 1,
+            "has_next": page < pages,
+            "prev_page": page - 1,
+            "next_page": page + 1,
         }
-        return render_template(
-            "index.html",
-            leaderboard=leaderboard[:6],
-            recent_matches=recent,
-            recent_pagination=recent_pagination,
+        return render_template("matches.html", matches=rows, pagination=pagination)
+
+    @app.route("/admin/announcements", methods=("GET", "POST"))
+    @role_required("super_admin")
+    def announcements():
+        if request.method == "POST":
+            title = request.form.get("title", "").strip()
+            content = request.form.get("content", "").strip()
+            if not title or not content:
+                flash(translate("announcement.required"), "error")
+            else:
+                timestamp = now()
+                execute(
+                    "insert into announcements (title, content, author_id, created_at, updated_at) values (?, ?, ?, ?, ?)",
+                    (title, content, g.user["id"], timestamp, timestamp),
+                )
+                flash(translate("announcement.created"), "success")
+                return redirect(url_for("announcements"))
+        rows = query_all(
+            """
+            select a.*, u.display_name as author_name
+            from announcements a left join users u on u.id = a.author_id
+            order by a.created_at desc, a.id desc
+            """
         )
+        return render_template("announcements.html", announcements=rows)
+
+    @app.route("/admin/announcements/<int:announcement_id>/edit", methods=("GET", "POST"))
+    @role_required("super_admin")
+    def announcement_edit(announcement_id: int):
+        announcement = query_one("select * from announcements where id = ?", (announcement_id,))
+        if not announcement:
+            flash(translate("announcement.missing"), "error")
+            return redirect(url_for("announcements"))
+        if request.method == "POST":
+            title = request.form.get("title", "").strip()
+            content = request.form.get("content", "").strip()
+            if not title or not content:
+                flash(translate("announcement.required"), "error")
+            else:
+                execute(
+                    "update announcements set title = ?, content = ?, updated_at = ? where id = ?",
+                    (title, content, now(), announcement_id),
+                )
+                flash(translate("announcement.updated"), "success")
+                return redirect(url_for("announcements"))
+        return render_template("announcement_form.html", announcement=announcement)
 
     @app.route("/favicon.ico")
     def favicon():
@@ -932,7 +1027,13 @@ def create_app() -> Flask:
                 return redirect(url_for("match_detail", match_id=result["match_id"]))
             for error in result["errors"]:
                 flash(error, "error")
-        return render_template("match_form.html", season=season, players=players, rules=normalize_rules(json.loads(season["rules_json"])))
+        return render_template(
+            "match_form.html",
+            season=season,
+            players=players,
+            rules=normalize_rules(json.loads(season["rules_json"])),
+            match_time=current_match_time(),
+        )
 
     @app.route("/matches/<int:match_id>")
     def match_detail(match_id: int):
@@ -1159,6 +1260,24 @@ def ensure_user_soft_delete_columns() -> None:
     db.commit()
 
 
+def ensure_announcements_table() -> None:
+    db = get_db()
+    db.execute(
+        """
+        create table if not exists announcements (
+          id integer primary key autoincrement,
+          title text not null,
+          content text not null,
+          author_id integer not null,
+          created_at text not null,
+          updated_at text not null,
+          foreign key (author_id) references users(id)
+        )
+        """
+    )
+    db.commit()
+
+
 def execute(sql: str, params: tuple = ()) -> None:
     db = get_db()
     db.execute(sql, params)
@@ -1175,6 +1294,10 @@ def query_all(sql: str, params: tuple = ()) -> list[sqlite3.Row]:
 
 def now() -> str:
     return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def current_match_time() -> str:
+    return datetime.now(ZoneInfo("Australia/Brisbane")).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def today_date() -> str:
@@ -1322,7 +1445,7 @@ def create_match_from_form(season, form) -> dict:
         (
             season["id"],
             g.user["id"],
-            normalize_datetime(form.get("played_at", "")),
+            current_match_time(),
             form.get("table_name", "").strip(),
             form.get("memo", "").strip(),
             now(),
