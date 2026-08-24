@@ -2,6 +2,7 @@ drop table if exists penalties;
 drop table if exists match_entries;
 drop table if exists matches;
 drop table if exists announcements;
+drop table if exists app_migrations;
 drop table if exists rule_versions;
 drop table if exists seasons;
 drop table if exists invite_codes;
@@ -26,6 +27,11 @@ create table announcements (
   created_at text not null,
   updated_at text not null,
   foreign key (author_id) references users(id)
+);
+
+create table app_migrations (
+  name text primary key,
+  applied_at text not null
 );
 
 create table invite_codes (

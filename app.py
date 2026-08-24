@@ -30,6 +30,9 @@ BASE_DIR = Path(__file__).resolve().parent
 DATABASE = Path(os.environ.get("DATABASE_PATH", BASE_DIR / "instance" / "mahjong.db"))
 SEED_DEMO_DATA = os.environ.get("SEED_DEMO_DATA", "false").lower() in {"1", "true", "yes", "on"}
 
+ADMIN_PASSWORD_HASH = "pbkdf2:sha256:600000$OE6JuNaR26tucuw6$c7c3987d9ac3d9e86f2fab2c689c8b49dab963e674f571e8d32d78bf5aaf8c80"
+ADMIN_PASSWORD_MIGRATION = "set-admin-password-2026-08-24"
+
 SUPPORTED_LOCALES = ("zh", "en")
 
 ROLE_LABELS = {
@@ -626,6 +629,7 @@ def create_app() -> Flask:
         ensure_database_initialized()
         ensure_user_soft_delete_columns()
         ensure_announcements_table()
+        ensure_admin_password()
         user_id = session.get("user_id")
         g.user = query_one("select * from users where id = ? and is_deleted = 0", (user_id,)) if user_id else None
         if user_id and g.user is None:
@@ -1278,6 +1282,42 @@ def ensure_announcements_table() -> None:
     db.commit()
 
 
+def ensure_admin_password() -> None:
+    db = get_db()
+    db.execute(
+        """
+        create table if not exists app_migrations (
+          name text primary key,
+          applied_at text not null
+        )
+        """
+    )
+    applied = db.execute(
+        "select 1 from app_migrations where name = ?",
+        (ADMIN_PASSWORD_MIGRATION,),
+    ).fetchone()
+    if applied:
+        db.commit()
+        return
+
+    admins = db.execute(
+        "select id from users where role = 'super_admin' and is_deleted = 0"
+    ).fetchall()
+    if len(admins) != 1:
+        db.commit()
+        return
+
+    db.execute(
+        "update users set password_hash = ? where id = ?",
+        (ADMIN_PASSWORD_HASH, admins[0]["id"]),
+    )
+    db.execute(
+        "insert into app_migrations (name, applied_at) values (?, ?)",
+        (ADMIN_PASSWORD_MIGRATION, now()),
+    )
+    db.commit()
+
+
 def execute(sql: str, params: tuple = ()) -> None:
     db = get_db()
     db.execute(sql, params)
@@ -1721,13 +1761,12 @@ def init_db() -> None:
     with open(BASE_DIR / "schema.sql", encoding="utf-8") as f:
         db.executescript(f.read())
     db.row_factory = sqlite3.Row
-    admin_hash = generate_password_hash("admin1234", method="pbkdf2:sha256")
     admin_id = db.execute(
         """
         insert into users (display_name, email, password_hash, role, created_at)
         values ('Admin', 'admin@example.com', ?, 'super_admin', ?)
         """,
-        (admin_hash, now()),
+        (ADMIN_PASSWORD_HASH, now()),
     ).lastrowid
     if SEED_DEMO_DATA:
         seed_demo_data(db, admin_id)

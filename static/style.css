@@ -1521,6 +1521,57 @@ select:focus {
     flex-direction: column;
   }
 
+  .announcement-layout {
+    gap: 14px;
+    margin-top: 14px;
+  }
+
+  .announcement-layout .panel {
+    padding: 16px;
+  }
+
+  .announcement-featured {
+    min-height: 0;
+  }
+
+  .announcement-layout .section-head {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .announcement-layout .section-head h2 {
+    margin: 0;
+    font-size: 25px;
+  }
+
+  .announcement-featured .secondary-button {
+    flex: none;
+    min-height: 36px;
+    padding: 7px 11px;
+    font-size: 14px;
+  }
+
+  .announcement-featured h3 {
+    margin-top: 22px;
+    font-size: 24px;
+    line-height: 1.25;
+  }
+
+  .announcement-meta {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .announcement-content {
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .announcement-archive .empty {
+    padding-block: 22px;
+  }
+
   .mobile-topbar {
     min-height: 74px;
     padding: 12px 14px;

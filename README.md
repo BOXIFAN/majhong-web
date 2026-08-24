@@ -28,7 +28,7 @@ DATABASE_PATH=/tmp/mahjong.db flask --app app run --debug
 
 数据库首次创建时会初始化：
 
-- 超级管理员：`admin@example.com` / `admin1234`
+- 超级管理员账号：`admin@example.com`（密码不在公开文档中保存）
 
 默认不会初始化赛季、玩家、裁判或邀请码。请使用超级管理员登录后创建赛季与邀请码。
 
@@ -75,7 +75,7 @@ demo 数据会额外初始化：
    - `SECRET_KEY`: 自动生成
 6. 创建后等待 Build 和 Deploy 完成。
 7. 打开 Render 提供的 `onrender.com` 地址。
-8. 首次访问会自动初始化数据库，可用 `admin@example.com` / `admin1234` 登录。
+8. 首次访问会自动初始化数据库，可使用管理员账号 `admin@example.com` 登录。
 
 ### 方式二：手动创建 Web Service
 
