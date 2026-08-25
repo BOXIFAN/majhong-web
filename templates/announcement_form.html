@@ -6,6 +6,7 @@
   <label>{{ t('announcement.subject') }}<input name="title" maxlength="160" required value="{{ request.form.get('title', announcement.title) }}"></label>
   <label>{{ t('announcement.content') }}<textarea name="content" required>{{ request.form.get('content', announcement.content) }}</textarea></label>
   <div class="form-actions">
+    <button class="danger-button" type="submit" formaction="{{ url_for('announcement_delete', announcement_id=announcement.id) }}" formmethod="post" formnovalidate onclick="return confirm({{ t('announcement.delete_confirm', title=announcement.title)|tojson }});">{{ t('announcement.delete') }}</button>
     <a class="secondary-button" href="{{ url_for('announcements') }}">{{ t('match.cancel') }}</a>
     <button class="button slim" type="submit">{{ t('announcement.save') }}</button>
   </div>

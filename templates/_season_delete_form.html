@@ -1,0 +1,14 @@
+{% if current_user and current_user.role == 'super_admin' %}
+  <details class="danger-zone">
+    <summary>{{ t('season.delete') }}</summary>
+    <div class="danger-zone-content">
+      <p>{{ t('season.delete_warning') }}</p>
+      <form method="post" action="{{ url_for('season_delete', season_id=season.id) }}" onsubmit="return confirm({{ t('season.delete_confirm', name=season.name)|tojson }});">
+        <label>{{ t('season.delete_password') }}
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <button class="danger-button" type="submit">{{ t('season.delete') }}</button>
+      </form>
+    </div>
+  </details>
+{% endif %}

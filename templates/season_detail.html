@@ -42,5 +42,6 @@
       <a class="ghost-link" href="{{ url_for('export_season', season_id=season.id) }}">{{ t('season.export_csv') }}</a>
     {% endif %}
   </div>
+  {% include "_season_delete_form.html" %}
 </article>
 {% endblock %}

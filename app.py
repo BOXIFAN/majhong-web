@@ -100,9 +100,12 @@ TRANSLATIONS = {
         "announcement.content": "公告内容",
         "announcement.publish": "发布公告",
         "announcement.save": "保存修改",
+        "announcement.delete": "删除公告",
+        "announcement.delete_confirm": "确认删除公告“{title}”？此操作无法撤销。",
         "announcement.required": "请填写公告标题和内容。",
         "announcement.created": "公告已发布。",
         "announcement.updated": "公告已更新。",
+        "announcement.deleted": "公告已删除。",
         "announcement.missing": "公告不存在。",
         "pagination.recent_matches": "最近对局翻页",
         "pagination.prev": "上一页",
@@ -158,6 +161,10 @@ TRANSLATIONS = {
         "season.status": "状态",
         "season.start_date": "开始日期",
         "season.save_rules": "保存赛季规则",
+        "season.delete": "删除赛季",
+        "season.delete_warning": "删除后，该赛季的全部比赛、排行榜、罚则和规则版本都会永久删除。请输入当前管理员密码确认。",
+        "season.delete_password": "管理员密码",
+        "season.delete_confirm": "确定永久删除赛季“{name}”及其全部排行榜和比赛数据？",
         "match.entry": "录入比赛",
         "match.edit": "编辑比赛",
         "match.edit_hint": "修改后会按当前赛季规则重新计算顺位、pt、马点和罚分。",
@@ -244,6 +251,8 @@ TRANSLATIONS = {
         "flash.season_created": "赛季已创建。",
         "flash.season_missing": "赛季不存在。",
         "flash.season_updated": "赛季规则已更新，版本记录已保留。",
+        "flash.season_password_invalid": "管理员密码不正确，赛季未删除。",
+        "flash.season_deleted": "赛季“{name}”及其排行榜和比赛数据已删除。",
         "flash.season_required": "请先创建并启用赛季。",
         "flash.match_created": "比赛已录入，排行榜已自动更新。",
         "flash.match_missing": "比赛不存在。",
@@ -306,9 +315,12 @@ TRANSLATIONS = {
         "announcement.content": "Content",
         "announcement.publish": "Publish",
         "announcement.save": "Save Changes",
+        "announcement.delete": "Delete Announcement",
+        "announcement.delete_confirm": "Delete announcement “{title}”? This cannot be undone.",
         "announcement.required": "Please enter both a title and content.",
         "announcement.created": "Announcement published.",
         "announcement.updated": "Announcement updated.",
+        "announcement.deleted": "Announcement deleted.",
         "announcement.missing": "Announcement not found.",
         "pagination.recent_matches": "Recent match pagination",
         "pagination.prev": "Previous",
@@ -364,6 +376,10 @@ TRANSLATIONS = {
         "season.status": "Status",
         "season.start_date": "Start Date",
         "season.save_rules": "Save Season Rules",
+        "season.delete": "Delete Season",
+        "season.delete_warning": "All matches, leaderboard results, penalties, and rule versions for this season will be permanently deleted. Enter your current admin password to confirm.",
+        "season.delete_password": "Admin Password",
+        "season.delete_confirm": "Permanently delete season “{name}” and all of its leaderboard and match data?",
         "match.entry": "Match Entry",
         "match.edit": "Edit Match",
         "match.edit_hint": "Changes will recalculate placement, PT, uma, and penalties with the current season rules.",
@@ -450,6 +466,8 @@ TRANSLATIONS = {
         "flash.season_created": "Season created.",
         "flash.season_missing": "Season not found.",
         "flash.season_updated": "Season rules updated and version history retained.",
+        "flash.season_password_invalid": "The admin password is incorrect. The season was not deleted.",
+        "flash.season_deleted": "Season “{name}” and its leaderboard and match data were deleted.",
         "flash.season_required": "Please create and activate a season first.",
         "flash.match_created": "Match entered and leaderboard recalculated.",
         "flash.match_missing": "Match not found.",
@@ -743,6 +761,17 @@ def create_app() -> Flask:
                 return redirect(url_for("announcements"))
         return render_template("announcement_form.html", announcement=announcement)
 
+    @app.route("/admin/announcements/<int:announcement_id>/delete", methods=("POST",))
+    @role_required("super_admin")
+    def announcement_delete(announcement_id: int):
+        announcement = query_one("select id from announcements where id = ?", (announcement_id,))
+        if not announcement:
+            flash(translate("announcement.missing"), "error")
+        else:
+            execute("delete from announcements where id = ?", (announcement_id,))
+            flash(translate("announcement.deleted"), "success")
+        return redirect(url_for("announcements"))
+
     @app.route("/favicon.ico")
     def favicon():
         return redirect(url_for("static", filename="web_logo.jpg"))
@@ -1015,6 +1044,37 @@ def create_app() -> Flask:
             flash(translate("flash.season_updated"), "success")
             return redirect(url_for("season_detail", season_id=season_id))
         return render_template("season_form.html", season=season, rules=rules)
+
+    @app.route("/seasons/<int:season_id>/delete", methods=("POST",))
+    @role_required("super_admin")
+    def season_delete(season_id: int):
+        season = query_one("select * from seasons where id = ?", (season_id,))
+        if not season:
+            flash(translate("flash.season_missing"), "error")
+            return redirect(url_for("seasons"))
+
+        password = request.form.get("password", "")
+        if not check_password_hash(g.user["password_hash"], password):
+            flash(translate("flash.season_password_invalid"), "error")
+            return redirect(url_for("season_detail", season_id=season_id))
+
+        db = get_db()
+        try:
+            db.execute(
+                "delete from match_entries where match_id in (select id from matches where season_id = ?)",
+                (season_id,),
+            )
+            db.execute("delete from penalties where season_id = ?", (season_id,))
+            db.execute("delete from matches where season_id = ?", (season_id,))
+            db.execute("delete from rule_versions where season_id = ?", (season_id,))
+            db.execute("delete from seasons where id = ?", (season_id,))
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
+
+        flash(translate("flash.season_deleted", name=season["name"]), "success")
+        return redirect(url_for("seasons"))
 
     @app.route("/matches/new", methods=("GET", "POST"))
     @role_required("super_admin", "referee")

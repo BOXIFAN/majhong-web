@@ -19,7 +19,12 @@
       {% for announcement in announcements %}
         <article class="announcement-admin-item">
           <div><strong>{{ announcement.title }}</strong><small>{{ t('announcement.published_by', date=announcement.created_at, name=(announcement.author_name or t('home.system'))) }}</small></div>
-          <a class="secondary-button" href="{{ url_for('announcement_edit', announcement_id=announcement.id) }}">{{ t('announcement.edit') }}</a>
+          <div class="announcement-admin-actions">
+            <a class="secondary-button" href="{{ url_for('announcement_edit', announcement_id=announcement.id) }}">{{ t('announcement.edit') }}</a>
+            <form method="post" action="{{ url_for('announcement_delete', announcement_id=announcement.id) }}" onsubmit="return confirm({{ t('announcement.delete_confirm', title=announcement.title)|tojson }});">
+              <button class="danger-button" type="submit">{{ t('announcement.delete') }}</button>
+            </form>
+          </div>
         </article>
       {% endfor %}
     </div>

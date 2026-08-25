@@ -526,6 +526,17 @@ p {
   padding: 14px;
 }
 
+.announcement-admin-actions {
+  display: flex;
+  flex: none;
+  gap: 10px;
+  align-items: center;
+}
+
+.announcement-admin-actions form {
+  margin: 0;
+}
+
 .announcement-item summary {
   cursor: pointer;
 }
@@ -1031,6 +1042,40 @@ select:focus {
   margin-top: 26px;
   padding-top: 20px;
   border-top: 1px solid var(--line);
+}
+
+.danger-zone {
+  margin-top: 22px;
+  border: 1px solid rgba(185, 28, 28, 0.2);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(254, 242, 242, 0.48), rgba(255, 255, 255, 0.2));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  overflow: hidden;
+}
+
+.danger-zone summary {
+  padding: 14px 16px;
+  color: var(--bad);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.danger-zone-content {
+  padding: 0 16px 16px;
+  border-top: 1px solid rgba(185, 28, 28, 0.12);
+}
+
+.danger-zone-content p {
+  margin: 14px 0;
+  color: #7f1d1d;
+  line-height: 1.6;
+}
+
+.danger-zone-content form {
+  display: grid;
+  grid-template-columns: minmax(220px, 420px) auto;
+  gap: 12px;
+  align-items: end;
 }
 
 .season-archive {
@@ -1615,6 +1660,17 @@ select:focus {
   .announcement-admin-item {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .announcement-admin-actions,
+  .announcement-admin-actions a,
+  .announcement-admin-actions form,
+  .announcement-admin-actions button {
+    width: 100%;
+  }
+
+  .danger-zone-content form {
+    grid-template-columns: 1fr;
   }
 
   .announcement-layout {
