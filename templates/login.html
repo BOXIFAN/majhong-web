@@ -6,6 +6,10 @@
   <form method="post" class="form">
     <label>{{ t('auth.email') }}<input name="email" type="email" required></label>
     <label>{{ t('auth.password') }}<input name="password" type="password" required></label>
+    <label class="remember-login">
+      <input name="remember" type="checkbox" value="1" checked>
+      <span>{{ t('auth.remember') }}</span>
+    </label>
     <button class="button" type="submit">{{ t('auth.login') }}</button>
   </form>
 </section>

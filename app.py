@@ -68,6 +68,7 @@ TRANSLATIONS = {
         "auth.register": "注册",
         "auth.email": "邮箱",
         "auth.password": "密码",
+        "auth.remember": "记住我（30 天）",
         "auth.display_name": "显示名称",
         "auth.invite_code": "邀请码",
         "auth.create_account": "创建账号",
@@ -330,6 +331,7 @@ TRANSLATIONS = {
         "auth.register": "Register",
         "auth.email": "Email",
         "auth.password": "Password",
+        "auth.remember": "Remember me for 30 days",
         "auth.display_name": "Display Name",
         "auth.invite_code": "Invite Code",
         "auth.create_account": "Create Account",
@@ -733,7 +735,19 @@ FIELD_LABELS = {
 
 def create_app() -> Flask:
     app = Flask(__name__, instance_relative_config=True)
-    app.config.from_mapping(SECRET_KEY=os.environ.get("SECRET_KEY", "dev-secret-change-me"))
+    is_render = os.environ.get("RENDER", "false").lower() in {"1", "true", "yes", "on"}
+    secure_cookie = os.environ.get(
+        "SESSION_COOKIE_SECURE",
+        "true" if is_render else "false",
+    ).lower() in {"1", "true", "yes", "on"}
+    app.config.from_mapping(
+        SECRET_KEY=os.environ.get("SECRET_KEY", "dev-secret-change-me"),
+        PERMANENT_SESSION_LIFETIME=timedelta(days=30),
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Lax",
+        SESSION_COOKIE_SECURE=secure_cookie,
+        SESSION_REFRESH_EACH_REQUEST=True,
+    )
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
 
     @app.before_request
@@ -1160,6 +1174,7 @@ def create_app() -> Flask:
             if user and check_password_hash(user["password_hash"], password):
                 selected_locale = session.get("locale")
                 session.clear()
+                session.permanent = request.form.get("remember") == "1"
                 if selected_locale in SUPPORTED_LOCALES:
                     session["locale"] = selected_locale
                 session["user_id"] = user["id"]

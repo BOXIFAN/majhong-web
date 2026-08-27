@@ -29,7 +29,6 @@
           <a href="{{ url_for('leaderboard') }}">{{ t('nav.leaderboard') }}</a>
           <a href="{{ url_for('matches') }}">{{ t('nav.matches') }}</a>
           <a href="{{ url_for('seasons') }}">{{ t('nav.rules') }}</a>
-          <a href="{{ url_for('about') }}">{{ t('nav.about') }}</a>
           {% if current_user %}
             <a href="{{ url_for('meetups') }}">{{ t('nav.meetups') }}</a>
             {% if current_user.role in ['super_admin', 'referee'] %}
@@ -41,6 +40,7 @@
               <a href="{{ url_for('invites') }}">{{ t('nav.invites') }}</a>
             {% endif %}
           {% endif %}
+          <a href="{{ url_for('about') }}">{{ t('nav.about') }}</a>
         </nav>
         <div class="language-switch" aria-label="{{ t('language.switch') }}">
           <a class="{{ 'active' if locale == 'zh' else '' }}" href="{{ url_for('set_language', locale='zh') }}">中</a>
@@ -80,7 +80,6 @@
           <a href="{{ url_for('leaderboard') }}">{{ t('nav.leaderboard') }}</a>
           <a href="{{ url_for('matches') }}">{{ t('nav.matches') }}</a>
           <a href="{{ url_for('seasons') }}">{{ t('nav.rules') }}</a>
-          <a href="{{ url_for('about') }}">{{ t('nav.about') }}</a>
           {% if current_user %}
             <a href="{{ url_for('meetups') }}">{{ t('nav.meetups') }}</a>
             {% if current_user.role in ['super_admin', 'referee'] %}
@@ -92,6 +91,7 @@
               <a href="{{ url_for('invites') }}">{{ t('nav.invites') }}</a>
             {% endif %}
           {% endif %}
+          <a href="{{ url_for('about') }}">{{ t('nav.about') }}</a>
         </nav>
         <div class="language-switch" aria-label="{{ t('language.switch') }}">
           <a class="{{ 'active' if locale == 'zh' else '' }}" href="{{ url_for('set_language', locale='zh') }}">中</a>

@@ -1332,6 +1332,23 @@ tbody tr:hover {
   margin-bottom: 18px;
 }
 
+.remember-login {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.remember-login input {
+  width: 18px;
+  min-height: 18px;
+  margin: 0;
+  accent-color: var(--brand);
+}
+
 .form {
   display: grid;
   gap: 16px;
