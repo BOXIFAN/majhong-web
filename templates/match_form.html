@@ -32,7 +32,10 @@
           <small>{{ seats[idx][0] }} / {{ seats[idx][1] }}</small>
         </h2>
         <label>{{ t('table.player') }}
-          <select name="player_{{ idx }}" required data-filterable-select id="player_{{ idx }}">
+          <select name="player_{{ idx }}" required data-filterable-select id="player_{{ idx }}"
+                  data-search-placeholder="{{ t('match.search_player') }}"
+                  data-empty-text="{{ t('match.no_player_results') }}"
+                  data-required-text="{{ t('match.player_selection_required') }}">
             <option value="">{{ t('match.choose_player') }}</option>
             {% for player in players %}
               <option value="{{ player.id }}">{{ player.display_name }} · {{ roles[player.role] }}</option>
