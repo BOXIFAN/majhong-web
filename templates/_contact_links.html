@@ -1,0 +1,22 @@
+<section class="contact-block{{ ' is-compact' if contact_compact else ' is-detailed' }}" aria-label="{{ t('contact.title') }}">
+  {% if not contact_compact %}
+    <p class="eyebrow">Contact</p>
+    <h3>{{ t('contact.title') }}</h3>
+  {% endif %}
+  <div class="contact-links">
+    <a class="contact-link contact-x" href="https://x.com/bneriichi?s=11&amp;t=ly2K-sDBckYzqe3m941ycA" target="_blank" rel="noopener noreferrer" aria-label="{{ t('contact.x') }}" title="{{ t('contact.x') }}">
+      <span class="contact-icon" aria-hidden="true">𝕏</span>
+      <span class="contact-link-text"><strong>{{ t('contact.x') }}</strong><small>@bneriichi</small></span>
+    </a>
+    <a class="contact-link contact-rednote" href="https://xhslink.cn/o/1YX4phhFyRu" target="_blank" rel="noopener noreferrer" aria-label="{{ t('contact.xiaohongshu') }}" title="{{ t('contact.xiaohongshu') }}">
+      <span class="contact-icon" aria-hidden="true">RED</span>
+      <span class="contact-link-text"><strong>{{ t('contact.xiaohongshu') }}</strong><small>BRML</small></span>
+    </a>
+    <a class="contact-link contact-email" href="mailto:contact@bneriichi.com" aria-label="{{ t('contact.email') }}" title="contact@bneriichi.com">
+      <span class="contact-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false"><path d="M3.5 6.5h17v11h-17zM4 7l8 6 8-6"/></svg>
+      </span>
+      <span class="contact-link-text"><strong>{{ t('contact.email') }}</strong><small>contact@bneriichi.com</small></span>
+    </a>
+  </div>
+</section>

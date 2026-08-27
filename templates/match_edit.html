@@ -14,7 +14,7 @@
     <label>{{ t('match.type') }}
       <select name="table_name">
         <option value="meetup" {% if match.table_name == 'meetup' %}selected{% endif %}>{{ t('match.type_meetup') }}</option>
-        <option value="private" {% if match.table_name != 'meetup' %}selected{% endif %}>{{ t('match.type_private') }}</option>
+        <option value="casual" {% if match.table_name != 'meetup' %}selected{% endif %}>{{ t('match.type_casual') }}</option>
       </select>
     </label>
     <label>{{ t('match.memo') }}<input name="memo" value="{{ match.memo or '' }}" placeholder="{{ t('match.optional') }}"></label>

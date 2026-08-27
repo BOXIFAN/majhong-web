@@ -76,6 +76,10 @@ TRANSLATIONS = {
         "account.guest": "访客",
         "account.guest_mobile_hint": "登录后可录入或发布",
         "account.guest_desktop_hint": "加入社群后可记录成绩",
+        "contact.title": "联系方式",
+        "contact.x": "X",
+        "contact.xiaohongshu": "小红书",
+        "contact.email": "邮箱",
         "meetup.title": "活动报名",
         "meetup.subtitle": "按时间查看 Meetup，并点击报名参加。",
         "meetup.create": "创建 Meetup",
@@ -221,7 +225,7 @@ TRANSLATIONS = {
         "match.time_automatic": "提交时自动记录当前时间（布里斯班时间）",
         "match.type": "对局类型",
         "match.type_meetup": "Meetup",
-        "match.type_private": "私下对局",
+        "match.type_casual": "临时对局",
         "match.memo": "备注",
         "match.optional": "可选",
         "match.player_n": "玩家 {number}",
@@ -340,6 +344,10 @@ TRANSLATIONS = {
         "account.guest": "Guest",
         "account.guest_mobile_hint": "Log in to enter or publish matches",
         "account.guest_desktop_hint": "Join the club to record results",
+        "contact.title": "Contact Us",
+        "contact.x": "X",
+        "contact.xiaohongshu": "REDnote",
+        "contact.email": "Email",
         "meetup.title": "Meetup Sign-up",
         "meetup.subtitle": "View upcoming meetups in time order and sign up to attend.",
         "meetup.create": "Create Meetup",
@@ -485,7 +493,7 @@ TRANSLATIONS = {
         "match.time_automatic": "The current Brisbane time is recorded automatically on submission",
         "match.type": "Match Type",
         "match.type_meetup": "Meetup",
-        "match.type_private": "Private Game",
+        "match.type_casual": "Casual Match",
         "match.memo": "Memo",
         "match.optional": "Optional",
         "match.player_n": "Player {number}",
@@ -1775,7 +1783,7 @@ def ensure_admin_password() -> None:
 
 
 def ensure_match_type_values() -> None:
-    migration_name = "normalize_match_types_v1"
+    migration_name = "normalize_match_types_v2"
     db = get_db()
     applied = db.execute(
         "select 1 from app_migrations where name = ?",
@@ -1788,8 +1796,8 @@ def ensure_match_type_values() -> None:
         update matches
         set table_name = case
           when lower(trim(table_name)) = 'meetup' then 'meetup'
-          when lower(trim(table_name)) in ('private', 'private game') then 'private'
-          when instr(table_name, '机打') > 0 or instr(table_name, '手打') > 0 then 'private'
+          when lower(trim(table_name)) in ('casual', 'casual match', 'private', 'private game') then 'casual'
+          when instr(table_name, '机打') > 0 or instr(table_name, '手打') > 0 then 'casual'
           else table_name
         end
         """
@@ -1845,7 +1853,7 @@ def normalize_match_type(value: str) -> str:
     normalized = value.strip().lower()
     if normalized == "meetup":
         return "meetup"
-    return "private"
+    return "casual"
 
 
 def match_type_label(value: str | None) -> str:
@@ -1853,8 +1861,8 @@ def match_type_label(value: str | None) -> str:
         return translate("home.unnamed_match")
     if value.strip().lower() == "meetup":
         return translate("match.type_meetup")
-    if value.strip().lower() in {"private", "private game", "机打", "手打"}:
-        return translate("match.type_private")
+    if value.strip().lower() in {"casual", "casual match", "private", "private game", "机打", "手打"}:
+        return translate("match.type_casual")
     return value
 
 
