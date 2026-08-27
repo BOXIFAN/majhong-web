@@ -8,14 +8,13 @@
   <p>{{ t('match.edit_hint') }}</p>
 </section>
 
-<form method="post" class="form wide" data-score-total="{{ score_total }}">
-  <section class="panel form-grid">
+<form method="post" class="form wide match-entry-form" data-score-total="{{ score_total }}">
+  <section class="panel form-grid match-entry-meta">
     <label>{{ t('match.time') }}<input name="played_at" type="datetime-local" value="{{ match_time }}"></label>
     <label>{{ t('match.type') }}
       <select name="table_name">
-        {% for type in ['机打', '手打'] %}
-          <option value="{{ type }}" {% if match.table_name == type %}selected{% endif %}>{{ type }}</option>
-        {% endfor %}
+        <option value="meetup" {% if match.table_name == 'meetup' %}selected{% endif %}>{{ t('match.type_meetup') }}</option>
+        <option value="private" {% if match.table_name != 'meetup' %}selected{% endif %}>{{ t('match.type_private') }}</option>
       </select>
     </label>
     <label>{{ t('match.memo') }}<input name="memo" value="{{ match.memo or '' }}" placeholder="{{ t('match.optional') }}"></label>

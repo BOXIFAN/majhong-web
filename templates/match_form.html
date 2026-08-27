@@ -8,8 +8,8 @@
   <h1>{{ t('match.entry') }}</h1>
   <p>{{ t('match.season_total', total=score_total) }}</p>
 </section>
-<form method="post" class="form wide" data-score-total="{{ score_total }}">
-  <section class="panel form-grid">
+<form method="post" class="form wide match-entry-form" data-score-total="{{ score_total }}">
+  <section class="panel form-grid match-entry-meta">
     <div class="automatic-time">
       <span>{{ t('match.time') }}</span>
       <strong>{{ match_time }}</strong>
@@ -17,8 +17,8 @@
     </div>
     <label>{{ t('match.type') }}
       <select name="table_name">
-        <option value="机打">机打</option>
-        <option value="手打">手打</option>
+        <option value="meetup">{{ t('match.type_meetup') }}</option>
+        <option value="private">{{ t('match.type_private') }}</option>
       </select>
     </label>
     <label>{{ t('match.memo') }}<input name="memo" placeholder="{{ t('match.optional') }}"></label>

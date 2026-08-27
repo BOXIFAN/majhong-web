@@ -217,6 +217,8 @@ TRANSLATIONS = {
         "match.time": "比赛时间",
         "match.time_automatic": "提交时自动记录当前时间（布里斯班时间）",
         "match.type": "对局类型",
+        "match.type_meetup": "Meetup",
+        "match.type_private": "私下对局",
         "match.memo": "备注",
         "match.optional": "可选",
         "match.player_n": "玩家 {number}",
@@ -477,6 +479,8 @@ TRANSLATIONS = {
         "match.time": "Match Time",
         "match.time_automatic": "The current Brisbane time is recorded automatically on submission",
         "match.type": "Match Type",
+        "match.type_meetup": "Meetup",
+        "match.type_private": "Private Game",
         "match.memo": "Memo",
         "match.optional": "Optional",
         "match.player_n": "Player {number}",
@@ -739,6 +743,7 @@ def create_app() -> Flask:
         ensure_announcements_table()
         ensure_meetups_tables()
         ensure_admin_password()
+        ensure_match_type_values()
         user_id = session.get("user_id")
         g.user = query_one("select * from users where id = ? and is_deleted = 0", (user_id,)) if user_id else None
         if user_id and g.user is None:
@@ -757,6 +762,7 @@ def create_app() -> Flask:
             "today_date": today_date(),
             "locale": locale,
             "t": translate,
+            "match_type_label": match_type_label,
         }
 
     @app.cli.command("init-db")
@@ -1737,6 +1743,33 @@ def ensure_admin_password() -> None:
     db.commit()
 
 
+def ensure_match_type_values() -> None:
+    migration_name = "normalize_match_types_v1"
+    db = get_db()
+    applied = db.execute(
+        "select 1 from app_migrations where name = ?",
+        (migration_name,),
+    ).fetchone()
+    if applied:
+        return
+    db.execute(
+        """
+        update matches
+        set table_name = case
+          when lower(trim(table_name)) = 'meetup' then 'meetup'
+          when lower(trim(table_name)) in ('private', 'private game') then 'private'
+          when instr(table_name, '机打') > 0 or instr(table_name, '手打') > 0 then 'private'
+          else table_name
+        end
+        """
+    )
+    db.execute(
+        "insert into app_migrations (name, applied_at) values (?, ?)",
+        (migration_name, now()),
+    )
+    db.commit()
+
+
 def execute(sql: str, params: tuple = ()) -> None:
     db = get_db()
     db.execute(sql, params)
@@ -1775,6 +1808,23 @@ def translate(key: str, **kwargs) -> str:
     locale = get_locale()
     text = TRANSLATIONS.get(locale, {}).get(key, TRANSLATIONS["zh"].get(key, key))
     return text.format(**kwargs) if kwargs else text
+
+
+def normalize_match_type(value: str) -> str:
+    normalized = value.strip().lower()
+    if normalized == "meetup":
+        return "meetup"
+    return "private"
+
+
+def match_type_label(value: str | None) -> str:
+    if not value:
+        return translate("home.unnamed_match")
+    if value.strip().lower() == "meetup":
+        return translate("match.type_meetup")
+    if value.strip().lower() in {"private", "private game", "机打", "手打"}:
+        return translate("match.type_private")
+    return value
 
 
 def normalize_datetime(value: str) -> str:
@@ -1941,7 +1991,7 @@ def create_match_from_form(season, form) -> dict:
             season["id"],
             g.user["id"],
             current_match_time(),
-            form.get("table_name", "").strip(),
+            normalize_match_type(form.get("table_name", "")),
             form.get("memo", "").strip(),
             now(),
         ),
@@ -1962,7 +2012,7 @@ def update_match_from_result(match_id: int, match, form, result: dict) -> None:
         """,
         (
             normalize_datetime(form.get("played_at", "")),
-            form.get("table_name", "").strip(),
+            normalize_match_type(form.get("table_name", "")),
             form.get("memo", "").strip(),
             match_id,
         ),

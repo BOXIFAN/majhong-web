@@ -3,7 +3,7 @@
 {% block content %}
 <section class="page-head">
   <p class="eyebrow">{{ match.season_name }}</p>
-  <h1>{{ match.table_name or t('match.unknown_title', id=match.id) }}</h1>
+  <h1>{{ match_type_label(match.table_name) if match.table_name else t('match.unknown_title', id=match.id) }}</h1>
   <p>{{ t('match.meta', time=match.played_at, referee=(match.referee_name or t('home.system'))) }}</p>
 </section>
 <section class="panel">

@@ -13,7 +13,7 @@
     <div class="match-list matches-page-list">
       {% for match in matches %}
         <a class="match-card" href="{{ url_for('match_detail', match_id=match.id) }}">
-          <span>{{ match.table_name or t('home.unnamed_match') }}</span>
+          <span>{{ match_type_label(match.table_name) }}</span>
           <strong>{{ match.played_at }}</strong>
           <small>{{ t('home.referee', name=(match.referee_name or t('home.system'))) }}</small>
         </a>

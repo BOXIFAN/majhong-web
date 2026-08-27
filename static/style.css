@@ -1341,6 +1341,37 @@ tbody tr:hover {
   width: 100%;
 }
 
+.match-entry-form {
+  gap: 24px;
+}
+
+.match-entry-meta {
+  gap: 22px;
+  padding: 26px;
+}
+
+.match-entry-meta label,
+.match-entry-meta .automatic-time,
+.match-entry-form .entry-card label {
+  gap: 10px;
+}
+
+.match-entry-form .player-entry-grid {
+  gap: 20px;
+  margin-bottom: 8px;
+}
+
+.match-entry-form .entry-card {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  padding: 26px;
+}
+
+.match-entry-form .entry-card h2 {
+  margin: 0 0 4px;
+}
+
 label {
   display: grid;
   gap: 7px;
@@ -2377,6 +2408,16 @@ select:focus {
     gap: 13px;
   }
 
+  .match-entry-form {
+    gap: 18px;
+  }
+
+  .match-entry-meta,
+  .match-entry-form .entry-card {
+    padding: 20px;
+    gap: 15px;
+  }
+
   label {
     gap: 6px;
     font-size: 14px;
@@ -2397,6 +2438,10 @@ select:focus {
 
   .player-entry-grid {
     gap: 14px;
+  }
+
+  .match-entry-form .player-entry-grid {
+    gap: 16px;
   }
 
   .score-meter {
