@@ -772,7 +772,8 @@ p {
 }
 
 .about-document,
-.leadership-card {
+.leadership-card,
+.contact-block.is-detailed {
   border: 1px solid var(--glass-edge);
   background:
     radial-gradient(circle at 8% 0%, rgba(255, 255, 255, 0.9), transparent 38%),
@@ -854,11 +855,53 @@ p {
   color: var(--brand-dark);
 }
 
-.leadership-card {
+.about-sidebar {
   position: sticky;
   top: 24px;
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.leadership-card {
+  position: static;
   padding: 24px;
   border-radius: 18px;
+}
+
+.contact-block.is-detailed {
+  padding: 24px;
+  border-radius: 18px;
+}
+
+.contact-block.is-detailed h3 {
+  margin: 0 0 14px;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.contact-block.is-detailed .contact-links {
+  gap: 7px;
+}
+
+.contact-membership-note {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(132, 151, 177, 0.18);
+}
+
+.contact-membership-note strong {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.contact-membership-note p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
 }
 
 .leadership-list {
@@ -891,17 +934,6 @@ p {
   font-size: 16px;
   font-weight: 850;
   overflow-wrap: anywhere;
-}
-
-.leadership-card .contact-block {
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(132, 151, 177, 0.18);
-}
-
-.leadership-card .contact-block h3 {
-  margin: 0 0 12px;
-  font-size: 19px;
 }
 
 .meetup-create-form {
@@ -2264,7 +2296,7 @@ select:focus {
     grid-template-columns: 1fr;
   }
 
-  .leadership-card {
+  .about-sidebar {
     position: static;
     order: -1;
   }
@@ -2343,9 +2375,14 @@ select:focus {
   }
 
   .about-document,
-  .leadership-card {
+  .leadership-card,
+  .contact-block.is-detailed {
     padding: 18px;
     border-radius: 16px;
+  }
+
+  .about-sidebar {
+    gap: 14px;
   }
 
   .about-document {

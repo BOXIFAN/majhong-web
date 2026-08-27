@@ -19,4 +19,10 @@
       <span class="contact-link-text"><strong>{{ t('contact.email') }}</strong><small>contact@bneriichi.com</small></span>
     </a>
   </div>
+  {% if not contact_compact %}
+    <div class="contact-membership-note">
+      <strong>{{ t('contact.member_title') }}</strong>
+      <p>{{ t('contact.member_description') }}</p>
+    </div>
+  {% endif %}
 </section>
