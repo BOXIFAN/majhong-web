@@ -8,7 +8,7 @@ import os
 import secrets
 import sqlite3
 import string
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -57,6 +57,8 @@ TRANSLATIONS = {
         "nav.leaderboard": "排行榜",
         "nav.matches": "最近对局",
         "nav.rules": "赛季规则",
+        "nav.about": "关于我们",
+        "nav.meetups": "活动报名",
         "nav.match_entry": "录入比赛",
         "nav.admin": "后台管理",
         "nav.invites": "邀请码",
@@ -72,6 +74,48 @@ TRANSLATIONS = {
         "account.guest": "访客",
         "account.guest_mobile_hint": "登录后可录入或发布",
         "account.guest_desktop_hint": "加入社群后可记录成绩",
+        "meetup.title": "活动报名",
+        "meetup.subtitle": "按时间查看 Meetup，并点击报名参加。",
+        "meetup.create": "创建 Meetup",
+        "meetup.edit": "编辑时间",
+        "meetup.time": "Meetup 时间",
+        "meetup.deadline": "报名截止时间",
+        "meetup.timezone": "布里斯班时间",
+        "meetup.save": "保存时间",
+        "meetup.signup": "报名",
+        "meetup.signed_up": "已报名",
+        "meetup.attendees": "报名成员",
+        "meetup.attendee_count": "{count} 人",
+        "meetup.no_attendees": "还没有人报名。",
+        "meetup.none": "目前还没有可报名的 Meetup。",
+        "meetup.time_required": "请选择有效的 Meetup 时间。",
+        "meetup.created": "Meetup 已创建。",
+        "meetup.updated": "Meetup 时间已更新。",
+        "meetup.missing": "Meetup 不存在。",
+        "meetup.signup_success": "报名成功。",
+        "meetup.signup_duplicate": "你已经报名该 Meetup。",
+        "meetup.view_signup": "查看并报名",
+        "meetup.detail": "报名详情",
+        "meetup.back": "返回报名列表",
+        "meetup.open": "报名中",
+        "meetup.closed": "报名已截止",
+        "meetup.archived": "已归档",
+        "meetup.archive": "归档报名",
+        "meetup.archive_confirm": "确认归档这个 Meetup？归档后普通成员不能再报名。",
+        "meetup.archived_success": "Meetup 已归档。",
+        "meetup.delete": "删除 Meetup",
+        "meetup.delete_confirm": "确认永久删除这个 Meetup？全部报名记录也会一并删除，此操作无法撤销。",
+        "meetup.deleted_success": "Meetup 及其报名记录已删除。",
+        "meetup.signup_closed": "该 Meetup 已截止或归档，无法报名。",
+        "meetup.deadline_order": "报名截止时间不能晚于 Meetup 时间。",
+        "meetup.manage_attendees": "管理报名成员",
+        "meetup.choose_member": "选择成员",
+        "meetup.add_member": "加入成员",
+        "meetup.remove_member": "移除",
+        "meetup.remove_confirm": "确认将 {name} 从报名名单中移除？",
+        "meetup.member_added": "成员已加入报名名单。",
+        "meetup.member_removed": "成员已从报名名单移除。",
+        "meetup.member_missing": "成员不存在或无法报名。",
         "home.title_fallback": "立直麻将社群平台",
         "home.subtitle": "赛季规则、比赛录入、自动算分、排行榜和个人数据集中管理。",
         "home.view_leaderboard": "查看排行榜",
@@ -108,6 +152,7 @@ TRANSLATIONS = {
         "announcement.deleted": "公告已删除。",
         "announcement.missing": "公告不存在。",
         "pagination.recent_matches": "最近对局翻页",
+        "pagination.meetups": "活动报名翻页",
         "pagination.prev": "上一页",
         "pagination.next": "下一页",
         "table.player": "玩家",
@@ -272,6 +317,8 @@ TRANSLATIONS = {
         "nav.leaderboard": "Leaderboard",
         "nav.matches": "Recent Matches",
         "nav.rules": "Season Rules",
+        "nav.about": "About Us",
+        "nav.meetups": "Meetup Sign-up",
         "nav.match_entry": "Match Entry",
         "nav.admin": "Admin",
         "nav.invites": "Invites",
@@ -287,6 +334,48 @@ TRANSLATIONS = {
         "account.guest": "Guest",
         "account.guest_mobile_hint": "Log in to enter or publish matches",
         "account.guest_desktop_hint": "Join the club to record results",
+        "meetup.title": "Meetup Sign-up",
+        "meetup.subtitle": "View upcoming meetups in time order and sign up to attend.",
+        "meetup.create": "Create Meetup",
+        "meetup.edit": "Edit Time",
+        "meetup.time": "Meetup Time",
+        "meetup.deadline": "Sign-up Deadline",
+        "meetup.timezone": "Brisbane time",
+        "meetup.save": "Save Time",
+        "meetup.signup": "Sign Up",
+        "meetup.signed_up": "Signed Up",
+        "meetup.attendees": "Attendees",
+        "meetup.attendee_count": "{count} people",
+        "meetup.no_attendees": "No one has signed up yet.",
+        "meetup.none": "There are no meetups available yet.",
+        "meetup.time_required": "Please choose a valid meetup time.",
+        "meetup.created": "Meetup created.",
+        "meetup.updated": "Meetup time updated.",
+        "meetup.missing": "Meetup not found.",
+        "meetup.signup_success": "You have signed up.",
+        "meetup.signup_duplicate": "You have already signed up for this meetup.",
+        "meetup.view_signup": "View & Sign Up",
+        "meetup.detail": "Sign-up Details",
+        "meetup.back": "Back to Meetups",
+        "meetup.open": "Open",
+        "meetup.closed": "Sign-up Closed",
+        "meetup.archived": "Archived",
+        "meetup.archive": "Archive Sign-up",
+        "meetup.archive_confirm": "Archive this meetup? Members will no longer be able to sign up.",
+        "meetup.archived_success": "Meetup archived.",
+        "meetup.delete": "Delete Meetup",
+        "meetup.delete_confirm": "Permanently delete this meetup and all of its sign-ups? This cannot be undone.",
+        "meetup.deleted_success": "Meetup and its sign-ups deleted.",
+        "meetup.signup_closed": "This meetup is closed or archived and cannot accept sign-ups.",
+        "meetup.deadline_order": "The sign-up deadline cannot be later than the meetup time.",
+        "meetup.manage_attendees": "Manage Attendees",
+        "meetup.choose_member": "Choose Member",
+        "meetup.add_member": "Add Member",
+        "meetup.remove_member": "Remove",
+        "meetup.remove_confirm": "Remove {name} from this meetup?",
+        "meetup.member_added": "Member added to the attendee list.",
+        "meetup.member_removed": "Member removed from the attendee list.",
+        "meetup.member_missing": "Member not found or unavailable.",
         "home.title_fallback": "Riichi Mahjong League Platform",
         "home.subtitle": "Manage season rules, match entry, scoring, leaderboards, and player data in one place.",
         "home.view_leaderboard": "View Leaderboard",
@@ -323,6 +412,7 @@ TRANSLATIONS = {
         "announcement.deleted": "Announcement deleted.",
         "announcement.missing": "Announcement not found.",
         "pagination.recent_matches": "Recent match pagination",
+        "pagination.meetups": "Meetup pagination",
         "pagination.prev": "Previous",
         "pagination.next": "Next",
         "table.player": "Player",
@@ -647,6 +737,7 @@ def create_app() -> Flask:
         ensure_database_initialized()
         ensure_user_soft_delete_columns()
         ensure_announcements_table()
+        ensure_meetups_tables()
         ensure_admin_password()
         user_id = session.get("user_id")
         g.user = query_one("select * from users where id = ? and is_deleted = 0", (user_id,)) if user_id else None
@@ -688,9 +779,236 @@ def create_app() -> Flask:
             past_announcements=announcements[1:],
         )
 
+    @app.route("/about")
+    def about():
+        return render_template("about.html")
+
+    @app.route("/meetups")
+    @login_required
+    def meetups():
+        auto_archive_expired_meetups()
+        per_page = 8
+        page = max(request.args.get("page", 1, type=int), 1)
+        total = query_one("select count(*) as c from meetups")["c"]
+        pages = max((total + per_page - 1) // per_page, 1)
+        if page > pages:
+            return redirect(url_for("meetups", page=pages))
+        meetup_rows = query_all(
+            """
+            select m.*, u.display_name as creator_name, count(ms.id) as attendee_count
+            from meetups m
+            left join users u on u.id = m.created_by
+            left join meetup_signups ms on ms.meetup_id = m.id
+            group by m.id
+            order by m.meetup_at desc, m.id desc
+            limit ? offset ?
+            """,
+            (per_page, (page - 1) * per_page),
+        )
+        meetup_items = []
+        for meetup in meetup_rows:
+            item = dict(meetup)
+            item["status"] = meetup_status(meetup)
+            meetup_items.append(item)
+        pagination = {
+            "page": page,
+            "pages": pages,
+            "total": total,
+            "has_prev": page > 1,
+            "has_next": page < pages,
+            "prev_page": page - 1,
+            "next_page": page + 1,
+        }
+        return render_template("meetups.html", meetups=meetup_items, pagination=pagination)
+
+    @app.route("/meetups/<int:meetup_id>")
+    @login_required
+    def meetup_detail(meetup_id: int):
+        auto_archive_expired_meetups()
+        meetup = query_one(
+            """
+            select m.*, u.display_name as creator_name
+            from meetups m left join users u on u.id = m.created_by
+            where m.id = ?
+            """,
+            (meetup_id,),
+        )
+        if not meetup:
+            flash(translate("meetup.missing"), "error")
+            return redirect(url_for("meetups"))
+        attendees = query_all(
+            """
+            select ms.user_id, ms.created_at, u.display_name, u.role
+            from meetup_signups ms join users u on u.id = ms.user_id
+            where ms.meetup_id = ?
+            order by ms.created_at asc, ms.id asc
+            """,
+            (meetup_id,),
+        )
+        eligible_users = []
+        if g.user["role"] == "super_admin":
+            eligible_users = query_all(
+                """
+                select u.id, u.display_name, u.role
+                from users u
+                where u.is_deleted = 0
+                  and not exists (
+                    select 1 from meetup_signups ms
+                    where ms.meetup_id = ? and ms.user_id = u.id
+                  )
+                order by u.display_name
+                """,
+                (meetup_id,),
+            )
+        status = meetup_status(meetup)
+        is_signed_up = any(attendee["user_id"] == g.user["id"] for attendee in attendees)
+        return render_template(
+            "meetup_detail.html",
+            meetup=meetup,
+            attendees=attendees,
+            eligible_users=eligible_users,
+            status=status,
+            is_signed_up=is_signed_up,
+        )
+
+    @app.route("/admin/meetups/new", methods=("POST",))
+    @role_required("super_admin")
+    def meetup_new():
+        meetup_at = parse_local_datetime(request.form.get("meetup_at", ""))
+        signup_deadline = parse_local_datetime(request.form.get("signup_deadline", ""))
+        if not meetup_at or not signup_deadline:
+            flash(translate("meetup.time_required"), "error")
+        elif signup_deadline > meetup_at:
+            flash(translate("meetup.deadline_order"), "error")
+        else:
+            timestamp = now()
+            execute(
+                "insert into meetups (meetup_at, signup_deadline, created_by, created_at, updated_at) values (?, ?, ?, ?, ?)",
+                (meetup_at, signup_deadline, g.user["id"], timestamp, timestamp),
+            )
+            flash(translate("meetup.created"), "success")
+        return redirect(url_for("meetups"))
+
+    @app.route("/admin/meetups/<int:meetup_id>/edit", methods=("GET", "POST"))
+    @role_required("super_admin")
+    def meetup_edit(meetup_id: int):
+        meetup = query_one("select * from meetups where id = ?", (meetup_id,))
+        if not meetup:
+            flash(translate("meetup.missing"), "error")
+            return redirect(url_for("meetups"))
+        if request.method == "POST":
+            meetup_at = parse_local_datetime(request.form.get("meetup_at", ""))
+            signup_deadline = parse_local_datetime(request.form.get("signup_deadline", ""))
+            if not meetup_at or not signup_deadline:
+                flash(translate("meetup.time_required"), "error")
+            elif signup_deadline > meetup_at:
+                flash(translate("meetup.deadline_order"), "error")
+            else:
+                execute(
+                    "update meetups set meetup_at = ?, signup_deadline = ?, updated_at = ? where id = ?",
+                    (meetup_at, signup_deadline, now(), meetup_id),
+                )
+                flash(translate("meetup.updated"), "success")
+                return redirect(url_for("meetup_detail", meetup_id=meetup_id))
+        return render_template(
+            "meetup_form.html",
+            meetup=meetup,
+            meetup_time=meetup["meetup_at"].replace(" ", "T")[:16],
+            signup_deadline=meetup["signup_deadline"].replace(" ", "T")[:16],
+        )
+
+    @app.route("/meetups/<int:meetup_id>/signup", methods=("POST",))
+    @login_required
+    def meetup_signup(meetup_id: int):
+        auto_archive_expired_meetups()
+        meetup = query_one("select * from meetups where id = ?", (meetup_id,))
+        if not meetup:
+            flash(translate("meetup.missing"), "error")
+            return redirect(url_for("meetups"))
+        if meetup_status(meetup) != "open":
+            flash(translate("meetup.signup_closed"), "error")
+            return redirect(url_for("meetup_detail", meetup_id=meetup_id))
+        try:
+            execute(
+                "insert into meetup_signups (meetup_id, user_id, created_at) values (?, ?, ?)",
+                (meetup_id, g.user["id"], now()),
+            )
+            flash(translate("meetup.signup_success"), "success")
+        except sqlite3.IntegrityError:
+            flash(translate("meetup.signup_duplicate"), "error")
+        return redirect(url_for("meetup_detail", meetup_id=meetup_id))
+
+    @app.route("/admin/meetups/<int:meetup_id>/archive", methods=("POST",))
+    @role_required("super_admin")
+    def meetup_archive(meetup_id: int):
+        meetup = query_one("select id from meetups where id = ?", (meetup_id,))
+        if not meetup:
+            flash(translate("meetup.missing"), "error")
+            return redirect(url_for("meetups"))
+        execute(
+            "update meetups set archived_at = coalesce(archived_at, ?), archived_by = coalesce(archived_by, ?), updated_at = ? where id = ?",
+            (now(), g.user["id"], now(), meetup_id),
+        )
+        flash(translate("meetup.archived_success"), "success")
+        return redirect(url_for("meetup_detail", meetup_id=meetup_id))
+
+    @app.route("/admin/meetups/<int:meetup_id>/delete", methods=("POST",))
+    @role_required("super_admin")
+    def meetup_delete(meetup_id: int):
+        meetup = query_one("select id from meetups where id = ?", (meetup_id,))
+        if not meetup:
+            flash(translate("meetup.missing"), "error")
+            return redirect(url_for("meetups"))
+        db = get_db()
+        db.execute("delete from meetup_signups where meetup_id = ?", (meetup_id,))
+        db.execute("delete from meetups where id = ?", (meetup_id,))
+        db.commit()
+        flash(translate("meetup.deleted_success"), "success")
+        return redirect(url_for("meetups"))
+
+    @app.route("/admin/meetups/<int:meetup_id>/attendees/add", methods=("POST",))
+    @role_required("super_admin")
+    def meetup_attendee_add(meetup_id: int):
+        meetup = query_one("select id from meetups where id = ?", (meetup_id,))
+        user_id = request.form.get("user_id", type=int)
+        user = query_one("select id from users where id = ? and is_deleted = 0", (user_id,)) if user_id else None
+        if not meetup:
+            flash(translate("meetup.missing"), "error")
+            return redirect(url_for("meetups"))
+        if not user:
+            flash(translate("meetup.member_missing"), "error")
+        else:
+            try:
+                execute(
+                    "insert into meetup_signups (meetup_id, user_id, created_at) values (?, ?, ?)",
+                    (meetup_id, user_id, now()),
+                )
+                flash(translate("meetup.member_added"), "success")
+            except sqlite3.IntegrityError:
+                flash(translate("meetup.signup_duplicate"), "error")
+        return redirect(url_for("meetup_detail", meetup_id=meetup_id))
+
+    @app.route("/admin/meetups/<int:meetup_id>/attendees/<int:user_id>/remove", methods=("POST",))
+    @role_required("super_admin")
+    def meetup_attendee_remove(meetup_id: int, user_id: int):
+        meetup = query_one("select id from meetups where id = ?", (meetup_id,))
+        if not meetup:
+            flash(translate("meetup.missing"), "error")
+            return redirect(url_for("meetups"))
+        signup = query_one(
+            "select id from meetup_signups where meetup_id = ? and user_id = ?",
+            (meetup_id, user_id),
+        )
+        if not signup:
+            flash(translate("meetup.member_missing"), "error")
+        else:
+            execute("delete from meetup_signups where id = ?", (signup["id"],))
+            flash(translate("meetup.member_removed"), "success")
+        return redirect(url_for("meetup_detail", meetup_id=meetup_id))
+
     @app.route("/matches")
     def matches():
-        per_page = 12
+        per_page = 20
         page = max(request.args.get("page", 1, type=int), 1)
         total = query_one("select count(*) as c from matches")["c"]
         pages = max((total + per_page - 1) // per_page, 1)
@@ -1342,6 +1660,47 @@ def ensure_announcements_table() -> None:
     db.commit()
 
 
+def ensure_meetups_tables() -> None:
+    db = get_db()
+    db.execute(
+        """
+        create table if not exists meetups (
+          id integer primary key autoincrement,
+          meetup_at text not null,
+          signup_deadline text not null,
+          archived_at text,
+          archived_by integer,
+          created_by integer not null,
+          created_at text not null,
+          updated_at text not null,
+          foreign key (created_by) references users(id)
+        )
+        """
+    )
+    columns = {row["name"] for row in db.execute("pragma table_info(meetups)").fetchall()}
+    if "signup_deadline" not in columns:
+        db.execute("alter table meetups add column signup_deadline text")
+    if "archived_at" not in columns:
+        db.execute("alter table meetups add column archived_at text")
+    if "archived_by" not in columns:
+        db.execute("alter table meetups add column archived_by integer")
+    db.execute("update meetups set signup_deadline = meetup_at where signup_deadline is null")
+    db.execute(
+        """
+        create table if not exists meetup_signups (
+          id integer primary key autoincrement,
+          meetup_id integer not null,
+          user_id integer not null,
+          created_at text not null,
+          unique (meetup_id, user_id),
+          foreign key (meetup_id) references meetups(id),
+          foreign key (user_id) references users(id)
+        )
+        """
+    )
+    db.commit()
+
+
 def ensure_admin_password() -> None:
     db = get_db()
     db.execute(
@@ -1422,6 +1781,42 @@ def normalize_datetime(value: str) -> str:
     if not value:
         return now()
     return value.replace("T", " ") + (":00" if len(value) == 16 else "")
+
+
+def parse_local_datetime(value: str) -> str | None:
+    value = value.strip()
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    return parsed.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def brisbane_local_now() -> datetime:
+    return datetime.now(ZoneInfo("Australia/Brisbane")).replace(tzinfo=None)
+
+
+def meetup_status(meetup) -> str:
+    if meetup["archived_at"]:
+        return "archived"
+    deadline = datetime.fromisoformat(meetup["signup_deadline"] or meetup["meetup_at"])
+    return "closed" if brisbane_local_now() > deadline else "open"
+
+
+def auto_archive_expired_meetups() -> None:
+    cutoff = (brisbane_local_now() - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
+    db = get_db()
+    db.execute(
+        """
+        update meetups
+        set archived_at = ?, updated_at = ?
+        where archived_at is null and meetup_at <= ?
+        """,
+        (now(), now(), cutoff),
+    )
+    db.commit()
 
 
 def generate_temporary_password(length: int = 12) -> str:

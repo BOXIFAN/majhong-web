@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ t('meetup.title') }} · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head row meetup-page-head">
+  <div>
+    <p class="eyebrow">BRML Meetup</p>
+    <h1>{{ t('meetup.title') }}</h1>
+    <p>{{ t('meetup.subtitle') }}</p>
+  </div>
+</section>
+
+{% if current_user.role == 'super_admin' %}
+  <form class="panel meetup-create-form" method="post" action="{{ url_for('meetup_new') }}">
+    <div>
+      <strong>{{ t('meetup.create') }}</strong>
+      <small>{{ t('meetup.timezone') }}</small>
+    </div>
+    <label>{{ t('meetup.time') }}
+      <input name="meetup_at" type="datetime-local" required>
+    </label>
+    <label>{{ t('meetup.deadline') }}
+      <input name="signup_deadline" type="datetime-local" required>
+    </label>
+    <button class="button" type="submit">{{ t('meetup.create') }}</button>
+  </form>
+{% endif %}
+
+{% if meetups %}
+  <section class="meetup-timeline" aria-label="{{ t('meetup.title') }}">
+    {% for meetup in meetups %}
+      <a class="meetup-card meetup-card-link status-{{ meetup.status }}" href="{{ url_for('meetup_detail', meetup_id=meetup.id) }}">
+        <div class="meetup-time-column">
+          <time datetime="{{ meetup.meetup_at.replace(' ', 'T') }}">{{ meetup.meetup_at[:16] }}</time>
+          <small>{{ t('meetup.timezone') }}</small>
+        </div>
+        <div class="meetup-list-summary">
+          <span class="meetup-status-badge status-{{ meetup.status }}">{{ t('meetup.' ~ meetup.status) }}</span>
+          <dl>
+            <div><dt>{{ t('meetup.deadline') }}</dt><dd>{{ meetup.signup_deadline[:16] }}</dd></div>
+            <div><dt>{{ t('meetup.attendees') }}</dt><dd>{{ t('meetup.attendee_count', count=meetup.attendee_count) }}</dd></div>
+          </dl>
+          <strong class="meetup-view-link">{{ t('meetup.view_signup') }} →</strong>
+        </div>
+      </a>
+    {% endfor %}
+  </section>
+  {% if pagination.pages > 1 %}
+    <nav class="pagination" aria-label="{{ t('pagination.meetups') }}">
+      {% if pagination.has_prev %}<a href="{{ url_for('meetups', page=pagination.prev_page) }}">{{ t('pagination.prev') }}</a>{% else %}<span class="disabled">{{ t('pagination.prev') }}</span>{% endif %}
+      <strong>{{ pagination.page }} / {{ pagination.pages }}</strong>
+      {% if pagination.has_next %}<a href="{{ url_for('meetups', page=pagination.next_page) }}">{{ t('pagination.next') }}</a>{% else %}<span class="disabled">{{ t('pagination.next') }}</span>{% endif %}
+    </nav>
+  {% endif %}
+{% else %}
+  <section class="panel"><div class="empty">{{ t('meetup.none') }}</div></section>
+{% endif %}
+{% endblock %}

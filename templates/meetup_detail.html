@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ t('meetup.detail') }} · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head row meetup-detail-head">
+  <div>
+    <p class="eyebrow">BRML Meetup</p>
+    <h1>{{ meetup.meetup_at[:16] }}</h1>
+    <p>{{ t('meetup.timezone') }} · {{ t('meetup.deadline') }}：{{ meetup.signup_deadline[:16] }}</p>
+  </div>
+  <span class="meetup-status-badge status-{{ status }}">{{ t('meetup.' ~ status) }}</span>
+</section>
+
+<section class="meetup-detail-layout">
+  <article class="panel meetup-signup-panel{{ ' is-archived' if status == 'archived' else '' }}">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Attendees</p>
+        <h2>{{ t('meetup.attendees') }}</h2>
+      </div>
+      <span class="muted">{{ t('meetup.attendee_count', count=attendees|length) }}</span>
+    </div>
+
+    {% if status == 'open' %}
+      {% if is_signed_up %}
+        <div class="meetup-signup-state">✓ {{ t('meetup.signed_up') }}</div>
+      {% else %}
+        <form method="post" action="{{ url_for('meetup_signup', meetup_id=meetup.id) }}">
+          <button class="button meetup-primary-action" type="submit">{{ t('meetup.signup') }}</button>
+        </form>
+      {% endif %}
+    {% else %}
+      <div class="meetup-signup-state is-closed">{{ t('meetup.signup_closed') }}</div>
+    {% endif %}
+
+    {% if attendees %}
+      <div class="meetup-attendee-list">
+        {% for attendee in attendees %}
+          <div class="meetup-attendee-row">
+            <span class="meetup-attendee">
+              <b>{{ attendee.display_name[:1] }}</b>
+              {{ attendee.display_name }}
+            </span>
+            {% if current_user.role == 'super_admin' %}
+              <form method="post" action="{{ url_for('meetup_attendee_remove', meetup_id=meetup.id, user_id=attendee.user_id) }}" onsubmit="return confirm({{ t('meetup.remove_confirm', name=attendee.display_name)|tojson }});">
+                <button class="danger-button compact" type="submit">{{ t('meetup.remove_member') }}</button>
+              </form>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty meetup-empty">{{ t('meetup.no_attendees') }}</div>
+    {% endif %}
+  </article>
+
+  {% if current_user.role == 'super_admin' %}
+    <aside class="panel meetup-admin-panel">
+      <h2>{{ t('meetup.manage_attendees') }}</h2>
+      {% if eligible_users %}
+        <form class="form" method="post" action="{{ url_for('meetup_attendee_add', meetup_id=meetup.id) }}">
+          <label>{{ t('meetup.choose_member') }}
+            <select name="user_id" required>
+              <option value="">{{ t('meetup.choose_member') }}</option>
+              {% for user in eligible_users %}
+                <option value="{{ user.id }}">{{ user.display_name }} · {{ roles[user.role] }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <button class="secondary-button" type="submit">{{ t('meetup.add_member') }}</button>
+        </form>
+      {% endif %}
+      <div class="meetup-admin-actions">
+        <a class="secondary-button" href="{{ url_for('meetup_edit', meetup_id=meetup.id) }}">{{ t('meetup.edit') }}</a>
+        {% if status != 'archived' %}
+          <form method="post" action="{{ url_for('meetup_archive', meetup_id=meetup.id) }}" onsubmit="return confirm({{ t('meetup.archive_confirm')|tojson }});">
+            <button class="danger-button" type="submit">{{ t('meetup.archive') }}</button>
+          </form>
+        {% endif %}
+        <form method="post" action="{{ url_for('meetup_delete', meetup_id=meetup.id) }}" onsubmit="return confirm({{ t('meetup.delete_confirm')|tojson }});">
+          <button class="danger-button" type="submit">{{ t('meetup.delete') }}</button>
+        </form>
+      </div>
+    </aside>
+  {% endif %}
+</section>
+
+<div class="document-actions meetup-back-action">
+  <a class="ghost-link" href="{{ url_for('meetups') }}">← {{ t('meetup.back') }}</a>
+</div>
+{% endblock %}

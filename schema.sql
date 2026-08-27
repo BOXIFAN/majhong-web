@@ -1,6 +1,8 @@
 drop table if exists penalties;
 drop table if exists match_entries;
 drop table if exists matches;
+drop table if exists meetup_signups;
+drop table if exists meetups;
 drop table if exists announcements;
 drop table if exists app_migrations;
 drop table if exists rule_versions;
@@ -27,6 +29,28 @@ create table announcements (
   created_at text not null,
   updated_at text not null,
   foreign key (author_id) references users(id)
+);
+
+create table meetups (
+  id integer primary key autoincrement,
+  meetup_at text not null,
+  signup_deadline text not null,
+  archived_at text,
+  archived_by integer,
+  created_by integer not null,
+  created_at text not null,
+  updated_at text not null,
+  foreign key (created_by) references users(id)
+);
+
+create table meetup_signups (
+  id integer primary key autoincrement,
+  meetup_id integer not null,
+  user_id integer not null,
+  created_at text not null,
+  unique (meetup_id, user_id),
+  foreign key (meetup_id) references meetups(id),
+  foreign key (user_id) references users(id)
 );
 
 create table app_migrations (

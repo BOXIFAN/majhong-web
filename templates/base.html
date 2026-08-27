@@ -29,7 +29,9 @@
           <a href="{{ url_for('leaderboard') }}">{{ t('nav.leaderboard') }}</a>
           <a href="{{ url_for('matches') }}">{{ t('nav.matches') }}</a>
           <a href="{{ url_for('seasons') }}">{{ t('nav.rules') }}</a>
+          <a href="{{ url_for('about') }}">{{ t('nav.about') }}</a>
           {% if current_user %}
+            <a href="{{ url_for('meetups') }}">{{ t('nav.meetups') }}</a>
             {% if current_user.role in ['super_admin', 'referee'] %}
               <a href="{{ url_for('match_new') }}">{{ t('nav.match_entry') }}</a>
             {% endif %}
@@ -78,7 +80,9 @@
           <a href="{{ url_for('leaderboard') }}">{{ t('nav.leaderboard') }}</a>
           <a href="{{ url_for('matches') }}">{{ t('nav.matches') }}</a>
           <a href="{{ url_for('seasons') }}">{{ t('nav.rules') }}</a>
+          <a href="{{ url_for('about') }}">{{ t('nav.about') }}</a>
           {% if current_user %}
+            <a href="{{ url_for('meetups') }}">{{ t('nav.meetups') }}</a>
             {% if current_user.role in ['super_admin', 'referee'] %}
               <a href="{{ url_for('match_new') }}">{{ t('nav.match_entry') }}</a>
             {% endif %}
@@ -129,6 +133,7 @@
           {% endif %}
         {% endwith %}
         {% block content %}{% endblock %}
+        <footer class="site-footer">Web designed by Rua</footer>
       </main>
     </div>
   </body>

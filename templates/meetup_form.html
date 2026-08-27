@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ t('meetup.edit') }} · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head">
+  <p class="eyebrow">BRML Meetup</p>
+  <h1>{{ t('meetup.edit') }}</h1>
+  <p>{{ t('meetup.timezone') }}</p>
+</section>
+<form class="panel form meetup-edit-form" method="post">
+  <label>{{ t('meetup.time') }}
+    <input name="meetup_at" type="datetime-local" required value="{{ request.form.get('meetup_at', meetup_time) }}">
+  </label>
+  <label>{{ t('meetup.deadline') }}
+    <input name="signup_deadline" type="datetime-local" required value="{{ request.form.get('signup_deadline', signup_deadline) }}">
+  </label>
+  <div class="form-actions">
+    <a class="secondary-button" href="{{ url_for('meetups') }}">{{ t('match.cancel') }}</a>
+    <button class="button slim" type="submit">{{ t('meetup.save') }}</button>
+  </div>
+</form>
+{% endblock %}
