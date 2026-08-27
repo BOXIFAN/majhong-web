@@ -6,6 +6,7 @@
     <p class="eyebrow">BRML Meetup</p>
     <h1>{{ meetup.meetup_at[:16] }}</h1>
     <p>{{ t('meetup.timezone') }} · {{ t('meetup.deadline') }}：{{ meetup.signup_deadline[:16] }}</p>
+    <p class="meetup-detail-venue"><strong>{{ t('meetup.venue') }}：</strong>{{ meetup.venue }}</p>
   </div>
   <span class="meetup-status-badge status-{{ status }}">{{ t('meetup.' ~ status) }}</span>
 </section>

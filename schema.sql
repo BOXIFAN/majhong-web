@@ -35,6 +35,7 @@ create table meetups (
   id integer primary key autoincrement,
   meetup_at text not null,
   signup_deadline text not null,
+  venue text not null default 'upc 8 Gillingham street, QLD4102',
   archived_at text,
   archived_by integer,
   created_by integer not null,

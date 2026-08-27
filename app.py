@@ -32,6 +32,7 @@ SEED_DEMO_DATA = os.environ.get("SEED_DEMO_DATA", "false").lower() in {"1", "tru
 
 ADMIN_PASSWORD_HASH = "pbkdf2:sha256:600000$OE6JuNaR26tucuw6$c7c3987d9ac3d9e86f2fab2c689c8b49dab963e674f571e8d32d78bf5aaf8c80"
 ADMIN_PASSWORD_MIGRATION = "set-admin-password-2026-08-24"
+DEFAULT_MEETUP_VENUE = "upc 8 Gillingham street, QLD4102"
 
 SUPPORTED_LOCALES = ("zh", "en")
 
@@ -78,9 +79,10 @@ TRANSLATIONS = {
         "meetup.title": "活动报名",
         "meetup.subtitle": "按时间查看 Meetup，并点击报名参加。",
         "meetup.create": "创建 Meetup",
-        "meetup.edit": "编辑时间",
+        "meetup.edit": "编辑 Meetup",
         "meetup.time": "Meetup 时间",
         "meetup.deadline": "报名截止时间",
+        "meetup.venue": "地点与场地",
         "meetup.timezone": "布里斯班时间",
         "meetup.save": "保存时间",
         "meetup.signup": "报名",
@@ -341,9 +343,10 @@ TRANSLATIONS = {
         "meetup.title": "Meetup Sign-up",
         "meetup.subtitle": "View upcoming meetups in time order and sign up to attend.",
         "meetup.create": "Create Meetup",
-        "meetup.edit": "Edit Time",
+        "meetup.edit": "Edit Meetup",
         "meetup.time": "Meetup Time",
         "meetup.deadline": "Sign-up Deadline",
+        "meetup.venue": "Location & Venue",
         "meetup.timezone": "Brisbane time",
         "meetup.save": "Save Time",
         "meetup.signup": "Sign Up",
@@ -777,6 +780,7 @@ def create_app() -> Flask:
             "locale": locale,
             "t": translate,
             "match_type_label": match_type_label,
+            "default_meetup_venue": DEFAULT_MEETUP_VENUE,
         }
 
     @app.cli.command("init-db")
@@ -896,6 +900,7 @@ def create_app() -> Flask:
     def meetup_new():
         meetup_at = parse_local_datetime(request.form.get("meetup_at", ""))
         signup_deadline = parse_local_datetime(request.form.get("signup_deadline", ""))
+        venue = request.form.get("venue", "").strip() or DEFAULT_MEETUP_VENUE
         if not meetup_at or not signup_deadline:
             flash(translate("meetup.time_required"), "error")
         elif signup_deadline > meetup_at:
@@ -903,8 +908,8 @@ def create_app() -> Flask:
         else:
             timestamp = now()
             execute(
-                "insert into meetups (meetup_at, signup_deadline, created_by, created_at, updated_at) values (?, ?, ?, ?, ?)",
-                (meetup_at, signup_deadline, g.user["id"], timestamp, timestamp),
+                "insert into meetups (meetup_at, signup_deadline, venue, created_by, created_at, updated_at) values (?, ?, ?, ?, ?, ?)",
+                (meetup_at, signup_deadline, venue, g.user["id"], timestamp, timestamp),
             )
             flash(translate("meetup.created"), "success")
         return redirect(url_for("meetups"))
@@ -919,14 +924,15 @@ def create_app() -> Flask:
         if request.method == "POST":
             meetup_at = parse_local_datetime(request.form.get("meetup_at", ""))
             signup_deadline = parse_local_datetime(request.form.get("signup_deadline", ""))
+            venue = request.form.get("venue", "").strip() or DEFAULT_MEETUP_VENUE
             if not meetup_at or not signup_deadline:
                 flash(translate("meetup.time_required"), "error")
             elif signup_deadline > meetup_at:
                 flash(translate("meetup.deadline_order"), "error")
             else:
                 execute(
-                    "update meetups set meetup_at = ?, signup_deadline = ?, updated_at = ? where id = ?",
-                    (meetup_at, signup_deadline, now(), meetup_id),
+                    "update meetups set meetup_at = ?, signup_deadline = ?, venue = ?, updated_at = ? where id = ?",
+                    (meetup_at, signup_deadline, venue, now(), meetup_id),
                 )
                 flash(translate("meetup.updated"), "success")
                 return redirect(url_for("meetup_detail", meetup_id=meetup_id))
@@ -935,6 +941,7 @@ def create_app() -> Flask:
             meetup=meetup,
             meetup_time=meetup["meetup_at"].replace(" ", "T")[:16],
             signup_deadline=meetup["signup_deadline"].replace(" ", "T")[:16],
+            meetup_venue=meetup["venue"],
         )
 
     @app.route("/meetups/<int:meetup_id>/signup", methods=("POST",))
@@ -1689,6 +1696,7 @@ def ensure_meetups_tables() -> None:
           id integer primary key autoincrement,
           meetup_at text not null,
           signup_deadline text not null,
+          venue text not null default 'upc 8 Gillingham street, QLD4102',
           archived_at text,
           archived_by integer,
           created_by integer not null,
@@ -1701,11 +1709,19 @@ def ensure_meetups_tables() -> None:
     columns = {row["name"] for row in db.execute("pragma table_info(meetups)").fetchall()}
     if "signup_deadline" not in columns:
         db.execute("alter table meetups add column signup_deadline text")
+    if "venue" not in columns:
+        db.execute(
+            "alter table meetups add column venue text not null default 'upc 8 Gillingham street, QLD4102'"
+        )
     if "archived_at" not in columns:
         db.execute("alter table meetups add column archived_at text")
     if "archived_by" not in columns:
         db.execute("alter table meetups add column archived_by integer")
     db.execute("update meetups set signup_deadline = meetup_at where signup_deadline is null")
+    db.execute(
+        "update meetups set venue = ? where venue is null or trim(venue) = ''",
+        (DEFAULT_MEETUP_VENUE,),
+    )
     db.execute(
         """
         create table if not exists meetup_signups (

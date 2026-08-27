@@ -766,7 +766,7 @@ p {
 
 .meetup-create-form {
   display: grid;
-  grid-template-columns: minmax(170px, 0.8fr) repeat(2, minmax(220px, 1.25fr)) auto;
+  grid-template-columns: minmax(160px, 0.7fr) repeat(2, minmax(190px, 1fr)) minmax(250px, 1.35fr) auto;
   gap: 16px;
   align-items: end;
   margin-bottom: 22px;
@@ -898,6 +898,15 @@ p {
 .meetup-list-summary dd {
   color: var(--ink);
   font-weight: 850;
+  overflow-wrap: anywhere;
+}
+
+.meetup-venue-item {
+  grid-column: 1 / -1;
+}
+
+.meetup-detail-venue {
+  overflow-wrap: anywhere;
 }
 
 .meetup-view-link {
@@ -2232,6 +2241,10 @@ select:focus {
 
   .meetup-list-summary dl {
     grid-template-columns: 1fr;
+  }
+
+  .meetup-venue-item {
+    grid-column: auto;
   }
 
   .meetup-view-link {

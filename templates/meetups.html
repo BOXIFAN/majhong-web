@@ -21,6 +21,9 @@
     <label>{{ t('meetup.deadline') }}
       <input name="signup_deadline" type="datetime-local" required>
     </label>
+    <label>{{ t('meetup.venue') }}
+      <input name="venue" type="text" value="{{ default_meetup_venue }}" required>
+    </label>
     <button class="button" type="submit">{{ t('meetup.create') }}</button>
   </form>
 {% endif %}
@@ -38,6 +41,7 @@
           <dl>
             <div><dt>{{ t('meetup.deadline') }}</dt><dd>{{ meetup.signup_deadline[:16] }}</dd></div>
             <div><dt>{{ t('meetup.attendees') }}</dt><dd>{{ t('meetup.attendee_count', count=meetup.attendee_count) }}</dd></div>
+            <div class="meetup-venue-item"><dt>{{ t('meetup.venue') }}</dt><dd>{{ meetup.venue }}</dd></div>
           </dl>
           <strong class="meetup-view-link">{{ t('meetup.view_signup') }} →</strong>
         </div>

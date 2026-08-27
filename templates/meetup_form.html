@@ -13,6 +13,9 @@
   <label>{{ t('meetup.deadline') }}
     <input name="signup_deadline" type="datetime-local" required value="{{ request.form.get('signup_deadline', signup_deadline) }}">
   </label>
+  <label>{{ t('meetup.venue') }}
+    <input name="venue" type="text" required value="{{ request.form.get('venue', meetup_venue) }}">
+  </label>
   <div class="form-actions">
     <a class="secondary-button" href="{{ url_for('meetups') }}">{{ t('match.cancel') }}</a>
     <button class="button slim" type="submit">{{ t('meetup.save') }}</button>
