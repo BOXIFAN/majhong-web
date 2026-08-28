@@ -4,6 +4,7 @@ import csv
 import functools
 import io
 import json
+import math
 import os
 import secrets
 import sqlite3
@@ -302,6 +303,24 @@ TRANSLATIONS = {
         "player.no_matches": "暂无对局。",
         "player.penalties": "罚则",
         "player.no_penalties": "暂无罚则记录。",
+        "player.radar_title": "竞技六维",
+        "player.radar_intro": "当前赛季表现概览",
+        "player.radar_aria": "当前赛季六维竞技数据雷达图",
+        "player.radar_empty": "当前赛季暂无足够数据，完成对局后会生成六维图。",
+        "player.radar_scale_note": "图形比例：平均打点以 50,000 点、火力以 60,000 点为满值。",
+        "player.first_rate": "一位率",
+        "player.first_rate_desc": "对局中取得一位的概率",
+        "player.positive_rate": "正分率",
+        "player.positive_rate_desc": "对局后取得正分的概率",
+        "player.average_score": "平均打点",
+        "player.average_score_desc": "场均最终得点",
+        "player.fourth_avoidance": "四位回避率",
+        "player.fourth_avoidance_desc": "对局中避免取得四位的概率",
+        "player.streak_rate": "连对率",
+        "player.streak_rate_desc": "最高连续一、二位场次占总场次比例",
+        "player.firepower": "火力",
+        "player.firepower_desc": "取得一位时的平均最终点数",
+        "player.streak_value": "{streak} 场 · {rate}%",
         "flash.login_required": "请先登录。",
         "flash.permission_denied": "当前账号没有操作权限。",
         "flash.register_missing": "请填写所有注册信息。",
@@ -593,6 +612,24 @@ TRANSLATIONS = {
         "player.no_matches": "No matches yet.",
         "player.penalties": "Penalties",
         "player.no_penalties": "No penalty records.",
+        "player.radar_title": "Performance Hexagon",
+        "player.radar_intro": "Current-season performance overview",
+        "player.radar_aria": "Current-season six-axis performance radar chart",
+        "player.radar_empty": "No current-season data yet. The chart will appear after completed matches.",
+        "player.radar_scale_note": "Chart scale: average score tops out at 50,000; firepower at 60,000.",
+        "player.first_rate": "First Rate",
+        "player.first_rate_desc": "Chance of finishing first",
+        "player.positive_rate": "Positive Rate",
+        "player.positive_rate_desc": "Chance of finishing with positive rank points",
+        "player.average_score": "Average Score",
+        "player.average_score_desc": "Average final score per match",
+        "player.fourth_avoidance": "Fourth Avoidance",
+        "player.fourth_avoidance_desc": "Chance of avoiding fourth place",
+        "player.streak_rate": "Streak Rate",
+        "player.streak_rate_desc": "Longest top-two streak as a share of matches",
+        "player.firepower": "Firepower",
+        "player.firepower_desc": "Average final score when finishing first",
+        "player.streak_value": "{streak} games · {rate}%",
         "flash.login_required": "Please log in first.",
         "flash.permission_denied": "This account does not have permission.",
         "flash.register_missing": "Please complete all registration fields.",
@@ -1658,25 +1695,31 @@ def create_app() -> Flask:
         player_stats = next((row for row in leaderboard if row["user_id"] == user_id), None)
         history = query_all(
             """
-            select m.played_at, me.final_score, me.placement, me.rank_points
+            select m.id as match_id, m.played_at, me.final_score, me.placement, me.rank_points
             from match_entries me join matches m on m.id = me.match_id
             where me.user_id = ?
-            order by m.played_at desc limit 10
+            order by m.played_at desc, m.id desc limit 10
             """,
             (user_id,),
         )
-        penalties = query_all(
-            "select * from penalties where user_id = ? order by created_at desc limit 8",
-            (user_id,),
-        )
+        season_entries = query_all(
+            """
+            select me.final_score, me.placement, me.rank_points, m.played_at, m.id as match_id
+            from match_entries me join matches m on m.id = me.match_id
+            where me.user_id = ? and m.season_id = ?
+            order by m.played_at asc, m.id asc
+            """,
+            (user_id, season["id"]),
+        ) if season else []
         trend = build_placement_trend(history)
+        radar = build_player_radar(season_entries)
         return render_template(
             "player.html",
             user=user,
             stats=player_stats,
             history=history,
             trend=trend,
-            penalties=penalties,
+            radar=radar,
         )
 
     @app.route("/export/season/<int:season_id>.csv")
@@ -2243,6 +2286,92 @@ def build_placement_trend(history: list[sqlite3.Row]) -> dict:
     return {
         "points": " ".join(f"{node['x']},{node['y']}" for node in nodes),
         "nodes": nodes,
+    }
+
+
+def build_player_radar(entries: list[sqlite3.Row]) -> dict:
+    match_count = len(entries)
+    first_count = sum(1 for row in entries if float(row["placement"]) == 1)
+    positive_count = sum(1 for row in entries if float(row["rank_points"]) > 0)
+    fourth_avoid_count = sum(1 for row in entries if float(row["placement"]) != 4)
+    average_score = sum(int(row["final_score"]) for row in entries) / match_count if match_count else 0
+    first_scores = [int(row["final_score"]) for row in entries if float(row["placement"]) == 1]
+    firepower = sum(first_scores) / len(first_scores) if first_scores else 0
+
+    longest_streak = 0
+    current_streak = 0
+    for row in entries:
+        if float(row["placement"]) <= 2:
+            current_streak += 1
+            longest_streak = max(longest_streak, current_streak)
+        else:
+            current_streak = 0
+
+    def percentage(count: int) -> float:
+        return round(count / match_count * 100, 1) if match_count else 0.0
+
+    first_rate = percentage(first_count)
+    positive_rate = percentage(positive_count)
+    fourth_avoidance = percentage(fourth_avoid_count)
+    streak_rate = percentage(longest_streak)
+    metric_specs = [
+        ("player.first_rate", "player.first_rate_desc", first_rate, f"{first_rate:.1f}%"),
+        ("player.positive_rate", "player.positive_rate_desc", positive_rate, f"{positive_rate:.1f}%"),
+        ("player.average_score", "player.average_score_desc", min(average_score / 50000 * 100, 100), f"{average_score:,.0f}"),
+        ("player.fourth_avoidance", "player.fourth_avoidance_desc", fourth_avoidance, f"{fourth_avoidance:.1f}%"),
+        (
+            "player.streak_rate",
+            "player.streak_rate_desc",
+            streak_rate,
+            translate("player.streak_value", streak=longest_streak, rate=f"{streak_rate:.1f}"),
+        ),
+        ("player.firepower", "player.firepower_desc", min(firepower / 60000 * 100, 100), f"{firepower:,.0f}"),
+    ]
+
+    center_x, center_y, radius = 180, 166, 92
+    grid_polygons = []
+    for factor in (0.25, 0.5, 0.75, 1.0):
+        points = []
+        for index in range(6):
+            angle = -math.pi / 2 + index * math.pi / 3
+            points.append(f"{center_x + math.cos(angle) * radius * factor:.1f},{center_y + math.sin(angle) * radius * factor:.1f}")
+        grid_polygons.append(" ".join(points))
+
+    metrics = []
+    data_points = []
+    for index, (label_key, description_key, normalized, display_value) in enumerate(metric_specs):
+        angle = -math.pi / 2 + index * math.pi / 3
+        axis_x = center_x + math.cos(angle) * radius
+        axis_y = center_y + math.sin(angle) * radius
+        value_radius = radius * max(0, min(float(normalized), 100)) / 100
+        data_points.append(f"{center_x + math.cos(angle) * value_radius:.1f},{center_y + math.sin(angle) * value_radius:.1f}")
+        label_radius = 126
+        label_x = center_x + math.cos(angle) * label_radius
+        label_y = center_y + math.sin(angle) * label_radius
+        horizontal = math.cos(angle)
+        anchor = "start" if horizontal > 0.35 else "end" if horizontal < -0.35 else "middle"
+        metrics.append(
+            {
+                "label": translate(label_key),
+                "description": translate(description_key),
+                "value": display_value,
+                "normalized": round(float(normalized), 1),
+                "axis_x": round(axis_x, 1),
+                "axis_y": round(axis_y, 1),
+                "label_x": round(label_x, 1),
+                "label_y": round(label_y, 1),
+                "anchor": anchor,
+            }
+        )
+
+    return {
+        "has_data": match_count > 0,
+        "match_count": match_count,
+        "center_x": center_x,
+        "center_y": center_y,
+        "grid_polygons": grid_polygons,
+        "data_points": " ".join(data_points),
+        "metrics": metrics,
     }
 
 

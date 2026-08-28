@@ -37,23 +37,59 @@
       </div>
       <div class="match-list player-history-list">
         {% for item in history %}
-          <div class="match-card"><span>{{ item.played_at }}</span><strong>{{ item.rank_points }}</strong><small>{{ t('player.placement_detail', placement=item.placement, score=item.final_score) }}</small></div>
+          <a class="match-card player-history-card" href="{{ url_for('match_detail', match_id=item.match_id) }}">
+            <span>{{ item.played_at }}</span>
+            <strong>{{ item.rank_points }}</strong>
+            <small>{{ t('player.placement_detail', placement=item.placement, score=item.final_score) }}</small>
+            <i aria-hidden="true">→</i>
+          </a>
         {% endfor %}
       </div>
     {% else %}
       <div class="empty">{{ t('player.no_matches') }}</div>
     {% endif %}
   </div>
-  <div class="panel">
-    <h2>{{ t('player.penalties') }}</h2>
-    {% if penalties %}
-      <div class="match-list">
-        {% for item in penalties %}
-          <div class="match-card"><span>{{ item.penalty_type }}</span><strong>-{{ item.points }}</strong><small>{{ item.reason }}</small></div>
+  <div class="panel player-radar-card">
+    <div class="player-radar-head">
+      <div>
+        <p class="eyebrow">Performance</p>
+        <h2>{{ t('player.radar_title') }}</h2>
+      </div>
+      <span>{{ t('player.radar_intro') }}</span>
+    </div>
+    {% if radar.has_data %}
+      <div class="player-radar-wrap">
+        <svg class="player-radar" viewBox="0 0 360 332" role="img" aria-labelledby="player-radar-title player-radar-desc">
+          <title id="player-radar-title">{{ t('player.radar_aria') }}</title>
+          <desc id="player-radar-desc">{{ t('player.radar_scale_note') }}</desc>
+          {% for points in radar.grid_polygons %}
+            <polygon class="radar-grid-polygon" points="{{ points }}"></polygon>
+          {% endfor %}
+          {% for metric in radar.metrics %}
+            <line class="radar-axis" x1="{{ radar.center_x }}" y1="{{ radar.center_y }}" x2="{{ metric.axis_x }}" y2="{{ metric.axis_y }}"></line>
+          {% endfor %}
+          <polygon class="radar-data" points="{{ radar.data_points }}"></polygon>
+          {% for metric in radar.metrics %}
+            <circle class="radar-node" cx="{{ metric.axis_x if metric.normalized >= 100 else radar.center_x + (metric.axis_x - radar.center_x) * metric.normalized / 100 }}" cy="{{ metric.axis_y if metric.normalized >= 100 else radar.center_y + (metric.axis_y - radar.center_y) * metric.normalized / 100 }}" r="3.4"></circle>
+            <text class="radar-label" x="{{ metric.label_x }}" y="{{ metric.label_y }}" text-anchor="{{ metric.anchor }}">
+              {{ metric.label }}
+              <tspan x="{{ metric.label_x }}" dy="15">{{ metric.value }}</tspan>
+            </text>
+          {% endfor %}
+        </svg>
+      </div>
+      <div class="radar-legend">
+        {% for metric in radar.metrics %}
+          <div>
+            <span>{{ metric.label }}</span>
+            <strong>{{ metric.value }}</strong>
+            <small>{{ metric.description }}</small>
+          </div>
         {% endfor %}
       </div>
+      <p class="radar-scale-note">{{ t('player.radar_scale_note') }}</p>
     {% else %}
-      <div class="empty">{{ t('player.no_penalties') }}</div>
+      <div class="empty">{{ t('player.radar_empty') }}</div>
     {% endif %}
   </div>
 </section>

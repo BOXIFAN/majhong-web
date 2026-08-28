@@ -2204,6 +2204,167 @@ select:focus {
   margin-top: 24px;
 }
 
+.player-history-card {
+  position: relative;
+  padding-right: 48px;
+  color: inherit;
+  border-color: rgba(15, 118, 110, 0.1);
+}
+
+.player-history-card i {
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  color: var(--brand);
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 900;
+  transform: translateY(-50%);
+  transition: transform 180ms ease;
+}
+
+.player-history-card:hover,
+.player-history-card:focus-visible {
+  border-color: rgba(15, 118, 110, 0.26);
+}
+
+.player-history-card:hover i,
+.player-history-card:focus-visible i {
+  transform: translate(4px, -50%);
+}
+
+.player-radar-card {
+  display: grid;
+  align-content: start;
+  gap: 20px;
+  overflow: hidden;
+}
+
+.player-radar-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: end;
+}
+
+.player-radar-head h2,
+.player-radar-head .eyebrow {
+  margin: 0;
+}
+
+.player-radar-head .eyebrow {
+  margin-bottom: 6px;
+}
+
+.player-radar-head > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+  text-align: right;
+}
+
+.player-radar-wrap {
+  padding: 8px 4px;
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at center, rgba(15, 118, 110, 0.09), transparent 58%),
+    rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+.player-radar {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  margin-inline: auto;
+  overflow: visible;
+}
+
+.radar-grid-polygon {
+  fill: rgba(255, 255, 255, 0.12);
+  stroke: rgba(100, 116, 139, 0.22);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.radar-axis {
+  stroke: rgba(100, 116, 139, 0.18);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.radar-data {
+  fill: rgba(15, 118, 110, 0.22);
+  stroke: var(--brand);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 8px 16px rgba(15, 118, 110, 0.14));
+}
+
+.radar-node {
+  fill: #f7d675;
+  stroke: #e4a92d;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.radar-label {
+  fill: #475467;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.radar-label tspan {
+  fill: var(--brand-dark);
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.radar-legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.radar-legend > div {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 10px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.radar-legend span,
+.radar-legend strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.radar-legend strong {
+  color: var(--brand-dark);
+}
+
+.radar-legend small {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.radar-scale-note {
+  margin: -4px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+  text-align: center;
+}
+
 @keyframes rise {
   from {
     opacity: 0;
@@ -2844,6 +3005,29 @@ select:focus {
   .user-edit-form input[disabled] {
     min-width: 0;
     width: 100%;
+  }
+
+  .player-radar-head {
+    align-items: start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .player-radar-head > span {
+    text-align: left;
+  }
+
+  .player-radar-wrap {
+    margin-inline: -8px;
+    padding-inline: 0;
+  }
+
+  .radar-legend {
+    grid-template-columns: 1fr;
+  }
+
+  .player-history-card {
+    padding-right: 44px;
   }
 }
 
