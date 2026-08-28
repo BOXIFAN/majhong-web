@@ -317,11 +317,10 @@ TRANSLATIONS = {
         "player.average_score_desc": "场均最终得点",
         "player.fourth_avoidance": "四位回避率",
         "player.fourth_avoidance_desc": "对局中避免取得四位的概率",
-        "player.streak_rate": "连对率",
-        "player.streak_rate_desc": "最高连续一、二位场次占总场次比例",
+        "player.bust_avoidance": "击飞回避率",
+        "player.bust_avoidance_desc": "终局点数不低于零的对局比例",
         "player.firepower": "火力",
         "player.firepower_desc": "取得一位时的平均最终点数",
-        "player.streak_value": "{streak} 场 · {rate}%",
         "player.password_title": "修改密码",
         "player.password_intro": "如果仍保持登录，可直接设置新密码，无需输入旧密码。",
         "player.new_password": "新密码",
@@ -637,11 +636,10 @@ TRANSLATIONS = {
         "player.average_score_desc": "Average final score per match",
         "player.fourth_avoidance": "Fourth Avoidance",
         "player.fourth_avoidance_desc": "Chance of avoiding fourth place",
-        "player.streak_rate": "Streak Rate",
-        "player.streak_rate_desc": "Longest top-two streak as a share of matches",
+        "player.bust_avoidance": "Busting Avoidance",
+        "player.bust_avoidance_desc": "Share of matches ending with a non-negative final score",
         "player.firepower": "Firepower",
         "player.firepower_desc": "Average final score when finishing first",
-        "player.streak_value": "{streak} games · {rate}%",
         "player.password_title": "Change Password",
         "player.password_intro": "While you are still signed in, you can set a new password without entering the old one.",
         "player.new_password": "New Password",
@@ -2363,18 +2361,10 @@ def build_player_radar(entries: list[sqlite3.Row]) -> dict:
     first_count = sum(1 for row in entries if float(row["placement"]) == 1)
     positive_count = sum(1 for row in entries if float(row["rank_points"]) > 0)
     fourth_avoid_count = sum(1 for row in entries if float(row["placement"]) != 4)
+    bust_avoid_count = sum(1 for row in entries if int(row["final_score"]) >= 0)
     average_score = sum(int(row["final_score"]) for row in entries) / match_count if match_count else 0
     first_scores = [int(row["final_score"]) for row in entries if float(row["placement"]) == 1]
     firepower = sum(first_scores) / len(first_scores) if first_scores else 0
-
-    longest_streak = 0
-    current_streak = 0
-    for row in entries:
-        if float(row["placement"]) <= 2:
-            current_streak += 1
-            longest_streak = max(longest_streak, current_streak)
-        else:
-            current_streak = 0
 
     def percentage(count: int) -> float:
         return round(count / match_count * 100, 1) if match_count else 0.0
@@ -2382,18 +2372,13 @@ def build_player_radar(entries: list[sqlite3.Row]) -> dict:
     first_rate = percentage(first_count)
     positive_rate = percentage(positive_count)
     fourth_avoidance = percentage(fourth_avoid_count)
-    streak_rate = percentage(longest_streak)
+    bust_avoidance = percentage(bust_avoid_count)
     metric_specs = [
         ("player.first_rate", "player.first_rate_desc", first_rate, f"{first_rate:.1f}%"),
         ("player.positive_rate", "player.positive_rate_desc", positive_rate, f"{positive_rate:.1f}%"),
         ("player.average_score", "player.average_score_desc", min(average_score / 50000 * 100, 100), f"{average_score:,.0f}"),
         ("player.fourth_avoidance", "player.fourth_avoidance_desc", fourth_avoidance, f"{fourth_avoidance:.1f}%"),
-        (
-            "player.streak_rate",
-            "player.streak_rate_desc",
-            streak_rate,
-            translate("player.streak_value", streak=longest_streak, rate=f"{streak_rate:.1f}"),
-        ),
+        ("player.bust_avoidance", "player.bust_avoidance_desc", bust_avoidance, f"{bust_avoidance:.1f}%"),
         ("player.firepower", "player.firepower_desc", min(firepower / 60000 * 100, 100), f"{firepower:,.0f}"),
     ]
 
