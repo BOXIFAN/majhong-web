@@ -28,15 +28,10 @@
       <span class="season-status {{ 'is-active' if current_season and current_season.status == 'active' else '' }}"><i aria-hidden="true"></i>{{ current_season.status|capitalize if current_season else t('home.not_enabled') }}</span>
     </div>
     <dl class="season-stats">
-      <div><dt>{{ t('home.players') }}</dt><dd>{{ season_player_count }}</dd></div>
+      <div><dt>{{ t('home.members') }}</dt><dd>{{ current_member_count }}</dd></div>
       <div><dt>{{ t('home.matches') }}</dt><dd>{{ season_match_count }}</dd></div>
       <div><dt>{{ t('home.rules') }}</dt><dd>v{{ current_season.version if current_season else '—' }}</dd></div>
     </dl>
-    <nav class="season-links" aria-label="{{ t('home.season_links') }}">
-      <a href="{{ url_for('leaderboard') }}">{{ t('nav.leaderboard') }} <span>→</span></a>
-      <a href="{{ url_for('matches') }}">{{ t('home.recent_matches') }} <span>→</span></a>
-      <a href="{{ url_for('seasons') }}">{{ t('nav.rules') }} <span>→</span></a>
-    </nav>
   </section>
 
   <section class="home-section explore-section" aria-labelledby="explore-title">
@@ -46,11 +41,11 @@
     </header>
     <div class="explore-grid">
       <a class="explore-card explore-leaderboard" href="{{ url_for('leaderboard') }}">
-        <span class="explore-number">01</span><span class="explore-icon" aria-hidden="true">一</span>
+        <span class="explore-number">01</span><span class="explore-icon explore-rank" aria-hidden="true"><i data-rank="2"></i><i data-rank="1"></i><i data-rank="3"></i></span>
         <span class="explore-copy"><strong>{{ t('nav.leaderboard') }}</strong><small>{{ t('home.leaderboard_desc') }}</small></span><span class="explore-arrow" aria-hidden="true">→</span>
       </a>
       <a class="explore-card explore-matches" href="{{ url_for('matches') }}">
-        <span class="explore-number">02</span><span class="explore-icon explore-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="explore-number">02</span><span class="explore-icon explore-red-dragon" aria-hidden="true">中</span>
         <span class="explore-copy"><strong>{{ t('home.recent_matches') }}</strong><small>{{ t('home.matches_desc') }}</small></span><span class="explore-arrow" aria-hidden="true">→</span>
       </a>
       <a class="explore-card explore-rules" href="{{ url_for('seasons') }}">
@@ -84,7 +79,7 @@
 
   <section class="home-section community-section" aria-labelledby="community-title">
     <div class="community-image" role="img" aria-label="{{ t('home.community_image_alt') }}">
-      <img src="{{ url_for('static', filename='brml-background.svg') }}" alt=""><div class="community-image-note"><span>{{ t('home.brisbane') }}</span><strong>27.47° S</strong></div>
+      <img src="{{ url_for('static', filename='brml-background.svg') }}" alt="">
     </div>
     <div class="community-copy">
       <p class="home-eyebrow">{{ t('home.community_eyebrow') }}</p><h2 id="community-title">{{ t('home.community_title') }}</h2>

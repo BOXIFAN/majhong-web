@@ -2992,14 +2992,12 @@ select:focus {
 }
 
 .home-button span,
-.text-link span,
-.season-links span {
+.text-link span {
   transition: transform 180ms ease;
 }
 
 .home-button:hover span,
-.text-link:hover span,
-.season-links a:hover span {
+.text-link:hover span {
   transform: translateX(4px);
 }
 
@@ -3102,7 +3100,7 @@ select:focus {
   z-index: 3;
   width: calc(100% - clamp(40px, 8vw, 120px));
   display: grid;
-  grid-template-columns: minmax(180px, 0.8fr) minmax(280px, 1fr) minmax(190px, 0.8fr);
+  grid-template-columns: minmax(210px, 0.8fr) minmax(0, 1.6fr);
   gap: 28px;
   align-items: center;
   margin: -48px auto 0;
@@ -3154,6 +3152,8 @@ select:focus {
 .season-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  align-self: stretch;
+  align-items: center;
   margin: 0;
 }
 
@@ -3175,24 +3175,6 @@ select:focus {
   color: var(--home-green-deep);
   font-size: 30px;
   font-weight: 950;
-}
-
-.season-links {
-  display: grid;
-  gap: 7px;
-}
-
-.season-links a {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  color: #35433f;
-  font-size: 12px;
-  font-weight: 780;
-}
-
-.season-links a:hover {
-  color: var(--home-green);
 }
 
 .home-section {
@@ -3300,21 +3282,52 @@ select:focus {
     rgba(232, 245, 240, 0.84);
 }
 
-.explore-dots {
-  grid-template-columns: repeat(2, 17px);
-  gap: 10px;
+.explore-rank {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px 13px 14px;
 }
 
-.explore-dots i {
-  width: 17px;
-  height: 17px;
-  border-radius: 50%;
+.explore-rank i {
+  position: relative;
+  width: 19px;
+  height: 44px;
+  border-radius: 5px 5px 2px 2px;
+  background: #9bcdbd;
+}
+
+.explore-rank i:nth-child(2) {
+  height: 68px;
   background: var(--home-green);
 }
 
-.explore-dots i:nth-child(2),
-.explore-dots i:nth-child(3) {
-  background: var(--home-red);
+.explore-rank i:nth-child(3) {
+  height: 34px;
+  background: #c8dfd7;
+}
+
+.explore-rank i::after {
+  content: attr(data-rank);
+  position: absolute;
+  inset: 7px 0 auto;
+  color: white;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+}
+
+.explore-red-dragon {
+  place-items: center;
+  color: var(--home-red);
+  font-family: "Songti SC", "Noto Serif CJK SC", Georgia, serif;
+  font-size: 48px;
+  line-height: 1;
+  text-align: center;
 }
 
 .explore-copy {
@@ -3569,33 +3582,6 @@ select:focus {
   transform: scale(1.035);
 }
 
-.community-image-note {
-  position: absolute;
-  left: 22px;
-  bottom: 20px;
-  display: grid;
-  padding: 10px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.78);
-  border-radius: 12px;
-  color: var(--home-green-deep);
-  background: rgba(255, 255, 255, 0.62);
-  box-shadow: 0 8px 22px rgba(31, 66, 57, 0.08);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-}
-
-.community-image-note span {
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.community-image-note strong {
-  margin-top: 4px;
-  font-size: 18px;
-}
-
 .community-copy > p:not(.home-eyebrow) {
   margin: 26px 0;
   color: #52605b;
@@ -3643,14 +3629,7 @@ select:focus {
   }
 
   .season-overview {
-    grid-template-columns: minmax(160px, 0.75fr) minmax(260px, 1.1fr);
-  }
-
-  .season-links {
-    grid-column: 1 / -1;
-    grid-template-columns: repeat(3, 1fr);
-    padding-top: 18px;
-    border-top: 1px solid #d9dfd8;
+    grid-template-columns: minmax(160px, 0.7fr) minmax(260px, 1.3fr);
   }
 }
 
@@ -3763,10 +3742,6 @@ select:focus {
     padding-inline: 14px;
   }
 
-  .season-links {
-    grid-column: auto;
-  }
-
   .home-section-head,
   .announcement-community,
   .community-section {
@@ -3849,11 +3824,6 @@ select:focus {
     padding-inline: 9px;
   }
 
-  .season-links {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
   .home-section {
     padding: 58px 22px;
   }
@@ -3874,14 +3844,31 @@ select:focus {
     font-size: 29px;
   }
 
-  .explore-dots {
-    grid-template-columns: repeat(2, 11px);
-    gap: 7px;
+  .explore-rank {
+    gap: 4px;
+    padding: 12px 9px 10px;
   }
 
-  .explore-dots i {
-    width: 11px;
-    height: 11px;
+  .explore-rank i {
+    width: 12px;
+    height: 30px;
+  }
+
+  .explore-rank i:nth-child(2) {
+    height: 45px;
+  }
+
+  .explore-rank i:nth-child(3) {
+    height: 23px;
+  }
+
+  .explore-rank i::after {
+    inset-block-start: 5px;
+    font-size: 8px;
+  }
+
+  .explore-red-dragon {
+    font-size: 34px;
   }
 
   .announcement-story {
