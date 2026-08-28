@@ -55,6 +55,7 @@ document.querySelectorAll("select[data-filterable-select]").forEach((select) => 
   const originalOptions = Array.from(select.options).filter((option) => option.value);
   const placeholder = select.options[0]?.textContent.trim() || "";
   const searchPlaceholder = select.dataset.searchPlaceholder || placeholder;
+  const listLabel = select.dataset.listLabel || "List";
   const emptyText = select.dataset.emptyText || "No results";
   const requiredText = select.dataset.requiredText || placeholder;
   const wasRequired = select.required;
@@ -64,17 +65,37 @@ document.querySelectorAll("select[data-filterable-select]").forEach((select) => 
   const wrapper = document.createElement("div");
   wrapper.className = "searchable-select";
 
+  const controls = document.createElement("div");
+  controls.className = "searchable-select-controls";
+
   const input = document.createElement("input");
-  input.type = "text";
+  input.type = "search";
   input.className = "searchable-select-input";
   input.placeholder = searchPlaceholder;
   input.autocomplete = "off";
   input.spellcheck = false;
+  input.enterKeyHint = "search";
   input.required = wasRequired;
   input.setAttribute("role", "combobox");
   input.setAttribute("aria-autocomplete", "list");
   input.setAttribute("aria-expanded", "false");
   input.setAttribute("aria-controls", listId);
+
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "searchable-select-toggle";
+  toggle.setAttribute("aria-controls", listId);
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-label", listLabel);
+
+  const toggleLabel = document.createElement("span");
+  toggleLabel.className = "searchable-select-toggle-label";
+  toggleLabel.textContent = listLabel;
+
+  const toggleIcon = document.createElement("span");
+  toggleIcon.className = "searchable-select-toggle-icon";
+  toggleIcon.setAttribute("aria-hidden", "true");
+  toggle.append(toggleLabel, toggleIcon);
 
   const list = document.createElement("div");
   list.className = "searchable-select-list";
@@ -83,7 +104,8 @@ document.querySelectorAll("select[data-filterable-select]").forEach((select) => 
   list.hidden = true;
 
   select.parentNode.insertBefore(wrapper, select);
-  wrapper.append(input, select, list);
+  controls.append(input, toggle);
+  wrapper.append(controls, select, list);
   select.classList.add("searchable-select-native");
   select.required = false;
 
@@ -94,6 +116,7 @@ document.querySelectorAll("select[data-filterable-select]").forEach((select) => 
     list.hidden = true;
     wrapper.classList.remove("is-open");
     input.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-expanded", "false");
     input.removeAttribute("aria-activedescendant");
     activeIndex = -1;
   }
@@ -149,18 +172,24 @@ document.querySelectorAll("select[data-filterable-select]").forEach((select) => 
     list.hidden = false;
     wrapper.classList.add("is-open");
     input.setAttribute("aria-expanded", "true");
+    toggle.setAttribute("aria-expanded", "true");
   }
 
   const initialSelection = selectedOption();
   input.value = initialSelection ? initialSelection.textContent.trim() : "";
   input.setCustomValidity(wasRequired && !initialSelection ? requiredText : "");
 
-  input.addEventListener("focus", () => openList(true));
-  input.addEventListener("click", () => openList(true));
   input.addEventListener("input", () => {
     select.value = "";
     input.setCustomValidity(wasRequired ? requiredText : "");
     openList(false);
+  });
+  toggle.addEventListener("click", () => {
+    if (list.hidden) {
+      openList(true);
+    } else {
+      closeList();
+    }
   });
   input.addEventListener("keydown", (event) => {
     const items = Array.from(list.querySelectorAll("[role='option']"));

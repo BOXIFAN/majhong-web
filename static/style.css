@@ -1648,26 +1648,56 @@ select:focus {
   z-index: 20;
 }
 
-.searchable-select::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: 14px;
+.searchable-select-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.searchable-select-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 74px;
+  min-height: 44px;
+  border: 1px solid rgba(15, 118, 110, 0.2);
+  border-radius: 11px;
+  padding: 9px 12px;
+  color: var(--brand-dark);
+  cursor: pointer;
+  background: rgba(15, 118, 110, 0.08);
+  font: inherit;
+  font-weight: 850;
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.searchable-select-toggle:hover,
+.searchable-select-toggle:focus-visible,
+.searchable-select.is-open .searchable-select-toggle {
+  border-color: rgba(15, 118, 110, 0.36);
+  background: rgba(15, 118, 110, 0.14);
+}
+
+.searchable-select-toggle:focus-visible {
+  outline: 3px solid rgba(15, 118, 110, 0.18);
+}
+
+.searchable-select-toggle-icon {
   width: 8px;
   height: 8px;
   border-right: 2px solid #475467;
   border-bottom: 2px solid #475467;
-  pointer-events: none;
-  transform: translateY(-70%) rotate(45deg);
+  transform: translateY(-2px) rotate(45deg);
   transition: transform 160ms ease;
 }
 
-.searchable-select.is-open::after {
-  transform: translateY(-25%) rotate(225deg);
+.searchable-select.is-open .searchable-select-toggle-icon {
+  transform: translateY(2px) rotate(225deg);
 }
 
 .searchable-select-input {
-  padding-right: 38px;
   cursor: text;
 }
 
@@ -3100,6 +3130,29 @@ select:focus {
 
   .player-password-form .button {
     width: 100%;
+  }
+
+  .searchable-select-controls {
+    gap: 10px;
+  }
+
+  .searchable-select-input,
+  .searchable-select-toggle {
+    min-height: 48px;
+  }
+
+  .searchable-select-toggle {
+    min-width: 84px;
+    padding-inline: 13px;
+  }
+
+  .searchable-select-list {
+    max-height: min(48vh, 320px);
+  }
+
+  .searchable-select-option {
+    min-height: 48px;
+    padding: 11px 13px;
   }
 }
 
