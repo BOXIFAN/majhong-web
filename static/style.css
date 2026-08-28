@@ -230,6 +230,22 @@ p {
   background: linear-gradient(135deg, var(--brand), var(--accent));
 }
 
+.account-profile-target {
+  color: inherit;
+  transition: transform 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.account-avatar.account-profile-target:hover,
+.account-avatar.account-profile-target:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.2);
+}
+
+.account-meta.account-profile-target:hover strong,
+.account-meta.account-profile-target:focus-visible strong {
+  color: var(--brand-dark);
+}
+
 .account-meta {
   min-width: 0;
 }

@@ -48,11 +48,11 @@
         </div>
         <div class="account-card{% if not current_user %} guest-account{% endif %}">
           {% if current_user %}
-            <div class="account-avatar">{{ current_user.display_name[:1] }}</div>
-            <div class="account-meta">
+            <a class="account-avatar account-profile-target" href="{{ url_for('player_profile', user_id=current_user.id) }}">{{ current_user.display_name[:1] }}</a>
+            <a class="account-meta account-profile-target" href="{{ url_for('player_profile', user_id=current_user.id) }}">
               <strong>{{ current_user.display_name }}</strong>
               <small>{{ roles[current_user.role] }}</small>
-            </div>
+            </a>
             <a class="logout-button" href="{{ url_for('logout') }}">{{ t('auth.logout') }}</a>
           {% else %}
             <div class="account-meta">
@@ -100,11 +100,11 @@
         <div class="sidebar-footer">
           {% if current_user %}
             <div class="account-card desktop-account">
-              <div class="account-avatar">{{ current_user.display_name[:1] }}</div>
-              <div class="account-meta">
+              <a class="account-avatar account-profile-target" href="{{ url_for('player_profile', user_id=current_user.id) }}">{{ current_user.display_name[:1] }}</a>
+              <a class="account-meta account-profile-target" href="{{ url_for('player_profile', user_id=current_user.id) }}">
                 <strong>{{ current_user.display_name }}</strong>
                 <small>{{ roles[current_user.role] }}</small>
-              </div>
+              </a>
               <a class="logout-button" href="{{ url_for('logout') }}">{{ t('auth.logout') }}</a>
             </div>
           {% else %}

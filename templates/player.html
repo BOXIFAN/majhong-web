@@ -45,6 +45,13 @@
           </a>
         {% endfor %}
       </div>
+      {% if pagination.pages > 1 %}
+        <nav class="pagination" aria-label="{{ t('pagination.player_matches') }}">
+          {% if pagination.has_prev %}<a href="{{ url_for('player_profile', user_id=user.id, page=pagination.prev_page) }}">{{ t('pagination.prev') }}</a>{% else %}<span class="disabled">{{ t('pagination.prev') }}</span>{% endif %}
+          <strong>{{ pagination.page }} / {{ pagination.pages }}</strong>
+          {% if pagination.has_next %}<a href="{{ url_for('player_profile', user_id=user.id, page=pagination.next_page) }}">{{ t('pagination.next') }}</a>{% else %}<span class="disabled">{{ t('pagination.next') }}</span>{% endif %}
+        </nav>
+      {% endif %}
     {% else %}
       <div class="empty">{{ t('player.no_matches') }}</div>
     {% endif %}

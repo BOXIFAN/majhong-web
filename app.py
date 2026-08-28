@@ -182,6 +182,7 @@ TRANSLATIONS = {
         "announcement.missing": "公告不存在。",
         "pagination.recent_matches": "最近对局翻页",
         "pagination.meetups": "活动报名翻页",
+        "pagination.player_matches": "个人战绩翻页",
         "pagination.prev": "上一页",
         "pagination.next": "下一页",
         "table.player": "玩家",
@@ -491,6 +492,7 @@ TRANSLATIONS = {
         "announcement.missing": "Announcement not found.",
         "pagination.recent_matches": "Recent match pagination",
         "pagination.meetups": "Meetup pagination",
+        "pagination.player_matches": "Player match history pagination",
         "pagination.prev": "Previous",
         "pagination.next": "Next",
         "table.player": "Player",
@@ -1693,7 +1695,25 @@ def create_app() -> Flask:
         season = current_season()
         leaderboard = get_leaderboard(season["id"]) if season else []
         player_stats = next((row for row in leaderboard if row["user_id"] == user_id), None)
+        per_page = 5
+        page = max(request.args.get("page", 1, type=int), 1)
+        history_total = query_one(
+            "select count(*) as c from match_entries where user_id = ?",
+            (user_id,),
+        )["c"]
+        history_pages = max((history_total + per_page - 1) // per_page, 1)
+        if page > history_pages:
+            return redirect(url_for("player_profile", user_id=user_id, page=history_pages))
         history = query_all(
+            """
+            select m.id as match_id, m.played_at, me.final_score, me.placement, me.rank_points
+            from match_entries me join matches m on m.id = me.match_id
+            where me.user_id = ?
+            order by m.played_at desc, m.id desc limit ? offset ?
+            """,
+            (user_id, per_page, (page - 1) * per_page),
+        )
+        trend_history = query_all(
             """
             select m.id as match_id, m.played_at, me.final_score, me.placement, me.rank_points
             from match_entries me join matches m on m.id = me.match_id
@@ -1711,8 +1731,17 @@ def create_app() -> Flask:
             """,
             (user_id, season["id"]),
         ) if season else []
-        trend = build_placement_trend(history)
+        trend = build_placement_trend(trend_history)
         radar = build_player_radar(season_entries)
+        pagination = {
+            "page": page,
+            "pages": history_pages,
+            "total": history_total,
+            "has_prev": page > 1,
+            "has_next": page < history_pages,
+            "prev_page": page - 1,
+            "next_page": page + 1,
+        }
         return render_template(
             "player.html",
             user=user,
@@ -1720,6 +1749,7 @@ def create_app() -> Flask:
             history=history,
             trend=trend,
             radar=radar,
+            pagination=pagination,
         )
 
     @app.route("/export/season/<int:season_id>.csv")
