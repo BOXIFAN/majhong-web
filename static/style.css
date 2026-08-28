@@ -3715,7 +3715,7 @@ select:focus {
     min-height: auto;
     grid-template-columns: 1fr;
     justify-items: center;
-    padding: 44px 22px 196px;
+    padding: 44px 22px 148px;
     text-align: center;
   }
 
@@ -3756,10 +3756,11 @@ select:focus {
     position: absolute;
     right: auto;
     left: 50%;
-    bottom: 16px;
-    width: 190px;
+    bottom: 28px;
+    width: 206px;
     min-height: 170px;
-    opacity: 0.78;
+    opacity: 0.42;
+    filter: saturate(0.72);
     transform: translateX(-50%);
   }
 
@@ -3787,13 +3788,14 @@ select:focus {
   .hero-stick {
     width: 92px;
     height: 8px;
+    bottom: 34%;
   }
 
   .season-overview {
     width: calc(100% - 20px);
     grid-template-columns: 1fr;
     gap: 22px;
-    margin-top: -34px;
+    margin-top: -72px;
     padding: 24px;
   }
 
@@ -3960,7 +3962,7 @@ select:focus {
   }
 
   .home-hero {
-    padding: 38px 18px 190px;
+    padding: 38px 18px 146px;
   }
 
   .home-hero h1 {
