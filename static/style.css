@@ -2849,17 +2849,24 @@ select:focus {
 
 /* Home — league portal */
 .home-page {
-  --home-green: #104c42;
-  --home-green-deep: #0a382f;
-  --home-green-soft: #dcebe5;
-  --home-paper: #fbf8f0;
-  --home-red: #c53c32;
+  --home-green: var(--brand);
+  --home-green-deep: var(--brand-dark);
+  --home-green-soft: #dfeee9;
+  --home-paper: #f5f8f7;
+  --home-red: #cf4941;
+  --home-glass: rgba(255, 255, 255, 0.72);
+  --home-glass-edge: rgba(255, 255, 255, 0.78);
+  --home-shadow: 0 20px 54px rgba(31, 66, 57, 0.09), 0 3px 12px rgba(31, 66, 57, 0.045);
   display: grid;
   gap: 0;
   overflow: hidden;
-  border-radius: 30px;
-  background: var(--home-paper);
-  box-shadow: 0 30px 80px rgba(22, 43, 37, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 80% 6%, rgba(151, 211, 190, 0.2), transparent 30%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.74), rgba(237, 246, 242, 0.7)),
+    var(--home-paper);
+  box-shadow: var(--home-shadow);
   animation: rise 520ms ease both;
 }
 
@@ -2874,7 +2881,8 @@ select:focus {
   margin-bottom: 0;
   font-size: clamp(30px, 4vw, 48px);
   line-height: 1.04;
-  letter-spacing: -0.045em;
+  font-weight: 820;
+  letter-spacing: -0.04em;
 }
 
 .home-eyebrow {
@@ -2894,10 +2902,15 @@ select:focus {
   align-items: center;
   gap: 44px;
   padding: clamp(50px, 7vw, 88px);
-  color: #fffdf7;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.72);
+  color: var(--ink);
   background:
-    radial-gradient(circle at 85% 14%, rgba(255, 255, 255, 0.09) 0 2px, transparent 3px) 0 0 / 26px 26px,
-    var(--home-green-deep);
+    radial-gradient(circle at 84% 18%, rgba(15, 118, 110, 0.16), transparent 28%),
+    radial-gradient(circle at 15% 4%, rgba(255, 255, 255, 0.96), transparent 40%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.76), rgba(223, 240, 234, 0.72));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  -webkit-backdrop-filter: blur(24px) saturate(135%);
+  backdrop-filter: blur(24px) saturate(135%);
   isolation: isolate;
   overflow: hidden;
 }
@@ -2910,9 +2923,9 @@ select:focus {
   bottom: -40%;
   width: 55%;
   aspect-ratio: 1;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(15, 118, 110, 0.12);
   border-radius: 50%;
-  box-shadow: 0 0 0 48px rgba(255, 255, 255, 0.025), 0 0 0 96px rgba(255, 255, 255, 0.018);
+  box-shadow: 0 0 0 48px rgba(15, 118, 110, 0.025), 0 0 0 96px rgba(15, 118, 110, 0.018);
 }
 
 .home-hero-copy {
@@ -2921,13 +2934,13 @@ select:focus {
 }
 
 .home-hero .home-eyebrow {
-  color: #b9d8ce;
+  color: var(--home-green);
 }
 
 .home-hero h1 {
   max-width: 720px;
   margin-bottom: 22px;
-  color: #fffdf7;
+  color: #18252a;
   font-size: clamp(50px, 6.7vw, 86px);
   font-weight: 850;
   line-height: 0.94;
@@ -2936,7 +2949,7 @@ select:focus {
 
 .home-hero h1 span {
   display: block;
-  color: #e6dcbf;
+  color: var(--home-green);
   font-size: 0.74em;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2949,16 +2962,17 @@ select:focus {
   margin-bottom: 14px;
   padding: 7px 12px;
   border-left: 3px solid var(--home-red);
-  color: #fffdf7;
+  border-radius: 0 10px 10px 0;
+  color: var(--home-green-deep);
   font-size: 15px;
   font-weight: 900;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.58);
 }
 
 .home-hero-lead {
   max-width: 600px;
   margin-bottom: 30px;
-  color: rgba(255, 255, 255, 0.72);
+  color: #667571;
   font-size: 18px;
   line-height: 1.65;
 }
@@ -2994,18 +3008,19 @@ select:focus {
 }
 
 .home-button-primary {
-  color: var(--home-green-deep);
-  background: #f6efe0;
+  color: white;
+  background: linear-gradient(135deg, var(--home-green), var(--home-green-deep));
+  box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
 }
 
 .home-button-ghost {
-  border-color: rgba(255, 255, 255, 0.3);
-  color: #fff;
-  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(15, 118, 110, 0.18);
+  color: var(--home-green-deep);
+  background: rgba(255, 255, 255, 0.55);
 }
 
 .home-button-ghost:hover {
-  background: rgba(255, 255, 255, 0.11);
+  background: rgba(255, 255, 255, 0.86);
 }
 
 .home-hero-visual {
@@ -3020,14 +3035,14 @@ select:focus {
   place-content: center;
   place-items: center;
   gap: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(15, 118, 110, 0.18);
   border-radius: 50% 44% 48% 46%;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(15, 94, 89, 0.48);
   transform: rotate(-5deg);
 }
 
 .hero-table-mark strong {
-  color: #e6dcbf;
+  color: var(--home-green);
   font-family: Georgia, serif;
   font-size: 70px;
   font-weight: 500;
@@ -3046,13 +3061,14 @@ select:focus {
   height: 92px;
   display: grid;
   place-items: center;
-  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  border-radius: 11px;
   color: var(--home-green);
   font-family: Georgia, serif;
   font-size: 35px;
   font-weight: 900;
-  background: #f7f0df;
-  box-shadow: 7px 9px 0 #cbbf9f, 0 22px 36px rgba(0, 0, 0, 0.22);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 6px 7px 0 #cfe3dc, 0 18px 34px rgba(31, 66, 57, 0.13);
 }
 
 .hero-tile-east {
@@ -3076,8 +3092,8 @@ select:focus {
   width: 130px;
   height: 12px;
   border-radius: 3px;
-  background: repeating-linear-gradient(90deg, #f2e7cd 0 16px, var(--home-red) 16px 22px, #f2e7cd 22px 38px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+  background: repeating-linear-gradient(90deg, #f8fbfa 0 16px, var(--home-red) 16px 22px, #f8fbfa 22px 38px);
+  box-shadow: 0 8px 18px rgba(31, 66, 57, 0.12);
   transform: rotate(18deg);
 }
 
@@ -3091,10 +3107,15 @@ select:focus {
   align-items: center;
   margin: -48px auto 0;
   padding: 26px 30px;
-  border-top: 4px solid var(--home-red);
+  border: 1px solid var(--home-glass-edge);
+  border-radius: 18px;
   color: var(--ink);
-  background: #fffdf8;
-  box-shadow: 0 18px 50px rgba(29, 55, 47, 0.16);
+  background:
+    radial-gradient(circle at 16% 0%, rgba(255, 255, 255, 0.95), transparent 42%),
+    rgba(255, 255, 255, 0.76);
+  box-shadow: var(--home-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.94);
+  -webkit-backdrop-filter: blur(22px) saturate(135%);
+  backdrop-filter: blur(22px) saturate(135%);
 }
 
 .season-heading h2 {
@@ -3138,7 +3159,7 @@ select:focus {
 
 .season-stats div {
   padding: 0 20px;
-  border-left: 1px solid #d9dfd8;
+  border-left: 1px solid rgba(15, 118, 110, 0.11);
 }
 
 .season-stats dt {
@@ -3152,7 +3173,7 @@ select:focus {
 .season-stats dd {
   margin: 4px 0 0;
   color: var(--home-green-deep);
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 950;
 }
 
@@ -3167,7 +3188,7 @@ select:focus {
   gap: 12px;
   color: #35433f;
   font-size: 12px;
-  font-weight: 850;
+  font-weight: 780;
 }
 
 .season-links a:hover {
@@ -3208,14 +3229,19 @@ select:focus {
   grid-template-rows: auto 1fr auto;
   gap: 16px;
   padding: 26px;
-  border-radius: 4px 34px 4px 4px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 20px;
   overflow: hidden;
-  transition: transform 200ms ease, box-shadow 200ms ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 12px 34px rgba(31, 66, 57, 0.065);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
+  backdrop-filter: blur(18px) saturate(130%);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
 .explore-card:hover {
-  transform: translateY(-7px);
-  box-shadow: 0 22px 45px rgba(25, 52, 44, 0.14);
+  transform: translateY(-3px);
+  border-color: rgba(15, 118, 110, 0.2);
+  box-shadow: 0 18px 40px rgba(31, 66, 57, 0.11);
 }
 
 .explore-number {
@@ -3238,8 +3264,9 @@ select:focus {
   font-family: Georgia, serif;
   font-size: 46px;
   font-weight: 900;
-  background: #fffdf7;
-  box-shadow: 7px 8px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(15, 118, 110, 0.08);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 5px 6px 0 rgba(15, 118, 110, 0.09), 0 12px 24px rgba(31, 66, 57, 0.07);
   transform: rotate(-5deg);
   transition: transform 220ms ease;
 }
@@ -3249,8 +3276,10 @@ select:focus {
 }
 
 .explore-leaderboard {
-  color: #fff;
-  background: var(--home-green);
+  color: var(--home-green-deep);
+  background:
+    radial-gradient(circle at 5% 0%, rgba(255, 255, 255, 0.92), transparent 42%),
+    rgba(223, 238, 233, 0.84);
 }
 
 .explore-leaderboard .explore-icon {
@@ -3259,12 +3288,16 @@ select:focus {
 
 .explore-matches {
   color: var(--home-green-deep);
-  background: #e6deca;
+  background:
+    radial-gradient(circle at 85% 5%, rgba(222, 241, 234, 0.62), transparent 44%),
+    rgba(255, 255, 255, 0.7);
 }
 
 .explore-rules {
   color: var(--home-green-deep);
-  background: var(--home-green-soft);
+  background:
+    radial-gradient(circle at 15% 100%, rgba(255, 255, 255, 0.72), transparent 45%),
+    rgba(232, 245, 240, 0.84);
 }
 
 .explore-dots {
@@ -3292,6 +3325,7 @@ select:focus {
 
 .explore-copy strong {
   font-size: 20px;
+  font-weight: 820;
 }
 
 .explore-copy small {
@@ -3309,29 +3343,34 @@ select:focus {
 }
 
 .explore-card:hover .explore-arrow {
-  transform: translateX(5px);
+  transform: translateX(3px);
 }
 
 .announcement-community {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.28fr);
   gap: clamp(36px, 7vw, 90px);
-  color: #fff;
-  background: #183f38;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 92% 8%, rgba(15, 118, 110, 0.12), transparent 30%),
+    radial-gradient(circle at 12% 92%, rgba(255, 255, 255, 0.78), transparent 30%),
+    rgba(225, 241, 235, 0.78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), inset 0 -1px 0 rgba(15, 118, 110, 0.06);
 }
 
 .announcement-community .home-eyebrow {
   margin-top: 30px;
-  color: #a9cbc0;
+  color: var(--home-green);
 }
 
 .announcement-intro h2 {
-  color: #fff;
+  color: var(--ink);
 }
 
 .announcement-intro > p:last-of-type {
   margin-top: 24px;
-  color: rgba(255, 255, 255, 0.66);
+  color: #667571;
   line-height: 1.75;
 }
 
@@ -3341,10 +3380,19 @@ select:focus {
   width: max-content;
   align-items: center;
   padding: 7px 10px;
-  color: #fff;
   font-size: 9px;
   font-weight: 950;
   letter-spacing: 0.16em;
+}
+
+.news-kicker {
+  color: var(--home-green-deep);
+  border: 1px solid rgba(15, 118, 110, 0.13);
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.latest-badge {
+  color: #fff;
   background: var(--home-red);
 }
 
@@ -3352,15 +3400,22 @@ select:focus {
   min-width: 0;
   padding: clamp(28px, 5vw, 50px);
   color: var(--ink);
-  background: #fffdf7;
-  box-shadow: 14px 14px 0 rgba(7, 35, 29, 0.42);
+  border: 1px solid var(--home-glass-edge);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 255, 255, 0.95), transparent 44%),
+    rgba(255, 255, 255, 0.7);
+  box-shadow: var(--home-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  -webkit-backdrop-filter: blur(22px) saturate(135%);
+  backdrop-filter: blur(22px) saturate(135%);
 }
 
 .announcement-story h3 {
   margin: 20px 0 10px;
   font-size: clamp(27px, 3.5vw, 40px);
   line-height: 1.1;
-  letter-spacing: -0.035em;
+  font-weight: 800;
+  letter-spacing: -0.03em;
   overflow-wrap: anywhere;
 }
 
@@ -3368,7 +3423,7 @@ select:focus {
   display: -webkit-box;
   margin-top: 24px;
   overflow: hidden;
-  color: #394b46;
+  color: #41514c;
   font-size: 16px;
   line-height: 1.8;
   -webkit-box-orient: vertical;
@@ -3376,11 +3431,12 @@ select:focus {
 }
 
 .announcement-story .announcement-meta {
-  color: #7b8581;
+  color: #71807b;
+  font-weight: 500;
 }
 
 .announcement-community .text-link {
-  color: #fff;
+  color: var(--home-green-deep);
 }
 
 .past-announcements {
@@ -3447,7 +3503,7 @@ select:focus {
   font-family: Georgia, serif;
   font-size: 28px;
   background: white;
-  box-shadow: 5px 6px 0 #d8d2c2;
+  box-shadow: 4px 5px 0 #d5e6e0, 0 10px 22px rgba(31, 66, 57, 0.08);
 }
 
 .news-empty p {
@@ -3461,38 +3517,51 @@ select:focus {
   grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
   gap: clamp(42px, 8vw, 100px);
   align-items: center;
-  background: #f2eddf;
+  background:
+    radial-gradient(circle at 95% 100%, rgba(204, 232, 221, 0.32), transparent 34%),
+    rgba(248, 251, 250, 0.76);
 }
 
 .community-image {
   position: relative;
-  min-height: 440px;
+  min-height: 420px;
   display: grid;
   place-items: center;
   overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.84);
+  border-radius: 22px;
   background:
-    linear-gradient(rgba(12, 57, 48, 0.74), rgba(12, 57, 48, 0.74)),
-    repeating-linear-gradient(45deg, transparent 0 24px, rgba(255, 255, 255, 0.06) 24px 25px),
-    var(--home-green);
+    linear-gradient(rgba(227, 243, 237, 0.8), rgba(208, 232, 223, 0.74)),
+    repeating-linear-gradient(45deg, transparent 0 24px, rgba(255, 255, 255, 0.28) 24px 25px),
+    #dceee7;
+  box-shadow: var(--home-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .community-image::after {
-  content: "COMMUNITY PHOTO";
+  content: "BRISBANE · RIICHI · COMMUNITY";
   position: absolute;
-  right: 20px;
-  bottom: 18px;
-  color: rgba(255, 255, 255, 0.46);
-  font-size: 8px;
+  top: 18px;
+  right: 18px;
+  bottom: auto;
+  padding: 8px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 999px;
+  color: var(--home-green-deep);
+  font-size: 7px;
   font-weight: 900;
   letter-spacing: 0.2em;
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: 0 8px 22px rgba(31, 66, 57, 0.08);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 
 .community-image img {
   width: 50%;
   max-height: 260px;
   object-fit: contain;
-  filter: brightness(0) invert(1);
-  opacity: 0.65;
+  filter: none;
+  opacity: 0.72;
   transition: transform 360ms ease;
 }
 
@@ -3505,7 +3574,14 @@ select:focus {
   left: 22px;
   bottom: 20px;
   display: grid;
-  color: #fff;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 12px;
+  color: var(--home-green-deep);
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: 0 8px 22px rgba(31, 66, 57, 0.08);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 
 .community-image-note span {
@@ -3548,8 +3624,22 @@ select:focus {
 
 @media (max-width: 1100px) {
   .home-hero {
-    grid-template-columns: minmax(0, 1fr) 250px;
+    grid-template-columns: 1fr;
     min-height: 520px;
+    padding-right: clamp(42px, 10vw, 84px);
+  }
+
+  .home-hero-copy {
+    max-width: 78%;
+  }
+
+  .home-hero-visual {
+    position: absolute;
+    right: 12px;
+    bottom: 34px;
+    width: 230px;
+    min-height: 280px;
+    opacity: 0.66;
   }
 
   .season-overview {
@@ -3570,12 +3660,20 @@ select:focus {
   }
 
   .home-hero {
-    grid-template-columns: minmax(0, 1fr) 230px;
+    grid-template-columns: 1fr;
     gap: 24px;
     padding: 54px 42px 82px;
   }
 
+  .home-hero-copy {
+    max-width: 76%;
+  }
+
   .home-hero-visual {
+    position: absolute;
+    right: 6px;
+    bottom: 24px;
+    width: 220px;
     min-height: 320px;
   }
 
@@ -3607,6 +3705,10 @@ select:focus {
     padding: 48px 30px 88px;
   }
 
+  .home-hero-copy {
+    max-width: 100%;
+  }
+
   .home-hero h1 {
     font-size: clamp(43px, 12vw, 66px);
   }
@@ -3628,7 +3730,7 @@ select:focus {
     width: 48px;
     height: 60px;
     font-size: 23px;
-    box-shadow: 4px 5px 0 #cbbf9f, 0 14px 24px rgba(0, 0, 0, 0.18);
+    box-shadow: 4px 5px 0 #cfe3dc, 0 14px 24px rgba(31, 66, 57, 0.11);
   }
 
   .hero-tile-east {
@@ -3784,7 +3886,7 @@ select:focus {
 
   .announcement-story {
     padding: 24px;
-    box-shadow: 8px 8px 0 rgba(7, 35, 29, 0.42);
+    box-shadow: 0 16px 38px rgba(31, 66, 57, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.92);
   }
 
   .community-image {
