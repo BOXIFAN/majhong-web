@@ -3696,31 +3696,71 @@ select:focus {
 
 @media (max-width: 760px) {
   .home-page {
-    margin-inline: -6px;
-    border-radius: 20px;
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    border-radius: 18px;
+  }
+
+  .home-page > *,
+  .home-page section,
+  .home-page article,
+  .home-page header,
+  .home-page div {
+    min-width: 0;
+    max-width: 100%;
   }
 
   .home-hero {
     min-height: auto;
     grid-template-columns: 1fr;
-    padding: 48px 30px 88px;
+    justify-items: center;
+    padding: 44px 22px 196px;
+    text-align: center;
   }
 
   .home-hero-copy {
+    display: grid;
+    justify-items: center;
     max-width: 100%;
   }
 
   .home-hero h1 {
+    width: 100%;
+    max-width: 560px;
     font-size: clamp(43px, 12vw, 66px);
+    overflow-wrap: anywhere;
+  }
+
+  .home-season-name {
+    max-width: 100%;
+    justify-content: center;
+    border-left: 0;
+    border-bottom: 3px solid var(--home-red);
+    border-radius: 10px 10px 0 0;
+    text-align: center;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .home-hero-lead {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .home-hero .hero-actions {
+    justify-content: center;
   }
 
   .home-hero-visual {
     position: absolute;
-    right: -20px;
-    bottom: 10px;
-    width: 170px;
+    right: auto;
+    left: 50%;
+    bottom: 16px;
+    width: 190px;
     min-height: 170px;
-    opacity: 0.72;
+    opacity: 0.78;
+    transform: translateX(-50%);
   }
 
   .hero-table-mark {
@@ -3750,20 +3790,50 @@ select:focus {
   }
 
   .season-overview {
-    width: calc(100% - 30px);
+    width: calc(100% - 20px);
     grid-template-columns: 1fr;
     gap: 22px;
-    margin-top: -40px;
+    margin-top: -34px;
     padding: 24px;
+  }
+
+  .season-heading {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .season-heading h2 {
+    display: block;
+    width: 100%;
+    margin-right: 0;
+    font-size: 24px;
+    line-height: 1.12;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .season-status {
+    margin-top: 10px;
+  }
+
+  .season-stats {
+    width: 100%;
+    text-align: center;
   }
 
   .season-stats div:first-child {
     border-left: 0;
-    padding-left: 0;
   }
 
   .season-stats div {
-    padding-inline: 14px;
+    min-width: 0;
+    padding-inline: 10px;
+  }
+
+  .season-stats dt {
+    line-height: 1.35;
+    overflow-wrap: anywhere;
   }
 
   .home-section-head,
@@ -3774,44 +3844,123 @@ select:focus {
 
   .home-section-head {
     gap: 20px;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .home-section-head > p {
+    margin-inline: auto;
+    text-align: center;
   }
 
   .explore-grid {
     grid-template-columns: 1fr;
+    justify-items: center;
   }
 
   .explore-card {
-    min-height: 210px;
-    grid-template-columns: 1fr 110px auto;
-    grid-template-rows: auto 1fr;
+    width: 100%;
+    max-width: 380px;
+    min-height: 290px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    justify-items: center;
+    align-items: center;
+    gap: 14px;
+    text-align: center;
+  }
+
+  .explore-number {
+    justify-self: start;
   }
 
   .explore-icon {
-    grid-column: 2;
-    grid-row: 1 / -1;
+    grid-column: 1;
+    grid-row: 2;
+    width: 84px;
+    height: 106px;
   }
 
   .explore-copy {
     grid-column: 1;
+    grid-row: 3;
+    justify-items: center;
+    align-self: center;
+  }
+
+  .explore-copy small {
+    max-width: 250px;
   }
 
   .explore-arrow {
-    grid-column: 3;
+    grid-column: 1;
+    grid-row: 4;
+    align-self: center;
+    justify-self: center;
+  }
+
+  .announcement-intro,
+  .community-copy {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .announcement-community .home-eyebrow {
+    margin-top: 24px;
+  }
+
+  .announcement-intro > p:last-of-type {
+    max-width: 420px;
+  }
+
+  .announcement-story {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .announcement-story h3,
+  .announcement-meta,
+  .announcement-content {
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .community-image {
-    min-height: 340px;
+    width: 100%;
+    min-height: 0;
+    aspect-ratio: 4 / 3;
+  }
+
+  .community-image::after {
+    right: auto;
+    left: 50%;
+    max-width: calc(100% - 28px);
+    text-align: center;
+    white-space: nowrap;
+    transform: translateX(-50%);
+  }
+
+  .community-copy > p:not(.home-eyebrow) {
+    max-width: 460px;
+    text-align: center;
+  }
+
+  .community-contacts,
+  .community-contacts .contact-block,
+  .community-contacts .contact-links {
+    justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
   .home-page {
-    margin-inline: -4px;
-    border-radius: 16px;
+    margin-inline: 0;
+    border-radius: 15px;
   }
 
   .home-hero {
-    padding: 38px 22px 80px;
+    padding: 38px 18px 190px;
   }
 
   .home-hero h1 {
@@ -3828,7 +3977,8 @@ select:focus {
 
   .home-hero .hero-actions {
     display: grid;
-    justify-items: start;
+    justify-items: center;
+    width: 100%;
   }
 
   .home-button {
@@ -3836,8 +3986,8 @@ select:focus {
   }
 
   .season-overview {
-    width: calc(100% - 22px);
-    padding: 20px;
+    width: calc(100% - 16px);
+    padding: 20px 14px;
   }
 
   .season-stats dd {
@@ -3849,7 +3999,7 @@ select:focus {
   }
 
   .home-section {
-    padding: 58px 22px;
+    padding: 54px 16px;
   }
 
   .home-page h2 {
@@ -3857,15 +4007,18 @@ select:focus {
   }
 
   .explore-card {
-    min-height: 190px;
-    grid-template-columns: 1fr 76px auto;
-    padding: 20px;
+    min-height: 270px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    padding: 20px 18px;
   }
 
   .explore-icon {
-    width: 58px;
-    height: 74px;
-    font-size: 29px;
+    grid-column: 1;
+    grid-row: 2;
+    width: 72px;
+    height: 90px;
+    font-size: 34px;
   }
 
   .explore-rank {
