@@ -3041,7 +3041,7 @@ select:focus {
 
 .hero-table-mark strong {
   color: var(--home-green);
-  font-family: Georgia, serif;
+  font-family: "STKaiti", "KaiTi", "Songti SC", Georgia, serif;
   font-size: 70px;
   font-weight: 500;
 }
@@ -3062,7 +3062,7 @@ select:focus {
   border: 1px solid rgba(255, 255, 255, 0.92);
   border-radius: 11px;
   color: var(--home-green);
-  font-family: Georgia, serif;
+  font-family: "STKaiti", "KaiTi", "Songti SC", Georgia, serif;
   font-size: 35px;
   font-weight: 900;
   background: rgba(255, 255, 255, 0.92);
@@ -3072,14 +3072,26 @@ select:focus {
 .hero-tile-east {
   top: 4px;
   right: 8%;
+  color: #202b2f;
+  font-size: 39px;
+  line-height: 1;
   transform: rotate(9deg);
 }
 
 .hero-tile-five {
   right: 52%;
   bottom: 5%;
+  grid-template-rows: repeat(2, auto);
+  align-content: center;
+  gap: 0;
   color: var(--home-red);
+  font-size: 31px;
+  line-height: 0.88;
   transform: rotate(-12deg);
+}
+
+.hero-tile-five span {
+  display: block;
 }
 
 .hero-stick {
@@ -3714,10 +3726,12 @@ select:focus {
 
   .hero-tile-east {
     top: 52px;
+    font-size: 25px;
   }
 
   .hero-tile-five {
     right: 56%;
+    font-size: 20px;
   }
 
   .hero-stick {
