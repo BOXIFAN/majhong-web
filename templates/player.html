@@ -84,8 +84,10 @@
           {% for metric in radar.metrics %}
             <circle class="radar-node" cx="{{ metric.axis_x if metric.normalized >= 100 else radar.center_x + (metric.axis_x - radar.center_x) * metric.normalized / 100 }}" cy="{{ metric.axis_y if metric.normalized >= 100 else radar.center_y + (metric.axis_y - radar.center_y) * metric.normalized / 100 }}" r="3.4"></circle>
             <text class="radar-label" x="{{ metric.label_x }}" y="{{ metric.label_y }}" text-anchor="{{ metric.anchor }}">
-              {{ metric.label }}
-              <tspan x="{{ metric.label_x }}" dy="15">{{ metric.value }}</tspan>
+              {% for line in metric.label_lines %}
+                <tspan class="radar-label-line" x="{{ metric.label_x }}" dy="{{ 0 if loop.first else 13 }}">{{ line }}</tspan>
+              {% endfor %}
+              <tspan class="radar-label-value" x="{{ metric.label_x }}" dy="15">{{ metric.value }}</tspan>
             </text>
           {% endfor %}
         </svg>

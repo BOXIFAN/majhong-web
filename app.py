@@ -2394,6 +2394,12 @@ def build_player_radar(entries: list[sqlite3.Row]) -> dict:
     metrics = []
     data_points = []
     for index, (label_key, description_key, normalized, display_value) in enumerate(metric_specs):
+        label = translate(label_key)
+        label_lines = (
+            label.split(" ")
+            if label_key in {"player.fourth_avoidance", "player.bust_avoidance"} and " " in label
+            else [label]
+        )
         angle = -math.pi / 2 + index * math.pi / 3
         axis_x = center_x + math.cos(angle) * radius
         axis_y = center_y + math.sin(angle) * radius
@@ -2406,7 +2412,8 @@ def build_player_radar(entries: list[sqlite3.Row]) -> dict:
         anchor = "start" if horizontal > 0.35 else "end" if horizontal < -0.35 else "middle"
         metrics.append(
             {
-                "label": translate(label_key),
+                "label": label,
+                "label_lines": label_lines,
                 "description": translate(description_key),
                 "value": display_value,
                 "normalized": round(float(normalized), 1),

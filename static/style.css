@@ -2333,7 +2333,13 @@ select:focus {
   font-weight: 800;
 }
 
-.radar-label tspan {
+.radar-label .radar-label-line {
+  fill: #475467;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.radar-label .radar-label-value {
   fill: var(--brand-dark);
   font-size: 11px;
   font-weight: 950;
