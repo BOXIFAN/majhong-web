@@ -3099,11 +3099,21 @@ select:focus {
   z-index: 2;
   right: 0;
   bottom: 18%;
-  width: 130px;
+  width: 142px;
   height: 12px;
-  border-radius: 3px;
-  background: repeating-linear-gradient(90deg, #f8fbfa 0 16px, var(--home-red) 16px 22px, #f8fbfa 22px 38px);
-  box-shadow: 0 8px 18px rgba(31, 66, 57, 0.12);
+  border: 1px solid rgba(112, 126, 119, 0.2);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 46% 29%, var(--home-red) 0 1.6px, transparent 1.9px),
+    radial-gradient(circle at 54% 29%, var(--home-red) 0 1.6px, transparent 1.9px),
+    radial-gradient(circle at 50% 50%, var(--home-red) 0 1.8px, transparent 2.1px),
+    radial-gradient(circle at 46% 71%, var(--home-red) 0 1.6px, transparent 1.9px),
+    radial-gradient(circle at 54% 71%, var(--home-red) 0 1.6px, transparent 1.9px),
+    linear-gradient(180deg, #fffefa 0%, #edf0e9 52%, #dce2da 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 1px rgba(81, 98, 89, 0.12),
+    0 8px 18px rgba(31, 66, 57, 0.1);
   transform: rotate(18deg);
 }
 
