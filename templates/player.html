@@ -1,9 +1,14 @@
 {% extends "base.html" %}
 {% block title %}{{ user.display_name }} · Brisbane Riichi{% endblock %}
 {% block content %}
-<section class="page-head">
-  <p class="eyebrow">{{ roles[user.role] }}</p>
-  <h1>{{ user.display_name }}</h1>
+<section class="page-head row">
+  <div>
+    <p class="eyebrow">{{ roles[user.role] }}</p>
+    <h1>{{ user.display_name }}</h1>
+  </div>
+  {% if current_user and current_user.id == user.id %}
+    <a class="secondary-button" href="#account-password">{{ t('player.password_title') }}</a>
+  {% endif %}
 </section>
 <section class="metric-grid">
   <div class="metric"><span>{{ t('player.current_points') }}</span><strong>{{ stats.total_points if stats else 0 }}</strong></div>
@@ -100,4 +105,25 @@
     {% endif %}
   </div>
 </section>
+{% if current_user and current_user.id == user.id %}
+  <section class="panel player-password-card" id="account-password">
+    <div class="player-password-copy">
+      <p class="eyebrow">Account Security</p>
+      <h2>{{ t('player.password_title') }}</h2>
+      <p>{{ t('player.password_intro') }}</p>
+    </div>
+    <form class="form player-password-form" method="post" action="{{ url_for('account_password_update') }}">
+      <label>
+        {{ t('player.new_password') }}
+        <input name="new_password" type="password" minlength="8" maxlength="128" autocomplete="new-password" required>
+      </label>
+      <label>
+        {{ t('player.confirm_password') }}
+        <input name="confirm_password" type="password" minlength="8" maxlength="128" autocomplete="new-password" required>
+      </label>
+      <small>{{ t('player.password_requirements') }}</small>
+      <button class="button" type="submit">{{ t('player.save_password') }}</button>
+    </form>
+  </section>
+{% endif %}
 {% endblock %}

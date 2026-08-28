@@ -322,7 +322,17 @@ TRANSLATIONS = {
         "player.firepower": "火力",
         "player.firepower_desc": "取得一位时的平均最终点数",
         "player.streak_value": "{streak} 场 · {rate}%",
+        "player.password_title": "修改密码",
+        "player.password_intro": "如果仍保持登录，可直接设置新密码，无需输入旧密码。",
+        "player.new_password": "新密码",
+        "player.confirm_password": "确认新密码",
+        "player.password_requirements": "使用 8–128 个字符。保存后请使用新密码登录。",
+        "player.save_password": "保存新密码",
         "flash.login_required": "请先登录。",
+        "flash.password_missing": "请填写并确认新密码。",
+        "flash.password_mismatch": "两次输入的密码不一致。",
+        "flash.password_invalid_length": "新密码长度需要为 8–128 个字符。",
+        "flash.password_updated": "密码已更新，请妥善保存新密码。",
         "flash.permission_denied": "当前账号没有操作权限。",
         "flash.register_missing": "请填写所有注册信息。",
         "flash.invite_invalid": "邀请码无效或已被使用。",
@@ -632,7 +642,17 @@ TRANSLATIONS = {
         "player.firepower": "Firepower",
         "player.firepower_desc": "Average final score when finishing first",
         "player.streak_value": "{streak} games · {rate}%",
+        "player.password_title": "Change Password",
+        "player.password_intro": "While you are still signed in, you can set a new password without entering the old one.",
+        "player.new_password": "New Password",
+        "player.confirm_password": "Confirm New Password",
+        "player.password_requirements": "Use 8–128 characters. Sign in with the new password after saving.",
+        "player.save_password": "Save New Password",
         "flash.login_required": "Please log in first.",
+        "flash.password_missing": "Enter and confirm your new password.",
+        "flash.password_mismatch": "The two passwords do not match.",
+        "flash.password_invalid_length": "Your new password must contain 8–128 characters.",
+        "flash.password_updated": "Password updated. Keep your new password somewhere safe.",
         "flash.permission_denied": "This account does not have permission.",
         "flash.register_missing": "Please complete all registration fields.",
         "flash.invite_invalid": "The invite code is invalid or has already been used.",
@@ -1304,6 +1324,25 @@ def create_app() -> Flask:
             session["locale"] = selected_locale
         flash(translate("flash.logout_success"), "success")
         return redirect(url_for("index"))
+
+    @app.route("/account/password", methods=("POST",))
+    @login_required
+    def account_password_update():
+        new_password = request.form.get("new_password", "")
+        confirm_password = request.form.get("confirm_password", "")
+        if not new_password or not confirm_password:
+            flash(translate("flash.password_missing"), "error")
+        elif new_password != confirm_password:
+            flash(translate("flash.password_mismatch"), "error")
+        elif not 8 <= len(new_password) <= 128:
+            flash(translate("flash.password_invalid_length"), "error")
+        else:
+            execute(
+                "update users set password_hash = ? where id = ?",
+                (generate_password_hash(new_password, method="pbkdf2:sha256"), g.user["id"]),
+            )
+            flash(translate("flash.password_updated"), "success")
+        return redirect(url_for("player_profile", user_id=g.user["id"]))
 
     @app.route("/dashboard")
     @login_required

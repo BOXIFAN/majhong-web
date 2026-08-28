@@ -2381,6 +2381,43 @@ select:focus {
   text-align: center;
 }
 
+.player-password-card {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.75fr) minmax(340px, 1.25fr);
+  gap: 32px;
+  align-items: start;
+  margin-top: 22px;
+  scroll-margin-top: 24px;
+}
+
+.player-password-copy h2,
+.player-password-copy p {
+  margin-top: 0;
+}
+
+.player-password-copy h2 {
+  margin-bottom: 10px;
+}
+
+.player-password-copy > p:last-child,
+.player-password-form > small {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.player-password-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.player-password-form > small {
+  align-self: center;
+  font-size: 12px;
+}
+
+.player-password-form .button {
+  justify-self: end;
+}
+
 @keyframes rise {
   from {
     opacity: 0;
@@ -3044,6 +3081,19 @@ select:focus {
 
   .player-history-card {
     padding-right: 44px;
+  }
+
+  .player-password-card,
+  .player-password-form {
+    grid-template-columns: 1fr;
+  }
+
+  .player-password-card {
+    gap: 18px;
+  }
+
+  .player-password-form .button {
+    width: 100%;
   }
 }
 
