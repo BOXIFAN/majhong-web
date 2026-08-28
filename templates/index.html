@@ -1,69 +1,96 @@
 {% extends "base.html" %}
 {% block title %}{{ t('nav.home') }} · Brisbane Riichi{% endblock %}
 {% block content %}
-<section class="hero">
-  <div>
-    <p class="eyebrow">Brisbane Riichi Mahjong</p>
-    <h1>{{ current_season.name if current_season else t('home.title_fallback') }}</h1>
-    <p>{{ t('home.subtitle') }}</p>
-    <div class="hero-actions">
-      <a class="button" href="{{ url_for('leaderboard') }}">{{ t('home.view_leaderboard') }}</a>
-      {% if current_user and current_user.role in ['super_admin', 'referee'] %}
-        <a class="button secondary" href="{{ url_for('match_new') }}">{{ t('match.entry') }}</a>
-      {% endif %}
-    </div>
-  </div>
-  <div class="hero-stat-card">
-    <span>{{ t('home.current_season') }}</span>
-    <strong>{{ current_season.status if current_season else t('home.not_enabled') }}</strong>
-    <small>{{ t('home.rule_version', version=(current_season.version if current_season else '-')) }}</small>
-  </div>
-</section>
-
-<section class="announcement-layout">
-  <article class="panel announcement-featured">
-    <div class="section-head">
-      <div>
-        <p class="eyebrow">Announcement</p>
-        <h2>{{ t('announcement.latest') }}</h2>
+<div class="home-page">
+  <section class="home-hero" aria-labelledby="home-hero-title">
+    <div class="home-hero-copy">
+      <p class="home-eyebrow">Brisbane Riichi Mahjong</p>
+      <h1 id="home-hero-title">Brisbane Riichi Mahjong <span>League</span></h1>
+      <p class="home-season-name">{{ current_season.name if current_season else t('home.title_fallback') }}</p>
+      <p class="home-hero-lead">{{ t('home.portal_subtitle') }}</p>
+      <div class="hero-actions">
+        <a class="home-button home-button-primary" href="{{ url_for('leaderboard') }}">{{ t('home.view_leaderboard') }} <span aria-hidden="true">→</span></a>
+        <a class="home-button home-button-ghost" href="{{ url_for('matches') }}">{{ t('home.recent_matches') }} <span aria-hidden="true">→</span></a>
       </div>
-      {% if current_user and current_user.role == 'super_admin' %}
-        <a class="secondary-button" href="{{ url_for('announcements') }}">{{ t('announcement.manage') }}</a>
-      {% endif %}
     </div>
-    {% if latest_announcement %}
-      <h3>{{ latest_announcement.title }}</h3>
-      <p class="announcement-meta">{{ t('announcement.published_by', date=latest_announcement.created_at, name=(latest_announcement.author_name or t('home.system'))) }}</p>
-      <div class="announcement-content">{{ latest_announcement.content }}</div>
-    {% else %}
-      <div class="empty">{{ t('announcement.none') }}</div>
-    {% endif %}
-  </article>
+    <div class="home-hero-visual" aria-hidden="true">
+      <span class="hero-tile hero-tile-east">E</span>
+      <span class="hero-tile hero-tile-five">五</span>
+      <span class="hero-stick"></span>
+      <div class="hero-table-mark"><span>PLAY</span><strong>競</strong><span>CONNECT</span></div>
+    </div>
+  </section>
 
-  <aside class="panel announcement-archive">
-    <div class="section-head">
-      <h2>{{ t('announcement.archive') }}</h2>
-      <span class="muted">{{ past_announcements|length }}</span>
+  <section class="season-overview" aria-labelledby="season-overview-title">
+    <div class="season-heading">
+      <p class="home-eyebrow">{{ t('home.current_season') }}</p>
+      <h2 id="season-overview-title">{{ current_season.name if current_season else t('home.not_enabled') }}</h2>
+      <span class="season-status {{ 'is-active' if current_season and current_season.status == 'active' else '' }}"><i aria-hidden="true"></i>{{ current_season.status|capitalize if current_season else t('home.not_enabled') }}</span>
     </div>
-    {% if past_announcements %}
-      <div class="announcement-list">
-        {% for announcement in past_announcements %}
-          <details class="announcement-item">
-            <summary>
-              <strong>{{ announcement.title }}</strong>
-              <small>{{ announcement.created_at }}</small>
-            </summary>
-            <div class="announcement-content compact">{{ announcement.content }}</div>
+    <dl class="season-stats">
+      <div><dt>{{ t('home.players') }}</dt><dd>{{ season_player_count }}</dd></div>
+      <div><dt>{{ t('home.matches') }}</dt><dd>{{ season_match_count }}</dd></div>
+      <div><dt>{{ t('home.rules') }}</dt><dd>v{{ current_season.version if current_season else '—' }}</dd></div>
+    </dl>
+    <nav class="season-links" aria-label="{{ t('home.season_links') }}">
+      <a href="{{ url_for('leaderboard') }}">{{ t('nav.leaderboard') }} <span>→</span></a>
+      <a href="{{ url_for('matches') }}">{{ t('home.recent_matches') }} <span>→</span></a>
+      <a href="{{ url_for('seasons') }}">{{ t('nav.rules') }} <span>→</span></a>
+    </nav>
+  </section>
+
+  <section class="home-section explore-section" aria-labelledby="explore-title">
+    <header class="home-section-head">
+      <div><p class="home-eyebrow">{{ t('home.explore_eyebrow') }}</p><h2 id="explore-title">{{ t('home.explore_title') }}</h2></div>
+      <p>{{ t('home.explore_intro') }}</p>
+    </header>
+    <div class="explore-grid">
+      <a class="explore-card explore-leaderboard" href="{{ url_for('leaderboard') }}">
+        <span class="explore-number">01</span><span class="explore-icon" aria-hidden="true">一</span>
+        <span class="explore-copy"><strong>{{ t('nav.leaderboard') }}</strong><small>{{ t('home.leaderboard_desc') }}</small></span><span class="explore-arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="explore-card explore-matches" href="{{ url_for('matches') }}">
+        <span class="explore-number">02</span><span class="explore-icon explore-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="explore-copy"><strong>{{ t('home.recent_matches') }}</strong><small>{{ t('home.matches_desc') }}</small></span><span class="explore-arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="explore-card explore-rules" href="{{ url_for('seasons') }}">
+        <span class="explore-number">03</span><span class="explore-icon" aria-hidden="true">南</span>
+        <span class="explore-copy"><strong>{{ t('nav.rules') }}</strong><small>{{ t('home.rules_desc') }}</small></span><span class="explore-arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="home-section announcement-community" aria-labelledby="announcement-title">
+    <div class="announcement-intro">
+      <span class="news-kicker">BRML NEWS</span><p class="home-eyebrow">{{ t('home.from_community') }}</p>
+      <h2 id="announcement-title">{{ t('announcement.latest') }}</h2><p>{{ t('home.news_intro') }}</p>
+      {% if current_user and current_user.role == 'super_admin' %}<a class="text-link" href="{{ url_for('announcements') }}">{{ t('announcement.manage') }} <span>→</span></a>{% endif %}
+    </div>
+    <article class="announcement-story">
+      {% if latest_announcement %}
+        <span class="latest-badge">LATEST</span><h3>{{ latest_announcement.title }}</h3>
+        <p class="announcement-meta">{{ t('announcement.published_by', date=latest_announcement.created_at, name=(latest_announcement.author_name or t('home.system'))) }}</p>
+        <div class="announcement-content">{{ latest_announcement.content }}</div>
+        {% if past_announcements %}
+          <details class="past-announcements"><summary>{{ t('home.more_announcements') }} <span>{{ past_announcements|length }}</span></summary>
+            <div class="past-announcement-list">{% for announcement in past_announcements %}<details><summary><strong>{{ announcement.title }}</strong><small>{{ announcement.created_at }}</small></summary><div class="announcement-content compact">{{ announcement.content }}</div></details>{% endfor %}</div>
           </details>
-        {% endfor %}
-      </div>
-    {% else %}
-      <div class="empty">{{ t('announcement.no_archive') }}</div>
-    {% endif %}
-  </aside>
-</section>
-<div class="home-contact-strip">
-  {% set contact_compact = true %}
-  {% include "_contact_links.html" %}
+        {% endif %}
+      {% else %}
+        <div class="news-empty"><span aria-hidden="true">東</span><p>{{ t('home.news_empty') }}</p></div>
+      {% endif %}
+    </article>
+  </section>
+
+  <section class="home-section community-section" aria-labelledby="community-title">
+    <div class="community-image" role="img" aria-label="{{ t('home.community_image_alt') }}">
+      <img src="{{ url_for('static', filename='brml-background.svg') }}" alt=""><div class="community-image-note"><span>{{ t('home.brisbane') }}</span><strong>27.47° S</strong></div>
+    </div>
+    <div class="community-copy">
+      <p class="home-eyebrow">{{ t('home.community_eyebrow') }}</p><h2 id="community-title">{{ t('home.community_title') }}</h2>
+      <p>{{ t('home.community_body') }}</p><a class="text-link" href="{{ url_for('about') }}">{{ t('home.about_brml') }} <span>→</span></a>
+      <div class="community-contacts">{% set contact_compact = true %}{% include "_contact_links.html" %}</div>
+    </div>
+  </section>
 </div>
 {% endblock %}

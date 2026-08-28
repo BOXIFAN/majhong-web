@@ -139,6 +139,27 @@ TRANSLATIONS = {
         "home.referee": "裁判：{name}",
         "home.system": "系统",
         "home.first_match_hint": "录入第一场比赛后会显示在这里。",
+        "home.portal_subtitle": "布里斯班竞技立直麻将的共同主场。一起打牌、竞技，也一起连接社群。",
+        "home.players": "参赛玩家",
+        "home.matches": "赛季对局",
+        "home.rules": "规则版本",
+        "home.season_links": "当前赛季快捷入口",
+        "home.explore_eyebrow": "探索联赛",
+        "home.explore_title": "从这里进入牌桌",
+        "home.explore_intro": "查看当前赛季排名、最近赛果，以及 BRML 的竞技规则。",
+        "home.leaderboard_desc": "查看当前赛季积分与排名",
+        "home.matches_desc": "回顾最近比赛与完整赛果",
+        "home.rules_desc": "阅读当前赛季的 BRML 规则",
+        "home.from_community": "来自社群",
+        "home.news_intro": "赛季动态、活动消息，以及来自 BRML 的重要通知。",
+        "home.more_announcements": "更多公告",
+        "home.news_empty": "下一条联赛消息正在酝酿中，请稍后再来看看。",
+        "home.community_eyebrow": "布里斯班立直社群",
+        "home.community_title": "竞技，也是一群人的相聚。",
+        "home.community_body": "BRML 通过定期对局、赛季竞技和社群活动，让布里斯班的立直麻将玩家相聚在一起。无论你是资深牌手，还是刚认识立直麻将，这里都有你的位置。",
+        "home.about_brml": "了解 BRML",
+        "home.community_image_alt": "BRML 社群活动照片预留区域",
+        "home.brisbane": "布里斯班",
         "announcement.title": "公告",
         "announcement.latest": "最新公告",
         "announcement.archive": "往期公告",
@@ -411,6 +432,27 @@ TRANSLATIONS = {
         "home.referee": "Referee: {name}",
         "home.system": "System",
         "home.first_match_hint": "The first entered match will appear here.",
+        "home.portal_subtitle": "Brisbane's home for competitive Riichi Mahjong. Play, compete, and connect with the community.",
+        "home.players": "Players",
+        "home.matches": "Matches",
+        "home.rules": "Rules",
+        "home.season_links": "Current season links",
+        "home.explore_eyebrow": "Explore the league",
+        "home.explore_title": "Your way into the game",
+        "home.explore_intro": "Follow the standings, revisit recent results, and get familiar with BRML competition rules.",
+        "home.leaderboard_desc": "See this season's standings and points",
+        "home.matches_desc": "Revisit recent games and full results",
+        "home.rules_desc": "Read the current BRML season rules",
+        "home.from_community": "From the community",
+        "home.news_intro": "Season updates, event news, and important notes from BRML.",
+        "home.more_announcements": "More Announcements",
+        "home.news_empty": "The next league update is on its way. Check back soon.",
+        "home.community_eyebrow": "Brisbane Riichi Community",
+        "home.community_title": "Competitive play, shared around a table.",
+        "home.community_body": "BRML brings Brisbane's Riichi players together through regular games, seasonal competition, and community events. Whether you are an experienced player or just discovering Riichi, there is a seat for you.",
+        "home.about_brml": "About BRML",
+        "home.community_image_alt": "Reserved area for a future BRML community event photo",
+        "home.brisbane": "Brisbane",
         "announcement.title": "Announcements",
         "announcement.latest": "Latest Announcement",
         "announcement.archive": "Past Announcements",
@@ -806,6 +848,7 @@ def create_app() -> Flask:
 
     @app.route("/")
     def index():
+        season = current_season()
         announcements = query_all(
             """
             select a.*, u.display_name as author_name
@@ -813,8 +856,27 @@ def create_app() -> Flask:
             order by a.created_at desc, a.id desc
             """
         )
+        season_match_count = 0
+        season_player_count = 0
+        if season:
+            season_match_count = query_one(
+                "select count(*) as c from matches where season_id = ?",
+                (season["id"],),
+            )["c"]
+            season_player_count = query_one(
+                """
+                select count(distinct me.user_id) as c
+                from match_entries me
+                join matches m on m.id = me.match_id
+                where m.season_id = ?
+                """,
+                (season["id"],),
+            )["c"]
         return render_template(
             "index.html",
+            current_season=season,
+            season_match_count=season_match_count,
+            season_player_count=season_player_count,
             latest_announcement=announcements[0] if announcements else None,
             past_announcements=announcements[1:],
         )
