@@ -10,15 +10,15 @@
 <section class="metric-grid finance-metrics">
   <article class="metric finance-metric finance-income">
     <span>{{ t('finance.income') }}</span>
-    <strong>¥{{ '{:,.2f}'.format(data.income_total) }}</strong>
+    <strong>A${{ '{:,.2f}'.format(data.income_total) }}</strong>
   </article>
   <article class="metric finance-metric finance-expense">
     <span>{{ t('finance.expense') }}</span>
-    <strong>¥{{ '{:,.2f}'.format(data.expense_total) }}</strong>
+    <strong>A${{ '{:,.2f}'.format(data.expense_total) }}</strong>
   </article>
   <article class="metric finance-metric finance-net {% if data.net < 0 %}is-negative{% endif %}">
     <span>{{ t('finance.net') }}</span>
-    <strong>¥{{ '{:,.2f}'.format(data.net) }}</strong>
+    <strong>A${{ '{:,.2f}'.format(data.net) }}</strong>
   </article>
   <article class="metric finance-metric">
     <span>{{ t('finance.spend_ratio') }}</span>
@@ -91,7 +91,7 @@
             <tr>
               <td class="strong">{{ member.display_name }}</td>
               <td>{{ member.records }}</td>
-              <td>¥{{ '{:,.2f}'.format(member.income) }}</td>
+              <td>A${{ '{:,.2f}'.format(member.income) }}</td>
               <td>{% if member.pct is not none %}{{ '%.1f' % member.pct }}%{% else %}{{ t('finance.no_percent') }}{% endif %}</td>
             </tr>
           {% endfor %}
@@ -129,7 +129,7 @@
               <td>{{ t('finance.category.' + tx.category) }}</td>
               <td>{{ tx.member_name or '—' }}</td>
               <td class="strong {{ 'money-income' if tx.kind == 'income' else 'money-expense' }}">
-                {{ '+' if tx.kind == 'income' else '−' }}¥{{ '{:,.2f}'.format(tx.amount) }}
+                {{ '+' if tx.kind == 'income' else '−' }}A${{ '{:,.2f}'.format(tx.amount) }}
               </td>
               <td>
                 <div class="table-actions">

@@ -10,15 +10,15 @@
 <section class="metric-grid finance-metrics">
   <article class="metric finance-metric finance-income">
     <span>{{ t('finance.income') }}</span>
-    <strong>¥{{ '{:,.2f}'.format(data.income_total) }}</strong>
+    <strong>A${{ '{:,.2f}'.format(data.income_total) }}</strong>
   </article>
   <article class="metric finance-metric finance-expense">
     <span>{{ t('finance.expense') }}</span>
-    <strong>¥{{ '{:,.2f}'.format(data.expense_total) }}</strong>
+    <strong>A${{ '{:,.2f}'.format(data.expense_total) }}</strong>
   </article>
   <article class="metric finance-metric finance-net {% if data.net < 0 %}is-negative{% endif %}">
     <span>{{ t('finance.net') }}</span>
-    <strong>¥{{ '{:,.2f}'.format(data.net) }}</strong>
+    <strong>A${{ '{:,.2f}'.format(data.net) }}</strong>
   </article>
   <article class="metric finance-metric">
     <span>{{ t('finance.spend_ratio') }}</span>
@@ -41,14 +41,14 @@
   <div class="panel finance-chart-panel">
     <div class="section-head">
       <h2>{{ t('finance.income_breakdown') }}</h2>
-      <span class="muted">¥{{ '{:,.2f}'.format(data.income.total) }}</span>
+      <span class="muted">A${{ '{:,.2f}'.format(data.income.total) }}</span>
     </div>
     {% if data.income.categories %}
       <div class="pie-layout">
         <div class="pie-chart" style="background: {{ data.income.gradient }};">
           <div class="pie-hole"></div>
           <div class="pie-center">
-            <strong>¥{{ '{:,.2f}'.format(data.income.total) }}</strong>
+            <strong>A${{ '{:,.2f}'.format(data.income.total) }}</strong>
             <small>{{ t('finance.income') }}</small>
           </div>
         </div>
@@ -58,7 +58,7 @@
             <li>
               <span class="pie-legend-swatch" style="background: {{ item.color }};"></span>
               <span class="pie-legend-label">{{ t('finance.category.' + item.category) }}</span>
-              <strong>¥{{ '{:,.2f}'.format(item.amount) }}</strong>
+              <strong>A${{ '{:,.2f}'.format(item.amount) }}</strong>
               <span class="muted">{{ item.pct_label }}</span>
             </li>
           {% endfor %}
@@ -72,14 +72,14 @@
   <div class="panel finance-chart-panel">
     <div class="section-head">
       <h2>{{ t('finance.expense_breakdown') }}</h2>
-      <span class="muted">¥{{ '{:,.2f}'.format(data.expense.total) }}</span>
+      <span class="muted">A${{ '{:,.2f}'.format(data.expense.total) }}</span>
     </div>
     {% if data.expense.categories %}
       <div class="pie-layout">
         <div class="pie-chart" style="background: {{ data.expense.gradient }};">
           <div class="pie-hole"></div>
           <div class="pie-center">
-            <strong>¥{{ '{:,.2f}'.format(data.expense.total) }}</strong>
+            <strong>A${{ '{:,.2f}'.format(data.expense.total) }}</strong>
             <small>{{ t('finance.expense') }}</small>
           </div>
         </div>
@@ -89,7 +89,7 @@
             <li>
               <span class="pie-legend-swatch" style="background: {{ item.color }};"></span>
               <span class="pie-legend-label">{{ t('finance.category.' + item.category) }}</span>
-              <strong>¥{{ '{:,.2f}'.format(item.amount) }}</strong>
+              <strong>A${{ '{:,.2f}'.format(item.amount) }}</strong>
               <span class="muted">{{ item.pct_label }}</span>
             </li>
           {% endfor %}
@@ -126,7 +126,7 @@
               <td>{{ t('finance.category.' + tx.category) }}</td>
               <td>{{ tx.member_name or '—' }}</td>
               <td class="strong {{ 'money-income' if tx.kind == 'income' else 'money-expense' }}">
-                {{ '+' if tx.kind == 'income' else '−' }}¥{{ '{:,.2f}'.format(tx.amount) }}
+                {{ '+' if tx.kind == 'income' else '−' }}A${{ '{:,.2f}'.format(tx.amount) }}
               </td>
             </tr>
           {% endfor %}
