@@ -65,6 +65,7 @@ class PublicPageSmokeTests(unittest.TestCase):
             self.assertGreater(db.execute("select count(*) from seasons").fetchone()[0], 0)
             self.assertGreater(db.execute("select count(*) from matches").fetchone()[0], 0)
             season_id = db.execute("select id from seasons order by id desc limit 1").fetchone()[0]
+            archived_season_id = db.execute("select id from seasons where status = 'archived' order by id limit 1").fetchone()[0]
             match_id = db.execute("select id from matches order by id desc limit 1").fetchone()[0]
             player_id = db.execute("select id from users where role = 'user' order by id limit 1").fetchone()[0]
             db.execute(
@@ -102,6 +103,33 @@ class PublicPageSmokeTests(unittest.TestCase):
         ):
             with self.subTest(path=path):
                 self.assertEqual(self.client.get(path).status_code, 200)
+
+        meetup_create = self.client.post(
+            "/admin/meetups/new",
+            data={
+                "meetup_at": "2026-12-01T19:00",
+                "signup_deadline": "2026-11-30T19:00",
+                "venue": "Delete-flow test venue",
+            },
+        )
+        self.assertEqual(meetup_create.status_code, 302)
+        with sqlite3.connect(self.database) as db:
+            meetup_id = db.execute("select id from meetups where venue = 'Delete-flow test venue'").fetchone()[0]
+        self.assertEqual(self.client.post(f"/meetups/{meetup_id}/signup").status_code, 302)
+        self.assertEqual(self.client.post(f"/admin/meetups/{meetup_id}/delete").status_code, 302)
+        self.assertEqual(self.client.post(f"/matches/{match_id}/delete").status_code, 302)
+        self.assertEqual(
+            self.client.post(
+                f"/seasons/{archived_season_id}/delete",
+                data={"password": "test-admin-password"},
+            ).status_code,
+            302,
+        )
+        with sqlite3.connect(self.database) as db:
+            self.assertEqual(db.execute("select count(*) from meetups where id = ?", (meetup_id,)).fetchone()[0], 0)
+            self.assertEqual(db.execute("select count(*) from matches where id = ?", (match_id,)).fetchone()[0], 0)
+            self.assertEqual(db.execute("select count(*) from seasons where id = ?", (archived_season_id,)).fetchone()[0], 0)
+            self.assertEqual(db.execute("pragma foreign_key_check").fetchall(), [])
 
     def test_route_endpoint_names_are_preserved(self) -> None:
         expected = {
