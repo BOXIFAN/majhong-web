@@ -43,6 +43,12 @@ class PublicPageSmokeTests(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.headers["Location"].endswith("/login"))
 
+    def test_language_switch_is_stored_in_session(self) -> None:
+        response = self.client.get("/language/en")
+        self.assertEqual(response.status_code, 302)
+        with self.client.session_transaction() as session:
+            self.assertEqual(session["locale"], "en")
+
     def test_demo_seed_populates_users_seasons_and_matches(self) -> None:
         application.app.config["SEED_DEMO_DATA"] = True
         with application.app.app_context():
