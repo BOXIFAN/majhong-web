@@ -9,7 +9,10 @@ import unittest
 from pathlib import Path
 
 import app as application
+from werkzeug.security import generate_password_hash
+
 from brml.analytics import build_finals_status
+from brml.config import ADMIN_PASSWORD_MIGRATION
 from brml.rules import DEFAULT_RULES
 from brml.scoring import calculate_placements, calculate_rank_points, get_uma_points
 
@@ -60,7 +63,58 @@ class PublicPageSmokeTests(unittest.TestCase):
             self.assertGreater(db.execute("select count(*) from users").fetchone()[0], 1)
             self.assertGreater(db.execute("select count(*) from seasons").fetchone()[0], 0)
             self.assertGreater(db.execute("select count(*) from matches").fetchone()[0], 0)
+            season_id = db.execute("select id from seasons order by id desc limit 1").fetchone()[0]
+            match_id = db.execute("select id from matches order by id desc limit 1").fetchone()[0]
+            player_id = db.execute("select id from users where role = 'user' order by id limit 1").fetchone()[0]
+            db.execute(
+                "update users set password_hash = ? where email = 'admin@example.com'",
+                (generate_password_hash("test-admin-password", method="pbkdf2:sha256"),),
+            )
+            db.execute(
+                "insert or replace into app_migrations (name, applied_at) values (?, 'test')",
+                (ADMIN_PASSWORD_MIGRATION,),
+            )
+            db.commit()
         self.assertEqual(self.client.get("/leaderboard").status_code, 200)
+        for path in (
+            f"/seasons/{season_id}",
+            f"/matches/{match_id}",
+            f"/players/{player_id}",
+        ):
+            with self.subTest(path=path):
+                self.assertEqual(self.client.get(path).status_code, 200)
+
+        login = self.client.post(
+            "/login",
+            data={"email": "admin@example.com", "password": "test-admin-password"},
+        )
+        self.assertEqual(login.status_code, 302)
+        for path in (
+            "/admin/announcements",
+            "/admin/invites",
+            "/admin/users",
+            "/seasons/new",
+            f"/seasons/{season_id}/edit",
+            "/matches/new",
+            f"/matches/{match_id}/edit",
+            f"/export/season/{season_id}.csv",
+        ):
+            with self.subTest(path=path):
+                self.assertEqual(self.client.get(path).status_code, 200)
+
+    def test_route_endpoint_names_are_preserved(self) -> None:
+        expected = {
+            "index", "about", "meetups", "meetup_detail", "meetup_new", "meetup_edit",
+            "meetup_signup", "meetup_archive", "meetup_delete", "meetup_attendee_add",
+            "meetup_attendee_remove", "matches", "announcements", "announcement_edit",
+            "announcement_delete", "favicon", "set_language", "register", "login", "logout",
+            "account_password_update", "dashboard", "invites", "admin_users", "admin_user_update",
+            "admin_user_delete", "admin_user_reset_password", "seasons", "season_new", "season_detail",
+            "season_edit", "season_delete", "match_new", "match_detail", "match_edit", "match_delete",
+            "leaderboard", "player_profile", "export_season",
+        }
+        actual = {rule.endpoint for rule in application.app.url_map.iter_rules()}
+        self.assertTrue(expected.issubset(actual))
 
 
 class ScoringRegressionTests(unittest.TestCase):
