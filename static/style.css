@@ -4479,26 +4479,33 @@ select:focus {
 .finance-charts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 22px;
-  margin-top: 22px;
+  gap: 26px 28px;
+  margin: 26px 0 8px;
 }
 
 .finance-chart-panel {
-  padding: 22px;
+  padding: 24px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .pie-layout {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) 1.2fr;
-  gap: 26px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 24px;
   align-items: center;
   margin-top: 8px;
+}
+
+.pie-layout > * {
+  min-width: 0;
 }
 
 .pie-chart {
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
+  max-width: 100%;
   border-radius: 50%;
   box-shadow: inset 0 0 0 1px var(--glass-edge), var(--soft-shadow);
 }
@@ -4537,6 +4544,7 @@ select:focus {
   gap: 8px;
   margin: 0;
   padding: 0;
+  min-width: 0;
   list-style: none;
 }
 
@@ -4572,6 +4580,10 @@ select:focus {
 
 .pie-legend li strong {
   white-space: nowrap;
+}
+
+.finance-records {
+  margin-top: 26px;
 }
 
 .finance-form {
