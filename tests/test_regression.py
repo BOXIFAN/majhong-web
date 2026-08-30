@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import sqlite3
 from pathlib import Path
 
 import app as application
@@ -15,6 +16,7 @@ class PublicPageSmokeTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
         self.original_database = application.DATABASE
+        self.original_seed_setting = application.SEED_DEMO_DATA
         application.DATABASE = Path(self.temp_dir.name) / "test.db"
         application.init_db()
         application.app.config.update(TESTING=True, SECRET_KEY="test-secret")
@@ -22,6 +24,7 @@ class PublicPageSmokeTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         application.DATABASE = self.original_database
+        application.SEED_DEMO_DATA = self.original_seed_setting
         self.temp_dir.cleanup()
 
     def test_public_pages_render_from_empty_database(self) -> None:
@@ -34,6 +37,14 @@ class PublicPageSmokeTests(unittest.TestCase):
         response = self.client.get("/meetups")
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.headers["Location"].endswith("/login"))
+
+    def test_demo_seed_populates_users_seasons_and_matches(self) -> None:
+        application.SEED_DEMO_DATA = True
+        application.init_db()
+        with sqlite3.connect(application.DATABASE) as db:
+            self.assertGreater(db.execute("select count(*) from users").fetchone()[0], 1)
+            self.assertGreater(db.execute("select count(*) from seasons").fetchone()[0], 0)
+            self.assertGreater(db.execute("select count(*) from matches").fetchone()[0], 0)
 
 
 class ScoringRegressionTests(unittest.TestCase):
