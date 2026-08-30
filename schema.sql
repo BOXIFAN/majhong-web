@@ -1,6 +1,6 @@
 -- 警告：此文件供 `flask init-db` 创建全新数据库，会先删除全部业务表。
 -- 线上旧数据库的兼容升级由 app.py 中幂等的 ensure_* 函数负责。
--- 日期时间统一保存为 `YYYY-MM-DD HH:MM:SS` 文本；外键关系由应用写入路径维护。
+-- 日期时间统一保存为 `YYYY-MM-DD HH:MM:SS` 文本；应用连接会启用 SQLite 外键约束。
 
 -- 删除顺序与外键依赖相反，便于未来启用 PRAGMA foreign_keys 后仍可重建。
 drop table if exists penalties;

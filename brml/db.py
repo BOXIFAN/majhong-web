@@ -31,6 +31,8 @@ def get_db() -> sqlite3.Connection:
         path = database_path()
         path.parent.mkdir(parents=True, exist_ok=True)
         g.db = sqlite3.connect(path)
+        # 旧库可能已有孤儿记录，但启用约束仍可阻止后续写入制造新的孤儿记录。
+        g.db.execute("pragma foreign_keys = on")
         g.db.row_factory = sqlite3.Row
     return g.db
 
@@ -66,14 +68,18 @@ def query_all(sql: str, params: tuple = ()) -> list[sqlite3.Row]:
     return get_db().execute(sql, params).fetchall()
 
 
-def init_db() -> None:
+def init_db(*, force: bool = False) -> None:
     """按 schema 重建数据库，并按环境开关选择是否写入演示数据。
 
-    ``schema.sql`` 开头包含 drop table，因此此函数不是无损迁移入口。
+    ``schema.sql`` 开头包含 drop table，因此已有数据库默认拒绝重建；只有调用方
+    明确传入 ``force=True`` 才允许覆盖。
     """
     path = database_path()
+    if path.exists() and not force:
+        raise FileExistsError(f"Database already exists: {path}. Use --force only after creating a backup.")
     path.parent.mkdir(parents=True, exist_ok=True)
     db = sqlite3.connect(path)
+    db.execute("pragma foreign_keys = on")
     with open(BASE_DIR / "schema.sql", encoding="utf-8") as schema_file:
         db.executescript(schema_file.read())
     db.row_factory = sqlite3.Row

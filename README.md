@@ -17,7 +17,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 flask --app app init-db
-flask --app app run --debug
+flask --app app run --debug --port 5050
 ```
 
 默认会创建 SQLite 数据库 `instance/mahjong.db`。也可以通过 `DATABASE_PATH` 指定数据库文件：
@@ -31,6 +31,8 @@ DATABASE_PATH=/tmp/mahjong.db flask --app app run --debug
 - 超级管理员账号：`admin@example.com`（密码不在公开文档中保存）
 
 默认不会初始化赛季、玩家、裁判或邀请码。请使用超级管理员登录后创建赛季与邀请码。
+
+`flask --app app init-db` 只允许创建不存在的数据库，避免误删现有数据。确需重建本地数据库时，请先备份，再显式运行 `flask --app app init-db --force`；不要在 Render 的持久化数据库上使用 `--force`。
 
 默认不会导入 demo 数据。如果需要本地演示数据，可在初始化前设置：
 

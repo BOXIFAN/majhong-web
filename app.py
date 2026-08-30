@@ -6,6 +6,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+import click
 from flask import Flask, g, session
 
 from brml.config import (
@@ -84,8 +85,12 @@ def create_app() -> Flask:
         }
 
     @app.cli.command("init-db")
-    def init_db_command() -> None:
-        init_db()
+    @click.option("--force", is_flag=True, help="Overwrite an existing database after taking a backup.")
+    def init_db_command(force: bool) -> None:
+        try:
+            init_db(force=force)
+        except FileExistsError as error:
+            raise click.ClickException(str(error)) from error
         print("Initialized the database.")
 
     register_community_routes(app)

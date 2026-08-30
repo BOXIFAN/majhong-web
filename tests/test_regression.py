@@ -13,6 +13,7 @@ from werkzeug.security import generate_password_hash
 
 from brml.analytics import build_finals_status
 from brml.config import ADMIN_PASSWORD_MIGRATION
+from brml.db import get_db
 from brml.rules import DEFAULT_RULES
 from brml.scoring import calculate_placements, calculate_rank_points, get_uma_points
 
@@ -58,7 +59,7 @@ class PublicPageSmokeTests(unittest.TestCase):
     def test_demo_seed_populates_users_seasons_and_matches(self) -> None:
         application.app.config["SEED_DEMO_DATA"] = True
         with application.app.app_context():
-            application.init_db()
+            application.init_db(force=True)
         with sqlite3.connect(self.database) as db:
             self.assertGreater(db.execute("select count(*) from users").fetchone()[0], 1)
             self.assertGreater(db.execute("select count(*) from seasons").fetchone()[0], 0)
@@ -115,6 +116,18 @@ class PublicPageSmokeTests(unittest.TestCase):
         }
         actual = {rule.endpoint for rule in application.app.url_map.iter_rules()}
         self.assertTrue(expected.issubset(actual))
+
+    def test_existing_database_is_not_overwritten_without_force(self) -> None:
+        with application.app.app_context():
+            with self.assertRaises(FileExistsError):
+                application.init_db()
+            user_count = get_db().execute("select count(*) from users").fetchone()[0]
+        self.assertEqual(user_count, 1)
+
+    def test_foreign_keys_are_enabled_for_request_connections(self) -> None:
+        with application.app.app_context():
+            enabled = get_db().execute("pragma foreign_keys").fetchone()[0]
+        self.assertEqual(enabled, 1)
 
 
 class ScoringRegressionTests(unittest.TestCase):
