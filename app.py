@@ -1,48 +1,20 @@
-"""BRML 联赛网站的 Flask 应用。
-
-项目目前采用单文件后端：路由集中在 ``create_app`` 中，数据库兼容逻辑、
-积分计算和演示数据位于其后。维护时应优先把业务规则保留在本文件的纯函数中，
-模板只负责展示，避免同一套积分规则在多个页面重复实现。
-"""
+"""BRML 的 Flask 应用工厂和 WSGI 入口。"""
 
 from __future__ import annotations
 
-import csv
-import io
-import json
 import os
-import sqlite3
 from datetime import timedelta
 from pathlib import Path
 
-from flask import (
-    Flask,
-    Response,
-    flash,
-    g,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for,
-)
-from werkzeug.security import check_password_hash, generate_password_hash
+from flask import Flask, g, session
 
-from brml.auth import generate_invite_code, generate_temporary_password, login_required, role_required
 from brml.config import (
     DATABASE,
     DEFAULT_MEETUP_VENUE,
     SEED_DEMO_DATA,
 )
-from brml.analytics import (
-    build_finals_status,
-    build_placement_trend,
-    build_player_radar,
-    get_leaderboard,
-    get_penalty_records,
-)
-from brml.db import close_db, ensure_database_initialized, execute, get_db, init_db, query_all, query_one
-from brml.i18n import ROLE_LABELS, ROLES, TRANSLATIONS, get_locale, translate
+from brml.db import close_db, ensure_database_initialized, init_db, query_one
+from brml.i18n import ROLE_LABELS, get_locale, translate
 from brml.migrations import (
     ensure_admin_password,
     ensure_announcements_table,
@@ -50,40 +22,14 @@ from brml.migrations import (
     ensure_meetups_tables,
     ensure_user_soft_delete_columns,
 )
-from brml.meetup_service import auto_archive_expired_meetups, meetup_status
-from brml.match_service import (
-    create_match_from_form,
-    current_season,
-    match_type_label,
-    normalize_match_type,
-    parse_match_result_form,
-    update_match_from_result,
-)
-from brml.scoring import (
-    calculate_placements,
-    calculate_rank_points,
-    get_uma_points,
-    placement_to_places,
-)
-from brml.timeutils import (
-    current_match_time,
-    normalize_datetime,
-    now,
-    parse_local_datetime,
-    today_date,
-)
-from brml.rules import (
-    DEFAULT_RULES,
-    FIELD_LABELS,
-    RULE_LABELS,
-    normalize_rules,
-    parse_rules_form,
-)
-from brml.routes.community import register_routes as register_community_routes
-from brml.routes.content import register_routes as register_content_routes
 from brml.routes.accounts import register_routes as register_account_routes
-from brml.routes.seasons import register_routes as register_season_routes
+from brml.routes.community import register_routes as register_community_routes
 from brml.routes.competition import register_routes as register_competition_routes
+from brml.routes.content import register_routes as register_content_routes
+from brml.routes.seasons import register_routes as register_season_routes
+from brml.match_service import current_season, match_type_label
+from brml.rules import FIELD_LABELS, RULE_LABELS
+from brml.timeutils import today_date
 
 
 def create_app() -> Flask:

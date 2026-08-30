@@ -9,6 +9,9 @@ import unittest
 from pathlib import Path
 
 import app as application
+from brml.analytics import build_finals_status
+from brml.rules import DEFAULT_RULES
+from brml.scoring import calculate_placements, calculate_rank_points, get_uma_points
 
 
 class PublicPageSmokeTests(unittest.TestCase):
@@ -65,7 +68,7 @@ class ScoringRegressionTests(unittest.TestCase):
 
     def test_tied_scores_share_placement(self) -> None:
         scores = [35000, 30000, 30000, 5000]
-        self.assertEqual(application.calculate_placements(scores), [1.0, 2.5, 2.5, 4.0])
+        self.assertEqual(calculate_placements(scores), [1.0, 2.5, 2.5, 4.0])
 
     def test_standard_uma_and_penalty(self) -> None:
         rules = {
@@ -80,8 +83,8 @@ class ScoringRegressionTests(unittest.TestCase):
             }
         }
         scores = [40000, 30000, 20000, 10000]
-        placements = application.calculate_placements(scores)
-        points = application.calculate_rank_points(scores, placements, rules, [2, 0, 0, 0])
+        placements = calculate_placements(scores)
+        points = calculate_rank_points(scores, placements, rules, [2, 0, 0, 0])
         self.assertEqual(points, [23.0, 5.0, -15.0, -35.0])
 
     def test_a_rules_select_uma_by_positive_player_count(self) -> None:
@@ -93,7 +96,7 @@ class ScoringRegressionTests(unittest.TestCase):
             "a_uma_2_positive_4th": -12,
         }
         self.assertEqual(
-            application.get_uma_points([42000, 30000, 18000, 10000], 30000, point_rules),
+            get_uma_points([42000, 30000, 18000, 10000], 30000, point_rules),
             {1: 12, 2: 4, 3: -4, 4: -12},
         )
 
@@ -102,14 +105,14 @@ class AnalyticsRegressionTests(unittest.TestCase):
     """锁定决赛资格判定等排行榜衍生逻辑。"""
 
     def test_top_four_player_qualifies_for_championship(self) -> None:
-        season = {"rules_json": json.dumps(application.DEFAULT_RULES)}
+        season = {"rules_json": json.dumps(DEFAULT_RULES)}
         rows = [
             {"user_id": index, "display_name": f"Player {index}", "matches": 8, "total_points": 100 - index}
             for index in range(1, 9)
         ]
         user = {"id": 2, "display_name": "Player 2"}
         with application.app.test_request_context("/", headers={"Accept-Language": "zh"}):
-            status = application.build_finals_status(season, rows, user)
+            status = build_finals_status(season, rows, user)
         self.assertTrue(status["matches_met"])
         self.assertEqual(status["championship_gap"], 0)
         self.assertIsNone(status["yakitori_gap"])
