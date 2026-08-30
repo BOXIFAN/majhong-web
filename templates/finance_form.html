@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ t('finance.edit_title') }} · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head">
+  <p class="eyebrow">Admin</p>
+  <h1>{{ t('finance.edit_title') }}</h1>
+</section>
+
+<form method="post" class="panel form finance-form finance-form-edit">
+  <div class="finance-form-grid">
+    <label>{{ t('finance.kind') }}
+      <select name="kind" data-finance-kind>
+        <option value="income" {% if transaction.kind == 'income' %}selected{% endif %}>{{ t('finance.income_label') }}</option>
+        <option value="expense" {% if transaction.kind == 'expense' %}selected{% endif %}>{{ t('finance.expense_label') }}</option>
+      </select>
+    </label>
+    <label>{{ t('finance.category') }}
+      <select name="category" data-finance-category required>
+        <option value="membership" data-catset="income" {% if transaction.category == 'membership' %}selected{% endif %}>{{ t('finance.category.membership') }}</option>
+        <option value="event" data-catset="income" {% if transaction.category == 'event' %}selected{% endif %}>{{ t('finance.category.event') }}</option>
+        <option value="sponsorship" data-catset="income" {% if transaction.category == 'sponsorship' %}selected{% endif %}>{{ t('finance.category.sponsorship') }}</option>
+        <option value="venue" data-catset="expense" {% if transaction.category == 'venue' %}selected{% endif %}>{{ t('finance.category.venue') }}</option>
+        <option value="prize" data-catset="expense" {% if transaction.category == 'prize' %}selected{% endif %}>{{ t('finance.category.prize') }}</option>
+        <option value="equipment" data-catset="expense" {% if transaction.category == 'equipment' %}selected{% endif %}>{{ t('finance.category.equipment') }}</option>
+        <option value="food" data-catset="expense" {% if transaction.category == 'food' %}selected{% endif %}>{{ t('finance.category.food') }}</option>
+        <option value="other" data-catset="both" {% if transaction.category == 'other' %}selected{% endif %}>{{ t('finance.category.other') }}</option>
+      </select>
+    </label>
+    <label>{{ t('finance.date') }}
+      <input type="date" name="occurred_at" value="{{ transaction.occurred_at }}" required>
+    </label>
+    <label>{{ t('finance.amount') }}
+      <input type="number" name="amount" min="0.01" step="0.01" value="{{ '%.2f' % transaction.amount }}" required>
+    </label>
+    <label>{{ t('finance.member') }} <small class="muted">{{ t('finance.optional') }}</small>
+      <select name="user_id" data-finance-member>
+        <option value="">—</option>
+        {% for member in members %}
+          <option value="{{ member.id }}" {% if transaction.user_id == member.id %}selected{% endif %}>{{ member.display_name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+  <label>{{ t('finance.category') }} · 摘要
+    <input name="description" value="{{ transaction.description }}" required maxlength="200">
+  </label>
+  <div class="form-actions">
+    <button class="button slim" type="submit">{{ t('finance.save') }}</button>
+    <a class="secondary-button" href="{{ url_for('admin_finance') }}">{{ t('finance.back_to_admin') }}</a>
+  </div>
+</form>
+{% endblock %}

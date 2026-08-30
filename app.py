@@ -21,8 +21,10 @@ from brml.migrations import (
     ensure_announcements_table,
     ensure_match_type_values,
     ensure_meetups_tables,
+    ensure_transactions_table,
     ensure_user_soft_delete_columns,
 )
+from brml.routes.finance import register_routes as register_finance_routes
 from brml.routes.accounts import register_routes as register_account_routes
 from brml.routes.community import register_routes as register_community_routes
 from brml.routes.competition import register_routes as register_competition_routes
@@ -62,6 +64,7 @@ def create_app() -> Flask:
         ensure_meetups_tables()
         ensure_admin_password()
         ensure_match_type_values()
+        ensure_transactions_table()
         user_id = session.get("user_id")
         g.user = query_one("select * from users where id = ? and is_deleted = 0", (user_id,)) if user_id else None
         if user_id and g.user is None:
@@ -102,6 +105,8 @@ def create_app() -> Flask:
     register_season_routes(app)
 
     register_competition_routes(app)
+
+    register_finance_routes(app)
 
     app.teardown_appcontext(close_db)
 

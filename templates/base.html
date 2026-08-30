@@ -29,6 +29,7 @@
           <a href="{{ url_for('leaderboard') }}">{{ t('nav.leaderboard') }}</a>
           <a href="{{ url_for('matches') }}">{{ t('nav.matches') }}</a>
           <a href="{{ url_for('seasons') }}">{{ t('nav.rules') }}</a>
+          <a href="{{ url_for('finance') }}">{{ t('nav.finance') }}</a>
           {% if current_user %}
             <a href="{{ url_for('meetups') }}">{{ t('nav.meetups') }}</a>
             {% if current_user.role in ['super_admin', 'referee'] %}
@@ -37,6 +38,7 @@
             {% if current_user.role == 'super_admin' %}
               <a href="{{ url_for('admin_users') }}">{{ t('nav.admin') }}</a>
               <a href="{{ url_for('announcements') }}">{{ t('announcement.manage') }}</a>
+              <a href="{{ url_for('admin_finance') }}">{{ t('nav.finance_admin') }}</a>
               <a href="{{ url_for('invites') }}">{{ t('nav.invites') }}</a>
             {% endif %}
           {% endif %}
@@ -80,6 +82,7 @@
           <a href="{{ url_for('leaderboard') }}">{{ t('nav.leaderboard') }}</a>
           <a href="{{ url_for('matches') }}">{{ t('nav.matches') }}</a>
           <a href="{{ url_for('seasons') }}">{{ t('nav.rules') }}</a>
+          <a href="{{ url_for('finance') }}">{{ t('nav.finance') }}</a>
           {% if current_user %}
             <a href="{{ url_for('meetups') }}">{{ t('nav.meetups') }}</a>
             {% if current_user.role in ['super_admin', 'referee'] %}
@@ -88,6 +91,7 @@
             {% if current_user.role == 'super_admin' %}
               <a href="{{ url_for('admin_users') }}">{{ t('nav.admin') }}</a>
               <a href="{{ url_for('announcements') }}">{{ t('announcement.manage') }}</a>
+              <a href="{{ url_for('admin_finance') }}">{{ t('nav.finance_admin') }}</a>
               <a href="{{ url_for('invites') }}">{{ t('nav.invites') }}</a>
             {% endif %}
           {% endif %}

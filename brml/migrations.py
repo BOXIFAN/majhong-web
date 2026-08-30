@@ -154,3 +154,30 @@ def ensure_match_type_values() -> None:
         (migration_name, now()),
     )
     db.commit()
+
+
+def ensure_transactions_table() -> None:
+    """为部署中的旧数据库补建记账表（幂等）。"""
+    db = get_db()
+    db.execute(
+        """
+        create table if not exists transactions (
+          id integer primary key autoincrement,
+          kind text not null check (kind in ('income', 'expense')),
+          category text not null,
+          description text not null,
+          amount real not null check (amount > 0),
+          user_id integer,
+          recorded_by integer not null,
+          occurred_at text not null,
+          recorded_at text not null,
+          deleted_at text,
+          foreign key (user_id) references users(id),
+          foreign key (recorded_by) references users(id)
+        )
+        """
+    )
+    columns = {row["name"] for row in db.execute("pragma table_info(transactions)").fetchall()}
+    if "deleted_at" not in columns:
+        db.execute("alter table transactions add column deleted_at text")
+    db.commit()

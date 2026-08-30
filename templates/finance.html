@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}{{ t('finance.title') }} · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head">
+  <p class="eyebrow">Club Finance</p>
+  <h1>{{ t('finance.title') }}</h1>
+  <p>{{ t('finance.subtitle') }}</p>
+</section>
+
+<section class="metric-grid finance-metrics">
+  <article class="metric finance-metric finance-income">
+    <span>{{ t('finance.income') }}</span>
+    <strong>¥{{ '{:,.2f}'.format(data.income_total) }}</strong>
+  </article>
+  <article class="metric finance-metric finance-expense">
+    <span>{{ t('finance.expense') }}</span>
+    <strong>¥{{ '{:,.2f}'.format(data.expense_total) }}</strong>
+  </article>
+  <article class="metric finance-metric finance-net {% if data.net < 0 %}is-negative{% endif %}">
+    <span>{{ t('finance.net') }}</span>
+    <strong>¥{{ '{:,.2f}'.format(data.net) }}</strong>
+  </article>
+  <article class="metric finance-metric">
+    <span>{{ t('finance.spend_ratio') }}</span>
+    <strong>{% if data.spend_ratio is not none %}{{ '%.1f' % data.spend_ratio }}%{% else %}{{ t('finance.no_percent') }}{% endif %}</strong>
+  </article>
+</section>
+
+<section class="panel finance-formula-panel">
+  <div class="section-head">
+    <h2>{{ t('finance.formula') }}</h2>
+  </div>
+  <div class="finance-formula">
+    <p>{{ t('finance.net_formula') }}</p>
+    <p>{{ t('finance.spend_formula') }}</p>
+    <p>{{ t('finance.net_ratio_formula') }}</p>
+  </div>
+</section>
+
+<section class="finance-charts">
+  <div class="panel finance-chart-panel">
+    <div class="section-head">
+      <h2>{{ t('finance.income_breakdown') }}</h2>
+      <span class="muted">¥{{ '{:,.2f}'.format(data.income.total) }}</span>
+    </div>
+    {% if data.income.categories %}
+      <div class="pie-layout">
+        <div class="pie-chart" style="background: {{ data.income.gradient }};">
+          <div class="pie-hole"></div>
+          <div class="pie-center">
+            <strong>¥{{ '{:,.2f}'.format(data.income.total) }}</strong>
+            <small>{{ t('finance.income') }}</small>
+          </div>
+        </div>
+        <ul class="pie-legend">
+          <li class="pie-legend-head"><span>{{ t('finance.category') }}</span><span>{{ t('finance.pct') }}</span></li>
+          {% for item in data.income.categories %}
+            <li>
+              <span class="pie-legend-swatch" style="background: {{ item.color }};"></span>
+              <span class="pie-legend-label">{{ t('finance.category.' + item.category) }}</span>
+              <strong>¥{{ '{:,.2f}'.format(item.amount) }}</strong>
+              <span class="muted">{{ item.pct_label }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% else %}
+      <div class="empty">{{ t('finance.empty') }}</div>
+    {% endif %}
+  </div>
+
+  <div class="panel finance-chart-panel">
+    <div class="section-head">
+      <h2>{{ t('finance.expense_breakdown') }}</h2>
+      <span class="muted">¥{{ '{:,.2f}'.format(data.expense.total) }}</span>
+    </div>
+    {% if data.expense.categories %}
+      <div class="pie-layout">
+        <div class="pie-chart" style="background: {{ data.expense.gradient }};">
+          <div class="pie-hole"></div>
+          <div class="pie-center">
+            <strong>¥{{ '{:,.2f}'.format(data.expense.total) }}</strong>
+            <small>{{ t('finance.expense') }}</small>
+          </div>
+        </div>
+        <ul class="pie-legend">
+          <li class="pie-legend-head"><span>{{ t('finance.category') }}</span><span>{{ t('finance.pct') }}</span></li>
+          {% for item in data.expense.categories %}
+            <li>
+              <span class="pie-legend-swatch" style="background: {{ item.color }};"></span>
+              <span class="pie-legend-label">{{ t('finance.category.' + item.category) }}</span>
+              <strong>¥{{ '{:,.2f}'.format(item.amount) }}</strong>
+              <span class="muted">{{ item.pct_label }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% else %}
+      <div class="empty">{{ t('finance.empty') }}</div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="panel">
+  <div class="section-head">
+    <h2>{{ t('finance.recent') }}</h2>
+    <span class="muted">{{ transactions|length }}</span>
+  </div>
+  {% if transactions %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ t('finance.date') }}</th>
+            <th>{{ t('finance.kind') }}</th>
+            <th>{{ t('finance.category') }}</th>
+            <th>{{ t('finance.member') }}</th>
+            <th>{{ t('finance.amount') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tx in transactions %}
+            <tr>
+              <td>{{ tx.occurred_at }}</td>
+              <td><span class="badge {{ 'income' if tx.kind == 'income' else 'archived' }}">{{ t('finance.income_label') if tx.kind == 'income' else t('finance.expense_label') }}</span></td>
+              <td>{{ t('finance.category.' + tx.category) }}</td>
+              <td>{{ tx.member_name or '—' }}</td>
+              <td class="strong {{ 'money-income' if tx.kind == 'income' else 'money-expense' }}">
+                {{ '+' if tx.kind == 'income' else '−' }}¥{{ '{:,.2f}'.format(tx.amount) }}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty">{{ t('finance.empty') }}</div>
+  {% endif %}
+</section>
+{% endblock %}

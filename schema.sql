@@ -9,6 +9,7 @@ drop table if exists matches;
 drop table if exists meetup_signups;
 drop table if exists meetups;
 drop table if exists announcements;
+drop table if exists transactions;
 drop table if exists app_migrations;
 drop table if exists rule_versions;
 drop table if exists seasons;
@@ -36,6 +37,22 @@ create table announcements (
   created_at text not null,
   updated_at text not null,
   foreign key (author_id) references users(id)
+);
+
+-- 俱乐部记账：收入与支出。金额以元存储（real），软删除用于防误删与审计。
+create table transactions (
+  id integer primary key autoincrement,
+  kind text not null check (kind in ('income', 'expense')),
+  category text not null,
+  description text not null,
+  amount real not null check (amount > 0),
+  user_id integer,
+  recorded_by integer not null,
+  occurred_at text not null,
+  recorded_at text not null,
+  deleted_at text,
+  foreign key (user_id) references users(id),
+  foreign key (recorded_by) references users(id)
 );
 
 create table meetups (

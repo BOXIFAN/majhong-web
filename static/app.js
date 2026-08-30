@@ -234,3 +234,30 @@ function refreshARulesState() {
 
 aRulesToggle?.addEventListener("change", refreshARulesState);
 refreshARulesState();
+
+// 记账表单：根据收入/支出切换可用分类，支出时禁用会员关联。
+document.querySelectorAll("[data-finance-kind]").forEach((kindSelect) => {
+  const form = kindSelect.closest("form");
+  const categorySelect = form?.querySelector("[data-finance-category]");
+  const memberSelect = form?.querySelector("[data-finance-member]");
+
+  function refreshFinanceFields() {
+    const isIncome = kindSelect.value === "income";
+    if (categorySelect) {
+      let firstVisible = "";
+      Array.from(categorySelect.options).forEach((option) => {
+        const set = option.dataset.catset;
+        const visible = set === "both" || set === kindSelect.value;
+        option.hidden = !visible;
+        if (visible && !firstVisible) firstVisible = option.value;
+      });
+      if (!Array.from(categorySelect.options).some((option) => !option.hidden && option.selected)) {
+        categorySelect.value = firstVisible;
+      }
+    }
+    if (memberSelect) memberSelect.disabled = !isIncome;
+  }
+
+  kindSelect.addEventListener("change", refreshFinanceFields);
+  refreshFinanceFields();
+});
