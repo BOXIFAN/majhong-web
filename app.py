@@ -1,3 +1,10 @@
+"""BRML 联赛网站的 Flask 应用。
+
+项目目前采用单文件后端：路由集中在 ``create_app`` 中，数据库兼容逻辑、
+积分计算和演示数据位于其后。维护时应优先把业务规则保留在本文件的纯函数中，
+模板只负责展示，避免同一套积分规则在多个页面重复实现。
+"""
+
 from __future__ import annotations
 
 import csv
@@ -28,9 +35,12 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 
 BASE_DIR = Path(__file__).resolve().parent
+# DATABASE_PATH 允许托管环境把 SQLite 文件放到持久化磁盘；本地默认使用 instance/。
 DATABASE = Path(os.environ.get("DATABASE_PATH", BASE_DIR / "instance" / "mahjong.db"))
 SEED_DEMO_DATA = os.environ.get("SEED_DEMO_DATA", "false").lower() in {"1", "true", "yes", "on"}
 
+# 这两个常量对应一次性数据迁移。更换默认管理员密码时必须同时更换迁移名称，
+# 否则已执行过旧迁移的数据库不会再次更新。
 ADMIN_PASSWORD_HASH = "pbkdf2:sha256:600000$OE6JuNaR26tucuw6$c7c3987d9ac3d9e86f2fab2c689c8b49dab963e674f571e8d32d78bf5aaf8c80"
 ADMIN_PASSWORD_MIGRATION = "set-admin-password-2026-08-24"
 DEFAULT_MEETUP_VENUE = "upc 8 Gillingham street, QLD4102"
@@ -850,6 +860,7 @@ FIELD_LABELS = {
 
 
 def create_app() -> Flask:
+    """创建并配置应用；所有路由在此注册，便于 WSGI 与测试复用。"""
     app = Flask(__name__, instance_relative_config=True)
     is_render = os.environ.get("RENDER", "false").lower() in {"1", "true", "yes", "on"}
     secure_cookie = os.environ.get(
@@ -868,6 +879,7 @@ def create_app() -> Flask:
 
     @app.before_request
     def load_user() -> None:
+        # 这些 ensure_* 操作必须保持幂等，用来兼容没有独立迁移工具的旧数据库。
         ensure_database_initialized()
         ensure_user_soft_delete_columns()
         ensure_announcements_table()
@@ -900,6 +912,8 @@ def create_app() -> Flask:
     def init_db_command() -> None:
         init_db()
         print("Initialized the database.")
+
+    # ----- 公共页面与活动报名 -----
 
     @app.route("/")
     def index():
@@ -1159,6 +1173,8 @@ def create_app() -> Flask:
             flash(translate("meetup.member_removed"), "success")
         return redirect(url_for("meetup_detail", meetup_id=meetup_id))
 
+    # ----- 对局、公告与静态辅助路由 -----
+
     @app.route("/matches")
     def matches():
         per_page = 20
@@ -1252,6 +1268,8 @@ def create_app() -> Flask:
         if locale in SUPPORTED_LOCALES:
             session["locale"] = locale
         return redirect(request.referrer or url_for("index"))
+
+    # ----- 登录、账号与后台用户管理 -----
 
     @app.route("/register", methods=("GET", "POST"))
     def register():
@@ -1443,6 +1461,8 @@ def create_app() -> Flask:
                 "success",
             )
         return redirect(url_for("admin_users"))
+
+    # ----- 赛季、成绩、排行榜与导出 -----
 
     @app.route("/seasons")
     def seasons():
@@ -1825,6 +1845,7 @@ def create_app() -> Flask:
 
 
 def get_db() -> sqlite3.Connection:
+    """返回当前请求独享的连接，并让查询结果支持按列名读取。"""
     if "db" not in g:
         ensure_database_initialized()
         DATABASE.parent.mkdir(parents=True, exist_ok=True)
@@ -1834,12 +1855,14 @@ def get_db() -> sqlite3.Connection:
 
 
 def ensure_database_initialized() -> None:
+    """首次启动时创建数据库；已有数据库交给后续兼容函数升级。"""
     if DATABASE.exists():
         return
     init_db()
 
 
 def ensure_user_soft_delete_columns() -> None:
+    """为早期数据库补齐用户软删除字段。"""
     db = get_db()
     columns = {row["name"] for row in db.execute("pragma table_info(users)").fetchall()}
     if "is_deleted" not in columns:
@@ -1850,6 +1873,7 @@ def ensure_user_soft_delete_columns() -> None:
 
 
 def ensure_announcements_table() -> None:
+    """为部署中的旧数据库补建公告表。"""
     db = get_db()
     db.execute(
         """
@@ -1868,6 +1892,7 @@ def ensure_announcements_table() -> None:
 
 
 def ensure_meetups_tables() -> None:
+    """补齐活动相关表和字段，并回填旧记录需要的非空业务值。"""
     db = get_db()
     db.execute(
         """
@@ -1918,6 +1943,10 @@ def ensure_meetups_tables() -> None:
 
 
 def ensure_admin_password() -> None:
+    """仅在系统恰有一个有效管理员时执行一次默认密码迁移。
+
+    多管理员场景无法判断目标账号，因此宁可跳过，避免意外重置真实用户密码。
+    """
     db = get_db()
     db.execute(
         """
@@ -1954,6 +1983,7 @@ def ensure_admin_password() -> None:
 
 
 def ensure_match_type_values() -> None:
+    """一次性把旧版自由文本桌型归一化为当前枚举值。"""
     migration_name = "normalize_match_types_v2"
     db = get_db()
     applied = db.execute(
@@ -1981,24 +2011,29 @@ def ensure_match_type_values() -> None:
 
 
 def execute(sql: str, params: tuple = ()) -> None:
+    """执行单条写语句并立即提交；多语句事务应直接使用 ``get_db``。"""
     db = get_db()
     db.execute(sql, params)
     db.commit()
 
 
 def query_one(sql: str, params: tuple = ()) -> sqlite3.Row | None:
+    """执行查询并返回第一行，没有结果时返回 ``None``。"""
     return get_db().execute(sql, params).fetchone()
 
 
 def query_all(sql: str, params: tuple = ()) -> list[sqlite3.Row]:
+    """执行查询并返回全部结果。"""
     return get_db().execute(sql, params).fetchall()
 
 
 def now() -> str:
+    """返回 created_at/updated_at 等审计字段使用的 UTC 时间文本。"""
     return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def current_match_time() -> str:
+    """返回比赛表单默认使用的布里斯班当地时间。"""
     return datetime.now(ZoneInfo("Australia/Brisbane")).strftime("%Y-%m-%d %H:%M:%S")
 
 
@@ -2007,6 +2042,7 @@ def today_date() -> str:
 
 
 def get_locale() -> str:
+    """优先使用会话语言，其次协商浏览器语言，最后回退到中文。"""
     selected = session.get("locale")
     if selected in SUPPORTED_LOCALES:
         return selected
@@ -2015,12 +2051,14 @@ def get_locale() -> str:
 
 
 def translate(key: str, **kwargs) -> str:
+    """读取当前语言文案；缺失翻译依次回退到中文键和值本身。"""
     locale = get_locale()
     text = TRANSLATIONS.get(locale, {}).get(key, TRANSLATIONS["zh"].get(key, key))
     return text.format(**kwargs) if kwargs else text
 
 
 def normalize_match_type(value: str) -> str:
+    """把表单和历史别名转换为数据库使用的 ``meetup``/``casual``。"""
     normalized = value.strip().lower()
     if normalized == "meetup":
         return "meetup"
@@ -2028,6 +2066,7 @@ def normalize_match_type(value: str) -> str:
 
 
 def match_type_label(value: str | None) -> str:
+    """将数据库桌型转换为当前语言的展示文案，并兼容旧自由文本。"""
     if not value:
         return translate("home.unnamed_match")
     if value.strip().lower() == "meetup":
@@ -2038,12 +2077,14 @@ def match_type_label(value: str | None) -> str:
 
 
 def normalize_datetime(value: str) -> str:
+    """把 ``datetime-local`` 表单值整理为 SQLite 使用的秒级文本。"""
     if not value:
         return now()
     return value.replace("T", " ") + (":00" if len(value) == 16 else "")
 
 
 def parse_local_datetime(value: str) -> str | None:
+    """严格解析本地日期时间；格式无效时返回 ``None`` 交给路由提示。"""
     value = value.strip()
     if not value:
         return None
@@ -2055,10 +2096,12 @@ def parse_local_datetime(value: str) -> str | None:
 
 
 def brisbane_local_now() -> datetime:
+    """返回无时区标记的布里斯班时间，以匹配数据库中的本地时间文本。"""
     return datetime.now(ZoneInfo("Australia/Brisbane")).replace(tzinfo=None)
 
 
 def meetup_status(meetup) -> str:
+    """按手动归档标记和报名截止时间计算活动状态。"""
     if meetup["archived_at"]:
         return "archived"
     deadline = datetime.fromisoformat(meetup["signup_deadline"] or meetup["meetup_at"])
@@ -2066,6 +2109,7 @@ def meetup_status(meetup) -> str:
 
 
 def auto_archive_expired_meetups() -> None:
+    """自动归档已结束 24 小时的活动，给管理员保留赛后处理窗口。"""
     cutoff = (brisbane_local_now() - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
     db = get_db()
     db.execute(
@@ -2080,11 +2124,13 @@ def auto_archive_expired_meetups() -> None:
 
 
 def generate_temporary_password(length: int = 12) -> str:
+    """生成避开易混淆字符的临时密码。"""
     alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"
     return "".join(secrets.choice(alphabet) for _ in range(length))
 
 
 def generate_invite_code(role: str) -> str:
+    """生成带角色前缀的邀请码，并在数据库中确保唯一。"""
     prefix = "REF" if role == "referee" else "PLAY"
     alphabet = string.ascii_uppercase + string.digits
     while True:
@@ -2095,6 +2141,7 @@ def generate_invite_code(role: str) -> str:
 
 
 def login_required(view):
+    """要求会话中存在未删除用户。"""
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:
@@ -2105,6 +2152,7 @@ def login_required(view):
 
 
 def role_required(*roles: str):
+    """限制路由角色；未登录和权限不足使用不同提示。"""
     def decorator(view):
         @functools.wraps(view)
         def wrapped_view(**kwargs):
@@ -2120,10 +2168,12 @@ def role_required(*roles: str):
 
 
 def current_season() -> sqlite3.Row | None:
+    """返回最新的启用赛季；业务约定同一时刻最多一个 active 赛季。"""
     return query_one("select * from seasons where status = 'active' order by id desc limit 1")
 
 
 def parse_rules_form(form) -> dict:
+    """依据默认规则的类型，把扁平表单还原为嵌套规则字典。"""
     parsed = {}
     for group, fields in DEFAULT_RULES.items():
         parsed[group] = {}
@@ -2139,6 +2189,7 @@ def parse_rules_form(form) -> dict:
 
 
 def normalize_rules(rules: dict) -> dict:
+    """把旧版规则合并到最新默认结构，确保新增字段始终有默认值。"""
     normalized = json.loads(json.dumps(DEFAULT_RULES))
     for group, fields in rules.items():
         if group not in normalized or not isinstance(fields, dict):
@@ -2152,6 +2203,7 @@ def normalize_rules(rules: dict) -> dict:
 
 
 def parse_match_result_form(season, form) -> dict:
+    """验证四人终局点数并计算顺位、UMA 和罚分后的赛季积分。"""
     rules = normalize_rules(json.loads(season["rules_json"]))
     start_total = int(rules["points"]["default_starting_points"]) * 4
     players = [int(form.get(f"player_{idx}") or 0) for idx in range(4)]
@@ -2191,6 +2243,7 @@ def parse_match_result_form(season, form) -> dict:
 
 
 def create_match_from_form(season, form) -> dict:
+    """在一个事务中新增对局、四条成绩和对应罚则。"""
     result = parse_match_result_form(season, form)
     if not result["ok"]:
         return result
@@ -2213,6 +2266,7 @@ def create_match_from_form(season, form) -> dict:
 
 
 def update_match_from_result(match_id: int, match, form, result: dict) -> None:
+    """重建指定对局的成绩与罚则，避免编辑后残留旧明细。"""
     db = get_db()
     db.execute(
         """
@@ -2234,6 +2288,7 @@ def update_match_from_result(match_id: int, match, form, result: dict) -> None:
 
 
 def insert_match_result_rows(db: sqlite3.Connection, match_id: int, season_id: int, result: dict, actor_id: int) -> None:
+    """写入四条成绩，并只为非零罚分创建罚则记录。"""
     for idx, user_id in enumerate(result["players"]):
         db.execute(
             """
@@ -2269,6 +2324,7 @@ def insert_match_result_rows(db: sqlite3.Connection, match_id: int, season_id: i
 
 
 def calculate_placements(scores: list[int]) -> list[float]:
+    """按平均名次处理同点，例如并列第一返回 1.5、1.5、3、4。"""
     placements = []
     sorted_scores = sorted(scores, reverse=True)
     for score in scores:
@@ -2278,6 +2334,7 @@ def calculate_placements(scores: list[int]) -> list[float]:
 
 
 def calculate_rank_points(scores: list[int], placements: list[float], rules: dict, penalties: list[int]) -> list[float]:
+    """计算 ``(终局点-返还点)/1000 + UMA - 罚分``，同点均分对应 UMA。"""
     point_rules = rules["points"]
     return_points = int(point_rules.get("return_points", point_rules["default_starting_points"]))
     uma = get_uma_points(scores, return_points, point_rules)
@@ -2292,6 +2349,7 @@ def calculate_rank_points(scores: list[int], placements: list[float], rules: dic
 
 
 def get_uma_points(scores: list[int], return_points: int, point_rules: dict) -> dict[int, int]:
+    """返回各顺位 UMA；A 规则按达到返还点的人数选择一组配置。"""
     if point_rules.get("use_a_rules"):
         positive_count = max(1, min(3, sum(1 for score in scores if score >= return_points)))
         return {
@@ -2313,6 +2371,7 @@ def get_uma_points(scores: list[int], return_points: int, point_rules: dict) -> 
 
 
 def placement_to_places(placement: float) -> list[int]:
+    """把平均顺位还原为占用名次，用于同分情况下的统计。"""
     if placement == 1:
         return [1]
     if placement == 2:
@@ -2331,6 +2390,7 @@ def placement_to_places(placement: float) -> list[int]:
 
 
 def build_placement_trend(history: list[sqlite3.Row]) -> dict:
+    """把新到旧的成绩历史转换为模板可直接绘制的 SVG 折线坐标。"""
     ordered = list(reversed(history))
     if not ordered:
         return {"points": "", "nodes": []}
@@ -2359,6 +2419,11 @@ def build_placement_trend(history: list[sqlite3.Row]) -> dict:
 
 
 def build_player_radar(entries: list[sqlite3.Row]) -> dict:
+    """计算个人雷达图指标，并产出模板绘制所需的 SVG 几何数据。
+
+    平均点数和火力使用固定上限做展示归一化；修改上限只影响图形比例，
+    不影响旁边显示的真实数值。
+    """
     match_count = len(entries)
     first_count = sum(1 for row in entries if float(row["placement"]) == 1)
     positive_count = sum(1 for row in entries if float(row["rank_points"]) > 0)
@@ -2439,6 +2504,7 @@ def build_player_radar(entries: list[sqlite3.Row]) -> dict:
 
 
 def get_leaderboard(season_id: int) -> list[dict]:
+    """聚合指定赛季的成绩；罚分已包含在 ``rank_points`` 中。"""
     rows = query_all(
         """
         select
@@ -2463,6 +2529,7 @@ def get_leaderboard(season_id: int) -> list[dict]:
 
 
 def build_finals_status(season: sqlite3.Row, rows: list[dict], user: sqlite3.Row | None) -> dict:
+    """根据排行榜前四/后四和最低局数计算当前用户的杯赛资格。"""
     rules = normalize_rules(json.loads(season["rules_json"]))
     required_matches = int(rules["points"].get("final_required_matches", 8))
     if user is None:
@@ -2531,6 +2598,7 @@ def build_finals_status(season: sqlite3.Row, rows: list[dict], user: sqlite3.Row
 
 
 def get_penalty_records(season_id: int) -> list[sqlite3.Row]:
+    """返回赛季罚则明细，供规则页审计展示。"""
     return query_all(
         """
         select
@@ -2551,6 +2619,10 @@ def get_penalty_records(season_id: int) -> list[sqlite3.Row]:
 
 
 def init_db() -> None:
+    """按 schema 重建空数据库，并按环境开关选择是否写入演示数据。
+
+    ``schema.sql`` 开头包含 drop table，因此此函数不是无损迁移入口。
+    """
     DATABASE.parent.mkdir(parents=True, exist_ok=True)
     db = sqlite3.connect(DATABASE)
     with open(BASE_DIR / "schema.sql", encoding="utf-8") as f:
@@ -2570,6 +2642,7 @@ def init_db() -> None:
 
 
 def seed_demo_data(db: sqlite3.Connection, admin_id: int) -> None:
+    """写入覆盖多赛季、同分和罚则场景的本地演示数据。"""
     season_1_rules = json.loads(json.dumps(DEFAULT_RULES))
     season_2_rules = json.loads(json.dumps(DEFAULT_RULES))
     season_3_rules = json.loads(json.dumps(DEFAULT_RULES))
@@ -2989,6 +3062,7 @@ def seed_match(
     entries: list[tuple[str, int]],
     penalties: list[dict],
 ) -> None:
+    """使用正式积分函数写入一场演示比赛，防止样例积分与业务规则漂移。"""
     scores = [score for _, score in entries]
     penalty_values_by_player = {item["player"]: item["points"] for item in penalties}
     penalty_values = [penalty_values_by_player.get(player, 0) for player, _ in entries]

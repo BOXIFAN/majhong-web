@@ -1,3 +1,4 @@
+/* Design tokens：页面组件优先复用这些颜色与阴影，避免产生近似但不一致的新值。 */
 :root {
   --bg: #f5f7fb;
   --ink: #172033;
@@ -45,6 +46,7 @@ a {
   text-decoration: none;
 }
 
+/* 桌面端框架：固定侧栏 + 可伸缩内容区；移动端覆盖集中在文件后部的媒体查询。 */
 .site-shell {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
@@ -379,6 +381,7 @@ p {
   max-width: 100%;
 }
 
+/* 公共页面组件 */
 .hero {
   min-height: 310px;
   display: grid;
@@ -625,6 +628,7 @@ p {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* 公告 */
 .announcement-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.85fr);
@@ -952,6 +956,7 @@ p {
   overflow-wrap: anywhere;
 }
 
+/* Meetup 列表、详情与后台操作 */
 .meetup-create-form {
   display: grid;
   grid-template-columns: minmax(160px, 0.7fr) repeat(2, minmax(190px, 1fr)) minmax(250px, 1.35fr) auto;
@@ -1293,6 +1298,7 @@ p {
   margin-top: 22px;
 }
 
+/* 登录、表单与数据表格 */
 .panel,
 .auth-card,
 .season-card,
@@ -2246,6 +2252,7 @@ select:focus {
   font-weight: 900;
 }
 
+/* 玩家详情：历史记录、雷达图与密码管理 */
 .player-history-list {
   margin-top: 24px;
 }
@@ -2476,6 +2483,7 @@ select:focus {
   }
 }
 
+/* 全站响应式覆盖。新增断点时尽量放在本区，避免和基础规则交错。 */
 @media (min-width: 1800px) {
   .site-shell {
     grid-template-columns: 280px minmax(0, 1fr) 280px;

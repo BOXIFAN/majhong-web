@@ -1,3 +1,8 @@
+-- 警告：此文件供 `flask init-db` 创建全新数据库，会先删除全部业务表。
+-- 线上旧数据库的兼容升级由 app.py 中幂等的 ensure_* 函数负责。
+-- 日期时间统一保存为 `YYYY-MM-DD HH:MM:SS` 文本；外键关系由应用写入路径维护。
+
+-- 删除顺序与外键依赖相反，便于未来启用 PRAGMA foreign_keys 后仍可重建。
 drop table if exists penalties;
 drop table if exists match_entries;
 drop table if exists matches;
@@ -10,6 +15,7 @@ drop table if exists seasons;
 drop table if exists invite_codes;
 drop table if exists users;
 
+-- 身份、登录与一次性迁移记录
 create table users (
   id integer primary key autoincrement,
   display_name text not null,
@@ -21,6 +27,7 @@ create table users (
   deleted_at text
 );
 
+-- 社群内容与活动报名
 create table announcements (
   id integer primary key autoincrement,
   title text not null,
@@ -59,6 +66,7 @@ create table app_migrations (
   applied_at text not null
 );
 
+-- 邀请码通过 used_by/used_at 保留使用审计，不会在使用后删除。
 create table invite_codes (
   id integer primary key autoincrement,
   code text not null unique,
@@ -71,6 +79,7 @@ create table invite_codes (
   foreign key (used_by) references users(id)
 );
 
+-- 赛季规则以 JSON 快照保存；rule_versions 记录每次管理端保存后的版本链。
 create table seasons (
   id integer primary key autoincrement,
   name text not null,
@@ -92,6 +101,7 @@ create table rule_versions (
   foreign key (changed_by) references users(id)
 );
 
+-- 比赛主记录与四位玩家的结算明细。placement 用 real 支持并列时的 1.5/2.5/3.5。
 create table matches (
   id integer primary key autoincrement,
   season_id integer not null,
@@ -116,6 +126,7 @@ create table match_entries (
   foreign key (user_id) references users(id)
 );
 
+-- 罚则独立存档便于审计，同时 penalty_points 会写入 match_entries 并计入 rank_points。
 create table penalties (
   id integer primary key autoincrement,
   match_id integer not null,

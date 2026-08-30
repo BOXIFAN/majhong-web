@@ -1,3 +1,4 @@
+// 比赛录入：这里只做即时反馈，最终点数校验仍由后端负责。
 const scoreInputs = document.querySelectorAll(".score-input");
 const scoreTotal = document.querySelector("#score-total");
 const scoreMeter = document.querySelector(".score-meter");
@@ -14,6 +15,7 @@ function refreshScoreTotal() {
 scoreInputs.forEach((input) => input.addEventListener("input", refreshScoreTotal));
 refreshScoreTotal();
 
+// 提示消息淡出后仍保留在 DOM 中，避免读屏软件在读取过程中节点突然消失。
 document.querySelectorAll(".flash").forEach((flash) => {
   setTimeout(() => {
     flash.style.opacity = "0";
@@ -21,6 +23,7 @@ document.querySelectorAll(".flash").forEach((flash) => {
   }, 4200);
 });
 
+// 移动端导航的视觉状态与 aria-expanded 必须同步更新。
 const menuToggle = document.querySelector(".menu-toggle");
 const mobileMenu = document.querySelector(".mobile-menu");
 
@@ -43,6 +46,7 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") setMobileMenu(false);
 });
 
+// 所有破坏性表单通过 data-confirm 复用同一套二次确认逻辑。
 document.querySelectorAll("[data-confirm]").forEach((button) => {
   button.addEventListener("click", (event) => {
     if (!window.confirm(button.dataset.confirm)) {
@@ -51,6 +55,11 @@ document.querySelectorAll("[data-confirm]").forEach((button) => {
   });
 });
 
+/*
+ * 可搜索下拉框保留原生 select 作为提交数据的唯一来源，自定义输入框只代理交互。
+ * 因此 choose/input 两条路径都必须同步 select.value；required 校验则转移到可见输入框，
+ * 否则浏览器会尝试聚焦已隐藏的原生控件。
+ */
 document.querySelectorAll("select[data-filterable-select]").forEach((select) => {
   const originalOptions = Array.from(select.options).filter((option) => option.value);
   const placeholder = select.options[0]?.textContent.trim() || "";
@@ -109,6 +118,7 @@ document.querySelectorAll("select[data-filterable-select]").forEach((select) => 
   select.classList.add("searchable-select-native");
   select.required = false;
 
+  // NFKC 让全角/半角字符以相同形式参与筛选，方便中英文混合的玩家名称。
   const normalize = (value) => value.normalize("NFKC").toLocaleLowerCase();
   const selectedOption = () => originalOptions.find((option) => option.value === select.value);
 
@@ -207,11 +217,13 @@ document.querySelectorAll("select[data-filterable-select]").forEach((select) => 
     }
   });
 
+  // 每个控件监听一次全局点击；页面上的控件数量较少，保持实现简单且相互独立。
   document.addEventListener("pointerdown", (event) => {
     if (!wrapper.contains(event.target)) closeList();
   });
 });
 
+// A 规则只控制相关字段的可见状态，字段值始终随表单提交并由后端解析。
 const aRulesToggle = document.querySelector("[data-a-rules-toggle]");
 const aRulesForm = aRulesToggle?.closest(".rule-form");
 
