@@ -18,7 +18,6 @@ import sqlite3
 import string
 from datetime import datetime, timedelta
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 from flask import (
     Flask,
@@ -47,6 +46,14 @@ from brml.scoring import (
     calculate_rank_points,
     get_uma_points,
     placement_to_places,
+)
+from brml.timeutils import (
+    brisbane_local_now,
+    current_match_time,
+    normalize_datetime,
+    now,
+    parse_local_datetime,
+    today_date,
 )
 from brml.rules import (
     DEFAULT_RULES,
@@ -1225,20 +1232,6 @@ def query_all(sql: str, params: tuple = ()) -> list[sqlite3.Row]:
     return get_db().execute(sql, params).fetchall()
 
 
-def now() -> str:
-    """返回 created_at/updated_at 等审计字段使用的 UTC 时间文本。"""
-    return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-
-
-def current_match_time() -> str:
-    """返回比赛表单默认使用的布里斯班当地时间。"""
-    return datetime.now(ZoneInfo("Australia/Brisbane")).strftime("%Y-%m-%d %H:%M:%S")
-
-
-def today_date() -> str:
-    return datetime.now().strftime("%Y-%m-%d")
-
-
 def normalize_match_type(value: str) -> str:
     """把表单和历史别名转换为数据库使用的 ``meetup``/``casual``。"""
     normalized = value.strip().lower()
@@ -1256,30 +1249,6 @@ def match_type_label(value: str | None) -> str:
     if value.strip().lower() in {"casual", "casual match", "private", "private game", "机打", "手打"}:
         return translate("match.type_casual")
     return value
-
-
-def normalize_datetime(value: str) -> str:
-    """把 ``datetime-local`` 表单值整理为 SQLite 使用的秒级文本。"""
-    if not value:
-        return now()
-    return value.replace("T", " ") + (":00" if len(value) == 16 else "")
-
-
-def parse_local_datetime(value: str) -> str | None:
-    """严格解析本地日期时间；格式无效时返回 ``None`` 交给路由提示。"""
-    value = value.strip()
-    if not value:
-        return None
-    try:
-        parsed = datetime.fromisoformat(value)
-    except ValueError:
-        return None
-    return parsed.strftime("%Y-%m-%d %H:%M:%S")
-
-
-def brisbane_local_now() -> datetime:
-    """返回无时区标记的布里斯班时间，以匹配数据库中的本地时间文本。"""
-    return datetime.now(ZoneInfo("Australia/Brisbane")).replace(tzinfo=None)
 
 
 def meetup_status(meetup) -> str:
