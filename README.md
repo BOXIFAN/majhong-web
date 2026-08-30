@@ -45,6 +45,25 @@ demo 数据会额外初始化：
 
 完整演示数据账号与比赛清单见 [DEMO_DATA.md](DEMO_DATA.md)。
 
+## 代码结构与回归
+
+`app.py` 只负责创建 Flask 应用、注册请求钩子和装配各路由模块。主要代码按职责放在 `brml/`：
+
+- `routes/`：社区活动、内容公告、账号后台、赛季和比赛路由
+- `db.py` / `migrations.py`：数据库连接、初始化和旧数据库兼容迁移
+- `match_service.py` / `meetup_service.py`：会写入数据的业务流程
+- `scoring.py` / `analytics.py`：积分计算与只读统计
+- `rules.py` / `i18n.py`：赛季规则结构和中英文文案
+- `seed.py`：可选演示数据
+
+修改业务逻辑后运行回归测试：
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+测试覆盖全新数据库、演示数据、公开页面、管理员页面、路由端点名、语言会话、同分顺位、UMA、罚分和决赛资格。重构基线提交为 `8579c53`，此后的职责拆分均为独立提交；需要撤销某阶段时优先使用 `git revert <提交哈希>`，保留完整回溯历史。
+
 ## 部署提示
 
 当前版本使用 SQLite。部署到 Render 时必须挂载 Persistent Disk，并将 `DATABASE_PATH` 指向 Disk 内的文件，否则 Render 重启或重新部署后会丢失本地写入的数据。
