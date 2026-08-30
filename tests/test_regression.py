@@ -15,16 +15,20 @@ class PublicPageSmokeTests(unittest.TestCase):
 
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.original_database = application.DATABASE
-        self.original_seed_setting = application.SEED_DEMO_DATA
-        application.DATABASE = Path(self.temp_dir.name) / "test.db"
-        application.init_db()
+        self.database = Path(self.temp_dir.name) / "test.db"
+        self.original_database = application.app.config["DATABASE_PATH"]
+        self.original_seed_setting = application.app.config["SEED_DEMO_DATA"]
+        application.app.config.update(DATABASE_PATH=self.database, SEED_DEMO_DATA=False)
+        with application.app.app_context():
+            application.init_db()
         application.app.config.update(TESTING=True, SECRET_KEY="test-secret")
         self.client = application.app.test_client()
 
     def tearDown(self) -> None:
-        application.DATABASE = self.original_database
-        application.SEED_DEMO_DATA = self.original_seed_setting
+        application.app.config.update(
+            DATABASE_PATH=self.original_database,
+            SEED_DEMO_DATA=self.original_seed_setting,
+        )
         self.temp_dir.cleanup()
 
     def test_public_pages_render_from_empty_database(self) -> None:
@@ -39,9 +43,10 @@ class PublicPageSmokeTests(unittest.TestCase):
         self.assertTrue(response.headers["Location"].endswith("/login"))
 
     def test_demo_seed_populates_users_seasons_and_matches(self) -> None:
-        application.SEED_DEMO_DATA = True
-        application.init_db()
-        with sqlite3.connect(application.DATABASE) as db:
+        application.app.config["SEED_DEMO_DATA"] = True
+        with application.app.app_context():
+            application.init_db()
+        with sqlite3.connect(self.database) as db:
             self.assertGreater(db.execute("select count(*) from users").fetchone()[0], 1)
             self.assertGreater(db.execute("select count(*) from seasons").fetchone()[0], 0)
             self.assertGreater(db.execute("select count(*) from matches").fetchone()[0], 0)

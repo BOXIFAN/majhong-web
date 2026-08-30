@@ -33,21 +33,25 @@ from flask import (
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from brml.config import (
-    ADMIN_PASSWORD_HASH,
-    ADMIN_PASSWORD_MIGRATION,
-    BASE_DIR,
     DATABASE,
     DEFAULT_MEETUP_VENUE,
     SEED_DEMO_DATA,
 )
+from brml.db import close_db, ensure_database_initialized, execute, get_db, init_db, query_all, query_one
 from brml.i18n import ROLE_LABELS, ROLES, TRANSLATIONS, get_locale, translate
+from brml.migrations import (
+    ensure_admin_password,
+    ensure_announcements_table,
+    ensure_match_type_values,
+    ensure_meetups_tables,
+    ensure_user_soft_delete_columns,
+)
 from brml.scoring import (
     calculate_placements,
     calculate_rank_points,
     get_uma_points,
     placement_to_places,
 )
-from brml.seed import seed_demo_data
 from brml.timeutils import (
     brisbane_local_now,
     current_match_time,
@@ -74,6 +78,8 @@ def create_app() -> Flask:
         "true" if is_render else "false",
     ).lower() in {"1", "true", "yes", "on"}
     app.config.from_mapping(
+        DATABASE_PATH=DATABASE,
+        SEED_DEMO_DATA=SEED_DEMO_DATA,
         SECRET_KEY=os.environ.get("SECRET_KEY", "dev-secret-change-me"),
         PERMANENT_SESSION_LIFETIME=timedelta(days=30),
         SESSION_COOKIE_HTTPONLY=True,
@@ -1041,196 +1047,9 @@ def create_app() -> Flask:
             headers={"Content-Disposition": f"attachment; filename=season-{season_id}-leaderboard.csv"},
         )
 
-    @app.teardown_appcontext
-    def close_db(_: Exception | None = None) -> None:
-        db = g.pop("db", None)
-        if db is not None:
-            db.close()
+    app.teardown_appcontext(close_db)
 
     return app
-
-
-def get_db() -> sqlite3.Connection:
-    """返回当前请求独享的连接，并让查询结果支持按列名读取。"""
-    if "db" not in g:
-        ensure_database_initialized()
-        DATABASE.parent.mkdir(parents=True, exist_ok=True)
-        g.db = sqlite3.connect(DATABASE)
-        g.db.row_factory = sqlite3.Row
-    return g.db
-
-
-def ensure_database_initialized() -> None:
-    """首次启动时创建数据库；已有数据库交给后续兼容函数升级。"""
-    if DATABASE.exists():
-        return
-    init_db()
-
-
-def ensure_user_soft_delete_columns() -> None:
-    """为早期数据库补齐用户软删除字段。"""
-    db = get_db()
-    columns = {row["name"] for row in db.execute("pragma table_info(users)").fetchall()}
-    if "is_deleted" not in columns:
-        db.execute("alter table users add column is_deleted integer not null default 0")
-    if "deleted_at" not in columns:
-        db.execute("alter table users add column deleted_at text")
-    db.commit()
-
-
-def ensure_announcements_table() -> None:
-    """为部署中的旧数据库补建公告表。"""
-    db = get_db()
-    db.execute(
-        """
-        create table if not exists announcements (
-          id integer primary key autoincrement,
-          title text not null,
-          content text not null,
-          author_id integer not null,
-          created_at text not null,
-          updated_at text not null,
-          foreign key (author_id) references users(id)
-        )
-        """
-    )
-    db.commit()
-
-
-def ensure_meetups_tables() -> None:
-    """补齐活动相关表和字段，并回填旧记录需要的非空业务值。"""
-    db = get_db()
-    db.execute(
-        """
-        create table if not exists meetups (
-          id integer primary key autoincrement,
-          meetup_at text not null,
-          signup_deadline text not null,
-          venue text not null default 'upc 8 Gillingham street, QLD4102',
-          archived_at text,
-          archived_by integer,
-          created_by integer not null,
-          created_at text not null,
-          updated_at text not null,
-          foreign key (created_by) references users(id)
-        )
-        """
-    )
-    columns = {row["name"] for row in db.execute("pragma table_info(meetups)").fetchall()}
-    if "signup_deadline" not in columns:
-        db.execute("alter table meetups add column signup_deadline text")
-    if "venue" not in columns:
-        db.execute(
-            "alter table meetups add column venue text not null default 'upc 8 Gillingham street, QLD4102'"
-        )
-    if "archived_at" not in columns:
-        db.execute("alter table meetups add column archived_at text")
-    if "archived_by" not in columns:
-        db.execute("alter table meetups add column archived_by integer")
-    db.execute("update meetups set signup_deadline = meetup_at where signup_deadline is null")
-    db.execute(
-        "update meetups set venue = ? where venue is null or trim(venue) = ''",
-        (DEFAULT_MEETUP_VENUE,),
-    )
-    db.execute(
-        """
-        create table if not exists meetup_signups (
-          id integer primary key autoincrement,
-          meetup_id integer not null,
-          user_id integer not null,
-          created_at text not null,
-          unique (meetup_id, user_id),
-          foreign key (meetup_id) references meetups(id),
-          foreign key (user_id) references users(id)
-        )
-        """
-    )
-    db.commit()
-
-
-def ensure_admin_password() -> None:
-    """仅在系统恰有一个有效管理员时执行一次默认密码迁移。
-
-    多管理员场景无法判断目标账号，因此宁可跳过，避免意外重置真实用户密码。
-    """
-    db = get_db()
-    db.execute(
-        """
-        create table if not exists app_migrations (
-          name text primary key,
-          applied_at text not null
-        )
-        """
-    )
-    applied = db.execute(
-        "select 1 from app_migrations where name = ?",
-        (ADMIN_PASSWORD_MIGRATION,),
-    ).fetchone()
-    if applied:
-        db.commit()
-        return
-
-    admins = db.execute(
-        "select id from users where role = 'super_admin' and is_deleted = 0"
-    ).fetchall()
-    if len(admins) != 1:
-        db.commit()
-        return
-
-    db.execute(
-        "update users set password_hash = ? where id = ?",
-        (ADMIN_PASSWORD_HASH, admins[0]["id"]),
-    )
-    db.execute(
-        "insert into app_migrations (name, applied_at) values (?, ?)",
-        (ADMIN_PASSWORD_MIGRATION, now()),
-    )
-    db.commit()
-
-
-def ensure_match_type_values() -> None:
-    """一次性把旧版自由文本桌型归一化为当前枚举值。"""
-    migration_name = "normalize_match_types_v2"
-    db = get_db()
-    applied = db.execute(
-        "select 1 from app_migrations where name = ?",
-        (migration_name,),
-    ).fetchone()
-    if applied:
-        return
-    db.execute(
-        """
-        update matches
-        set table_name = case
-          when lower(trim(table_name)) = 'meetup' then 'meetup'
-          when lower(trim(table_name)) in ('casual', 'casual match', 'private', 'private game') then 'casual'
-          when instr(table_name, '机打') > 0 or instr(table_name, '手打') > 0 then 'casual'
-          else table_name
-        end
-        """
-    )
-    db.execute(
-        "insert into app_migrations (name, applied_at) values (?, ?)",
-        (migration_name, now()),
-    )
-    db.commit()
-
-
-def execute(sql: str, params: tuple = ()) -> None:
-    """执行单条写语句并立即提交；多语句事务应直接使用 ``get_db``。"""
-    db = get_db()
-    db.execute(sql, params)
-    db.commit()
-
-
-def query_one(sql: str, params: tuple = ()) -> sqlite3.Row | None:
-    """执行查询并返回第一行，没有结果时返回 ``None``。"""
-    return get_db().execute(sql, params).fetchone()
-
-
-def query_all(sql: str, params: tuple = ()) -> list[sqlite3.Row]:
-    """执行查询并返回全部结果。"""
-    return get_db().execute(sql, params).fetchall()
 
 
 def normalize_match_type(value: str) -> str:
@@ -1672,29 +1491,6 @@ def get_penalty_records(season_id: int) -> list[sqlite3.Row]:
         """,
         (season_id,),
     )
-
-
-def init_db() -> None:
-    """按 schema 重建空数据库，并按环境开关选择是否写入演示数据。
-
-    ``schema.sql`` 开头包含 drop table，因此此函数不是无损迁移入口。
-    """
-    DATABASE.parent.mkdir(parents=True, exist_ok=True)
-    db = sqlite3.connect(DATABASE)
-    with open(BASE_DIR / "schema.sql", encoding="utf-8") as f:
-        db.executescript(f.read())
-    db.row_factory = sqlite3.Row
-    admin_id = db.execute(
-        """
-        insert into users (display_name, email, password_hash, role, created_at)
-        values ('Admin', 'admin@example.com', ?, 'super_admin', ?)
-        """,
-        (ADMIN_PASSWORD_HASH, now()),
-    ).lastrowid
-    if SEED_DEMO_DATA:
-        seed_demo_data(db, admin_id)
-    db.commit()
-    db.close()
 
 
 app = create_app()
