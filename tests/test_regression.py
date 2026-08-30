@@ -157,6 +157,30 @@ class PublicPageSmokeTests(unittest.TestCase):
             enabled = get_db().execute("pragma foreign_keys").fetchone()[0]
         self.assertEqual(enabled, 1)
 
+    def test_long_penalty_policy_uses_full_width_layout_without_field_label(self) -> None:
+        application.app.config["SEED_DEMO_DATA"] = True
+        with application.app.app_context():
+            application.init_db(force=True)
+        long_policy = "超长罚则" + ("continuous-policy-text" * 40)
+        rules = json.loads(json.dumps(DEFAULT_RULES))
+        rules["penalties"]["penalty_policy"] = long_policy
+        with sqlite3.connect(self.database) as db:
+            season_id = db.execute("select id from seasons where status = 'active'").fetchone()[0]
+            db.execute(
+                "update seasons set rules_json = ? where id = ?",
+                (json.dumps(rules, ensure_ascii=False), season_id),
+            )
+            db.commit()
+
+        for path in ("/seasons", f"/seasons/{season_id}"):
+            with self.subTest(path=path):
+                response = self.client.get(path)
+                html = response.get_data(as_text=True)
+                self.assertEqual(response.status_code, 200)
+                self.assertIn('class="penalty-policy"', html)
+                self.assertIn(long_policy, html)
+                self.assertNotIn("罚则内容 / Penalty Policy", html)
+
 
 class ScoringRegressionTests(unittest.TestCase):
     """锁定顺位、UMA 和罚分的既有计算方式。"""

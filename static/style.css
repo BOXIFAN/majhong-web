@@ -1818,6 +1818,7 @@ select:focus {
 }
 
 .rules-prose-section {
+  min-width: 0;
   max-width: 920px;
   padding: 20px 0;
   border-bottom: 1px solid rgba(219, 226, 238, 0.8);
@@ -1882,6 +1883,27 @@ select:focus {
   max-width: 62ch;
   line-height: 1.65;
   text-align: left;
+  white-space: pre-wrap;
+}
+
+/* 罚则正文没有左侧字段名，避免长内容把桌面双列布局的标签挤成逐字换行。 */
+.penalty-policy {
+  width: 100%;
+  min-width: 0;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.26));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.76), inset 0 -1px 0 rgba(132, 151, 177, 0.1);
+}
+
+.penalty-policy .multiline-rule {
+  width: 100%;
+  min-width: 0;
+  color: var(--brand-dark);
+  font-weight: 900;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
 
@@ -3072,7 +3094,8 @@ select:focus {
     font-size: 20px;
   }
 
-  .rules-param-list div {
+  .rules-param-list div,
+  .penalty-policy {
     grid-template-columns: 1fr;
     gap: 6px;
     padding: 10px 11px;

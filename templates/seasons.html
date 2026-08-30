@@ -23,6 +23,13 @@
       {% for group, fields in active_rules.items() %}
         <section class="rules-prose-section">
           <h3>{{ rule_labels[group] }}</h3>
+          {% if group == 'penalties' %}
+            <div class="penalty-policy">
+              {% for key, value in fields.items() %}
+                <div class="multiline-rule">{{ t('status.enabled') if value is sameas true else t('status.disabled') if value is sameas false else value }}</div>
+              {% endfor %}
+            </div>
+          {% else %}
           <dl class="rules-param-list">
             {% for key, value in fields.items() %}
               {% set is_normal_uma = key in ['uma_1st', 'uma_2nd', 'uma_3rd', 'uma_4th'] %}
@@ -35,6 +42,7 @@
               {% endif %}
             {% endfor %}
           </dl>
+          {% endif %}
         </section>
       {% endfor %}
 
