@@ -33,7 +33,7 @@ class PublicPageSmokeTests(unittest.TestCase):
         self.temp_dir.cleanup()
 
     def test_public_pages_render_from_empty_database(self) -> None:
-        for path in ("/", "/about", "/matches", "/seasons", "/leaderboard"):
+        for path in ("/", "/about", "/matches", "/seasons", "/leaderboard", "/login", "/register"):
             with self.subTest(path=path):
                 response = self.client.get(path)
                 self.assertEqual(response.status_code, 200)
