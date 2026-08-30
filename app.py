@@ -11,7 +11,6 @@ import csv
 import functools
 import io
 import json
-import math
 import os
 import secrets
 import sqlite3
@@ -36,6 +35,13 @@ from brml.config import (
     DATABASE,
     DEFAULT_MEETUP_VENUE,
     SEED_DEMO_DATA,
+)
+from brml.analytics import (
+    build_finals_status,
+    build_placement_trend,
+    build_player_radar,
+    get_leaderboard,
+    get_penalty_records,
 )
 from brml.db import close_db, ensure_database_initialized, execute, get_db, init_db, query_all, query_one
 from brml.i18n import ROLE_LABELS, ROLES, TRANSLATIONS, get_locale, translate
@@ -1262,235 +1268,6 @@ def insert_match_result_rows(db: sqlite3.Connection, match_id: int, season_id: i
                     now(),
                 ),
             )
-
-
-def build_placement_trend(history: list[sqlite3.Row]) -> dict:
-    """把新到旧的成绩历史转换为模板可直接绘制的 SVG 折线坐标。"""
-    ordered = list(reversed(history))
-    if not ordered:
-        return {"points": "", "nodes": []}
-    left, right = 16, 96
-    top, bottom = 14, 86
-    span_x = right - left
-    span_y = bottom - top
-    nodes = []
-    for idx, row in enumerate(ordered):
-        x = (left + span_x / 2) if len(ordered) == 1 else left + (span_x * idx / (len(ordered) - 1))
-        placement = float(row["placement"])
-        y = top + ((placement - 1) / 3) * span_y
-        nodes.append(
-            {
-                "x": round(x, 2),
-                "y": round(y, 2),
-                "placement": placement,
-                "rank_points": row["rank_points"],
-                "played_at": row["played_at"],
-            }
-        )
-    return {
-        "points": " ".join(f"{node['x']},{node['y']}" for node in nodes),
-        "nodes": nodes,
-    }
-
-
-def build_player_radar(entries: list[sqlite3.Row]) -> dict:
-    """计算个人雷达图指标，并产出模板绘制所需的 SVG 几何数据。
-
-    平均点数和火力使用固定上限做展示归一化；修改上限只影响图形比例，
-    不影响旁边显示的真实数值。
-    """
-    match_count = len(entries)
-    first_count = sum(1 for row in entries if float(row["placement"]) == 1)
-    positive_count = sum(1 for row in entries if float(row["rank_points"]) > 0)
-    fourth_avoid_count = sum(1 for row in entries if float(row["placement"]) != 4)
-    bust_avoid_count = sum(1 for row in entries if int(row["final_score"]) >= 0)
-    average_score = sum(int(row["final_score"]) for row in entries) / match_count if match_count else 0
-    first_scores = [int(row["final_score"]) for row in entries if float(row["placement"]) == 1]
-    firepower = sum(first_scores) / len(first_scores) if first_scores else 0
-
-    def percentage(count: int) -> float:
-        return round(count / match_count * 100, 1) if match_count else 0.0
-
-    first_rate = percentage(first_count)
-    positive_rate = percentage(positive_count)
-    fourth_avoidance = percentage(fourth_avoid_count)
-    bust_avoidance = percentage(bust_avoid_count)
-    metric_specs = [
-        ("player.first_rate", "player.first_rate_desc", first_rate, f"{first_rate:.1f}%"),
-        ("player.positive_rate", "player.positive_rate_desc", positive_rate, f"{positive_rate:.1f}%"),
-        ("player.average_score", "player.average_score_desc", min(average_score / 50000 * 100, 100), f"{average_score:,.0f}"),
-        ("player.fourth_avoidance", "player.fourth_avoidance_desc", fourth_avoidance, f"{fourth_avoidance:.1f}%"),
-        ("player.bust_avoidance", "player.bust_avoidance_desc", bust_avoidance, f"{bust_avoidance:.1f}%"),
-        ("player.firepower", "player.firepower_desc", min(firepower / 60000 * 100, 100), f"{firepower:,.0f}"),
-    ]
-
-    center_x, center_y, radius = 180, 166, 92
-    grid_polygons = []
-    for factor in (0.25, 0.5, 0.75, 1.0):
-        points = []
-        for index in range(6):
-            angle = -math.pi / 2 + index * math.pi / 3
-            points.append(f"{center_x + math.cos(angle) * radius * factor:.1f},{center_y + math.sin(angle) * radius * factor:.1f}")
-        grid_polygons.append(" ".join(points))
-
-    metrics = []
-    data_points = []
-    for index, (label_key, description_key, normalized, display_value) in enumerate(metric_specs):
-        label = translate(label_key)
-        label_lines = (
-            label.split(" ")
-            if label_key in {"player.fourth_avoidance", "player.bust_avoidance"} and " " in label
-            else [label]
-        )
-        angle = -math.pi / 2 + index * math.pi / 3
-        axis_x = center_x + math.cos(angle) * radius
-        axis_y = center_y + math.sin(angle) * radius
-        value_radius = radius * max(0, min(float(normalized), 100)) / 100
-        data_points.append(f"{center_x + math.cos(angle) * value_radius:.1f},{center_y + math.sin(angle) * value_radius:.1f}")
-        label_radius = 126
-        label_x = center_x + math.cos(angle) * label_radius
-        label_y = center_y + math.sin(angle) * label_radius
-        horizontal = math.cos(angle)
-        anchor = "start" if horizontal > 0.35 else "end" if horizontal < -0.35 else "middle"
-        metrics.append(
-            {
-                "label": label,
-                "label_lines": label_lines,
-                "description": translate(description_key),
-                "value": display_value,
-                "normalized": round(float(normalized), 1),
-                "axis_x": round(axis_x, 1),
-                "axis_y": round(axis_y, 1),
-                "label_x": round(label_x, 1),
-                "label_y": round(label_y, 1),
-                "anchor": anchor,
-            }
-        )
-
-    return {
-        "has_data": match_count > 0,
-        "match_count": match_count,
-        "center_x": center_x,
-        "center_y": center_y,
-        "grid_polygons": grid_polygons,
-        "data_points": " ".join(data_points),
-        "metrics": metrics,
-    }
-
-
-def get_leaderboard(season_id: int) -> list[dict]:
-    """聚合指定赛季的成绩；罚分已包含在 ``rank_points`` 中。"""
-    rows = query_all(
-        """
-        select
-            u.id as user_id,
-            u.display_name,
-            count(me.id) as matches,
-            round(coalesce(sum(me.rank_points), 0), 1) as total_points,
-            round(avg(me.placement), 2) as avg_place,
-            round(avg(case when me.placement = 1 then 1.0 else 0 end) * 100, 1) as first_rate,
-            round(avg(case when me.placement = 4 then 1.0 else 0 end) * 100, 1) as fourth_rate,
-            coalesce(sum(me.penalty_points), 0) as penalty_points
-        from users u
-        join match_entries me on me.user_id = u.id
-        join matches m on m.id = me.match_id
-        where m.season_id = ?
-        group by u.id, u.display_name
-        order by total_points desc, avg_place asc, matches desc
-        """,
-        (season_id,),
-    )
-    return [dict(row) for row in rows]
-
-
-def build_finals_status(season: sqlite3.Row, rows: list[dict], user: sqlite3.Row | None) -> dict:
-    """根据排行榜前四/后四和最低局数计算当前用户的杯赛资格。"""
-    rules = normalize_rules(json.loads(season["rules_json"]))
-    required_matches = int(rules["points"].get("final_required_matches", 8))
-    if user is None:
-        return {
-            "logged_in": False,
-            "required_matches": required_matches,
-            "matches": 0,
-            "remaining_matches": required_matches,
-            "matches_met": False,
-            "cup_status": translate("finals.login_to_view"),
-            "championship_gap": None,
-            "yakitori_gap": None,
-        }
-
-    user_row = next((row for row in rows if row["user_id"] == user["id"]), None)
-    user_rank = next((idx for idx, row in enumerate(rows, start=1) if row["user_id"] == user["id"]), None)
-    if user_row is None:
-        normalized_name = user["display_name"].strip().lower()
-        user_rank, user_row = next(
-            (
-                (idx, row)
-                for idx, row in enumerate(rows, start=1)
-                if row["display_name"].strip().lower() == normalized_name
-            ),
-            (None, None),
-        )
-    matches = int(user_row["matches"]) if user_row else 0
-    points = float(user_row["total_points"]) if user_row else 0.0
-    remaining_matches = max(required_matches - matches, 0)
-    matches_met = remaining_matches == 0
-
-    bottom_start_rank = max(len(rows) - 3, 1)
-    is_top_four = user_rank is not None and user_rank <= 4
-    is_bottom_four = user_rank is not None and user_rank >= bottom_start_rank and len(rows) >= 4
-    championship_cutoff = float(rows[3]["total_points"]) if len(rows) >= 4 else None
-    yakitori_cutoff = float(rows[bottom_start_rank - 1]["total_points"]) if len(rows) >= 4 else None
-
-    if is_top_four:
-        cup_status = translate("finals.championship_met")
-        championship_gap = 0
-        yakitori_gap = None
-    elif is_bottom_four:
-        cup_status = translate("finals.yakitori_met")
-        championship_gap = None
-        yakitori_gap = 0
-    else:
-        championship_gap = max(round((championship_cutoff or 0) - points, 1), 0) if championship_cutoff is not None else None
-        yakitori_gap = max(round(points - (yakitori_cutoff or 0), 1), 0) if yakitori_cutoff is not None else None
-        if championship_gap is None or yakitori_gap is None:
-            cup_status = translate("finals.not_enough_data")
-        else:
-            cup_status = translate("finals.not_met")
-
-    return {
-        "logged_in": True,
-        "required_matches": required_matches,
-        "matches": matches,
-        "remaining_matches": remaining_matches,
-        "matches_met": matches_met,
-        "rank": user_rank,
-        "points": points,
-        "cup_status": cup_status,
-        "championship_gap": championship_gap,
-        "yakitori_gap": yakitori_gap,
-    }
-
-
-def get_penalty_records(season_id: int) -> list[sqlite3.Row]:
-    """返回赛季罚则明细，供规则页审计展示。"""
-    return query_all(
-        """
-        select
-            p.*,
-            u.display_name as player_name,
-            m.played_at,
-            m.table_name,
-            r.display_name as referee_name
-        from penalties p
-        join users u on u.id = p.user_id
-        join matches m on m.id = p.match_id
-        left join users r on r.id = p.created_by
-        where p.season_id = ?
-        order by m.played_at desc, p.id desc
-        """,
-        (season_id,),
-    )
 
 
 app = create_app()

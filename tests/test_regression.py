@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import json
+import sqlite3
 import tempfile
 import unittest
-import sqlite3
 from pathlib import Path
 
 import app as application
@@ -50,6 +51,7 @@ class PublicPageSmokeTests(unittest.TestCase):
             self.assertGreater(db.execute("select count(*) from users").fetchone()[0], 1)
             self.assertGreater(db.execute("select count(*) from seasons").fetchone()[0], 0)
             self.assertGreater(db.execute("select count(*) from matches").fetchone()[0], 0)
+        self.assertEqual(self.client.get("/leaderboard").status_code, 200)
 
 
 class ScoringRegressionTests(unittest.TestCase):
@@ -88,6 +90,23 @@ class ScoringRegressionTests(unittest.TestCase):
             application.get_uma_points([42000, 30000, 18000, 10000], 30000, point_rules),
             {1: 12, 2: 4, 3: -4, 4: -12},
         )
+
+
+class AnalyticsRegressionTests(unittest.TestCase):
+    """锁定决赛资格判定等排行榜衍生逻辑。"""
+
+    def test_top_four_player_qualifies_for_championship(self) -> None:
+        season = {"rules_json": json.dumps(application.DEFAULT_RULES)}
+        rows = [
+            {"user_id": index, "display_name": f"Player {index}", "matches": 8, "total_points": 100 - index}
+            for index in range(1, 9)
+        ]
+        user = {"id": 2, "display_name": "Player 2"}
+        with application.app.test_request_context("/", headers={"Accept-Language": "zh"}):
+            status = application.build_finals_status(season, rows, user)
+        self.assertTrue(status["matches_met"])
+        self.assertEqual(status["championship_gap"], 0)
+        self.assertIsNone(status["yakitori_gap"])
 
 
 if __name__ == "__main__":
