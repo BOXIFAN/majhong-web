@@ -12,7 +12,7 @@ import io
 import json
 import os
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import timedelta
 from pathlib import Path
 
 from flask import (
@@ -50,6 +50,7 @@ from brml.migrations import (
     ensure_meetups_tables,
     ensure_user_soft_delete_columns,
 )
+from brml.meetup_service import auto_archive_expired_meetups, meetup_status
 from brml.scoring import (
     calculate_placements,
     calculate_rank_points,
@@ -57,7 +58,6 @@ from brml.scoring import (
     placement_to_places,
 )
 from brml.timeutils import (
-    brisbane_local_now,
     current_match_time,
     normalize_datetime,
     now,
@@ -1073,29 +1073,6 @@ def match_type_label(value: str | None) -> str:
     if value.strip().lower() in {"casual", "casual match", "private", "private game", "机打", "手打"}:
         return translate("match.type_casual")
     return value
-
-
-def meetup_status(meetup) -> str:
-    """按手动归档标记和报名截止时间计算活动状态。"""
-    if meetup["archived_at"]:
-        return "archived"
-    deadline = datetime.fromisoformat(meetup["signup_deadline"] or meetup["meetup_at"])
-    return "closed" if brisbane_local_now() > deadline else "open"
-
-
-def auto_archive_expired_meetups() -> None:
-    """自动归档已结束 24 小时的活动，给管理员保留赛后处理窗口。"""
-    cutoff = (brisbane_local_now() - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
-    db = get_db()
-    db.execute(
-        """
-        update meetups
-        set archived_at = ?, updated_at = ?
-        where archived_at is null and meetup_at <= ?
-        """,
-        (now(), now(), cutoff),
-    )
-    db.commit()
 
 
 def current_season() -> sqlite3.Row | None:
