@@ -13,12 +13,12 @@ from brml.stylematch import best_style_match
 
 
 def register_routes(app) -> None:
-    @app.route("/experiment/style-match")
+    @app.route("/style-match")
     @login_required
     def style_match():
         return redirect(url_for("style_match_for", user_id=g.user["id"]))
 
-    @app.route("/experiment/style-match/<int:user_id>")
+    @app.route("/style-match/<int:user_id>")
     @login_required
     def style_match_for(user_id: int):
         target = query_one(
