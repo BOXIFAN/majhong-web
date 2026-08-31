@@ -4994,10 +4994,27 @@ select:focus {
 @media (max-width: 560px) {
   .experiment-rank {
     grid-template-columns: 28px 1fr auto;
+    grid-template-areas:
+      "no name pct"
+      "no team pct";
+  }
+
+  .experiment-rank-no {
+    grid-area: no;
+  }
+
+  .experiment-rank-name {
+    grid-area: name;
   }
 
   .experiment-rank small {
-    grid-column: 2 / -1;
+    grid-area: team;
+  }
+
+  .experiment-rank strong {
+    grid-area: pct;
+    text-align: right;
+    justify-self: end;
   }
 
   .radar-compare {
