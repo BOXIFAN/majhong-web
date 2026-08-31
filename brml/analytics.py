@@ -119,6 +119,61 @@ def build_player_radar(entries: list[sqlite3.Row]) -> dict:
     }
 
 
+def build_vector_radar(values: list[float], labels: list[str]) -> dict:
+    """根据六个 0-100 的雷达值直接生成与 build_player_radar 相同的 SVG 几何。"""
+    center_x, center_y, radius = 180, 166, 92
+    grid_polygons = []
+    for factor in (0.25, 0.5, 0.75, 1.0):
+        points = []
+        for index in range(6):
+            angle = -math.pi / 2 + index * math.pi / 3
+            points.append(
+                f"{center_x + math.cos(angle) * radius * factor:.1f},"
+                f"{center_y + math.sin(angle) * radius * factor:.1f}"
+            )
+        grid_polygons.append(" ".join(points))
+
+    metrics = []
+    data_points = []
+    for index in range(6):
+        value = max(0.0, min(float(values[index]), 100.0))
+        angle = -math.pi / 2 + index * math.pi / 3
+        axis_x = center_x + math.cos(angle) * radius
+        axis_y = center_y + math.sin(angle) * radius
+        value_radius = radius * value / 100
+        data_points.append(
+            f"{center_x + math.cos(angle) * value_radius:.1f},"
+            f"{center_y + math.sin(angle) * value_radius:.1f}"
+        )
+        label_radius = 126
+        label_x = center_x + math.cos(angle) * label_radius
+        label_y = center_y + math.sin(angle) * label_radius
+        horizontal = math.cos(angle)
+        anchor = "start" if horizontal > 0.35 else "end" if horizontal < -0.35 else "middle"
+        label = labels[index] if index < len(labels) else ""
+        metrics.append(
+            {
+                "label": label,
+                "label_lines": [label],
+                "value": f"{value:.1f}",
+                "normalized": round(value, 1),
+                "axis_x": round(axis_x, 1),
+                "axis_y": round(axis_y, 1),
+                "label_x": round(label_x, 1),
+                "label_y": round(label_y, 1),
+                "anchor": anchor,
+            }
+        )
+    return {
+        "has_data": True,
+        "center_x": center_x,
+        "center_y": center_y,
+        "grid_polygons": grid_polygons,
+        "data_points": " ".join(data_points),
+        "metrics": metrics,
+    }
+
+
 def _raw_metrics(entries: list[sqlite3.Row]) -> dict:
     """计算单个选手的六维原始指标（百分率、均分与火力原始值）。
 

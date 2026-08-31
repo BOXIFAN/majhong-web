@@ -1,0 +1,22 @@
+{% macro radar_svg(radar, polygon_class='', node_class='') %}
+<div class="player-radar-wrap">
+  <svg class="player-radar" viewBox="0 0 360 332" role="img" aria-hidden="true">
+    {% for points in radar.grid_polygons %}
+      <polygon class="radar-grid-polygon" points="{{ points }}"></polygon>
+    {% endfor %}
+    {% for metric in radar.metrics %}
+      <line class="radar-axis" x1="{{ radar.center_x }}" y1="{{ radar.center_y }}" x2="{{ metric.axis_x }}" y2="{{ metric.axis_y }}"></line>
+    {% endfor %}
+    <polygon class="radar-data {{ polygon_class }}" points="{{ radar.data_points }}"></polygon>
+    {% for metric in radar.metrics %}
+      <circle class="radar-node {{ node_class }}" cx="{{ metric.axis_x if metric.normalized >= 100 else radar.center_x + (metric.axis_x - radar.center_x) * metric.normalized / 100 }}" cy="{{ metric.axis_y if metric.normalized >= 100 else radar.center_y + (metric.axis_y - radar.center_y) * metric.normalized / 100 }}" r="3.4"></circle>
+      <text class="radar-label" x="{{ metric.label_x }}" y="{{ metric.label_y }}" text-anchor="{{ metric.anchor }}">
+        {% for line in metric.label_lines %}
+          <tspan class="radar-label-line" x="{{ metric.label_x }}" dy="{{ 0 if loop.first else 13 }}">{{ line }}</tspan>
+        {% endfor %}
+        <tspan class="radar-label-value" x="{{ metric.label_x }}" dy="15">{{ metric.value }}</tspan>
+      </text>
+    {% endfor %}
+  </svg>
+</div>
+{% endmacro %}

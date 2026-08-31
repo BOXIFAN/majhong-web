@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_radar_svg.html" as radar_macro %}
 {% block title %}{{ t('experiment.style_title') }} · Brisbane Riichi{% endblock %}
 {% block content %}
 <section class="page-head">
@@ -17,6 +18,25 @@
     <p class="experiment-meta">{{ result.best.team }} · {{ t('experiment.similarity') }} {{ result.best.similarity_pct }}%</p>
     <p class="experiment-season">{{ t('experiment.based_on', season=result.season_name, count=result.match_count) }}</p>
     <p class="experiment-note">{{ t('experiment.experimental_note') }}</p>
+
+    {% if user_radar and best_radar %}
+      <div class="radar-compare">
+        <div class="panel radar-compare-card">
+          <div class="radar-compare-head">
+            <span>{{ t('experiment.compare_user') }}</span>
+            <h3>{{ target.display_name }}</h3>
+          </div>
+          {{ radar_macro.radar_svg(user_radar, '', '') }}
+        </div>
+        <div class="panel radar-compare-card">
+          <div class="radar-compare-head">
+            <span>{{ t('experiment.compare_best') }}</span>
+            <h3>{{ result.best.name }}</h3>
+          </div>
+          {{ radar_macro.radar_svg(best_radar, 'radar-mleague', 'radar-mleague-node') }}
+        </div>
+      </div>
+    {% endif %}
 
     {% if result.ranked|length > 1 %}
       <div class="experiment-list">
