@@ -18,6 +18,15 @@
     <p class="experiment-meta">{{ result.best.team }} · {{ t('experiment.similarity') }} {{ result.best.similarity_pct }}%</p>
     <p class="experiment-season">{{ t('experiment.based_on', season=result.season_name, count=result.match_count) }}</p>
     <p class="experiment-note">{{ t('experiment.experimental_note') }}</p>
+    <div class="experiment-source">
+      <h3>{{ t('experiment.source_title') }}</h3>
+      <p>{{ t('experiment.source_body') }}</p>
+      <p class="experiment-source-links">
+        <a href="https://www.m-katsu.com/data/%E9%80%9A%E7%AE%97_%E3%83%AC%E3%82%AE%E3%83%A5%E3%83%A9%E3%83%BC_avoid4.html" target="_blank" rel="noopener">{{ t('experiment.source_link_avoid') }} <span aria-hidden="true">↗</span></a>
+        <span aria-hidden="true">·</span>
+        <a href="https://www.m-katsu.com/data/%E9%80%9A%E7%AE%97_%E3%83%AC%E3%82%AE%E3%83%A5%E3%83%A9%E3%83%BC_games.html" target="_blank" rel="noopener">{{ t('experiment.source_link_games') }} <span aria-hidden="true">↗</span></a>
+      </p>
+    </div>
 
     {% if user_radar and best_radar %}
       <div class="radar-compare">

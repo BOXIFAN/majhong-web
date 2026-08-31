@@ -6,9 +6,6 @@
     <p class="eyebrow">{{ roles[user.role] }}</p>
     <h1>{{ user.display_name }}</h1>
   </div>
-  {% if current_user and current_user.id == user.id %}
-    <a class="secondary-button" href="#account-password">{{ t('player.password_title') }}</a>
-  {% endif %}
   {% if current_user %}
     <a class="secondary-button" href="{{ url_for('style_match_for', user_id=user.id) }}">{{ t('experiment.style_label') }}</a>
   {% endif %}

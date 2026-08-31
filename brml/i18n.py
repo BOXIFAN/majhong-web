@@ -422,6 +422,10 @@ TRANSLATIONS = {
         "experiment.compare_user": "您",
         "experiment.compare_best": "最佳匹配",
         "experiment.no_data": "本赛季暂无对局数据，完成对局后再来匹配牌风。",
+        "experiment.source_title": "数据来源",
+        "experiment.source_body": "Mリーグ选手的常规赛通算个人成绩（场数、累计 pt、平均着顺、各顺位次数）取自 Mカツ！的「Mリーグ個人成績ランキング」通算页面，跨度自 2018-19 赛季至今。仅供本次本地实验拟合参考，不代表官方排名。",
+        "experiment.source_link_avoid": "个人成绩排行榜（避4率）",
+        "experiment.source_link_games": "个人成绩排行榜（试合数）",
         "experiment.style_label": "实验 · 牌风匹配",
     },
     "en": {
@@ -824,6 +828,10 @@ TRANSLATIONS = {
         "experiment.compare_user": "You",
         "experiment.compare_best": "Best Match",
         "experiment.no_data": "No seasonal data yet. Play some games to see your style match.",
+        "experiment.source_title": "Data source",
+        "experiment.source_body": "M-League players' regular-season career stats (games, cumulative pt, average placement, placement counts) come from M-katsu's M-League Personal Results ranking (all-time regular), covering from the 2018-19 season onward. For this local experimental fit only; not an official ranking.",
+        "experiment.source_link_avoid": "Results ranking (avoid-4)",
+        "experiment.source_link_games": "Results ranking (games)",
         "experiment.style_label": "Experiment · Style Match",
     },
 }

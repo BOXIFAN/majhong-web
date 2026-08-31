@@ -4905,6 +4905,43 @@ select:focus {
   font-weight: 650;
 }
 
+.experiment-source {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-edge);
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.experiment-source h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.experiment-source p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.experiment-source-links {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.experiment-source a {
+  color: var(--brand-dark);
+  font-weight: 700;
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+
 .experiment-list {
   margin-top: 22px;
   display: grid;
