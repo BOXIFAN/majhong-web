@@ -102,6 +102,13 @@
 - 中英文文案齐备；导航加入“账本 / 财务”与超管“后台记账”。
 - 回归测试 12 项全部通过；功能用 Flask test client + 临时库验证。
 
+## 10. Render 持久化确认
+
+记账数据存放在与主业务相同的 SQLite 数据库 `DATABASE_PATH`（Render 上为 `/var/data/mahjong.db`，
+由 render.yaml 的 `disk` 挂载到 `/var/data`）。`transactions` 表由启动时的幂等迁移
+`ensure_transactions_table()` 自动创建，无需单独迁移命令；因此记账记录会随 Render 持久化盘保存，
+重启/重新部署不丢失。其余部署注意点（`SEED_DEMO_DATA=false` 等）沿用 README 既有说明。
+
 ## 7. 风险与回滚
 
 - 风险：新增迁移可能影响既有请求 → 迁移保持幂等、只新增表，不改动现有表结构。
