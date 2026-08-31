@@ -4419,6 +4419,11 @@ select:focus {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+
+  .pie-ring {
+    --pie-grow: 360deg;
+    animation: none !important;
+  }
 }
 
 /* ===== 记账系统 ===== */
@@ -4507,7 +4512,40 @@ select:focus {
   aspect-ratio: 1 / 1;
   max-width: 100%;
   border-radius: 50%;
+}
+
+/* 扇形图扫入动画：色环通过遮罩从 0° 顺时针扫到 360°，每次进入页面播放。 */
+@property --pie-grow {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.pie-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
   box-shadow: inset 0 0 0 1px var(--glass-edge), var(--soft-shadow);
+  --pie-grow: 0deg;
+  -webkit-mask-image: conic-gradient(
+    #000 0deg,
+    #000 var(--pie-grow),
+    transparent var(--pie-grow),
+    transparent 360deg
+  );
+  mask-image: conic-gradient(
+    #000 0deg,
+    #000 var(--pie-grow),
+    transparent var(--pie-grow),
+    transparent 360deg
+  );
+  animation: finance-pie-grow 0.9s cubic-bezier(0.25, 0.8, 0.35, 1) forwards;
+}
+
+@keyframes finance-pie-grow {
+  to {
+    --pie-grow: 360deg;
+  }
 }
 
 .pie-hole {
@@ -4516,12 +4554,13 @@ select:focus {
   border-radius: 50%;
   background: rgba(245, 247, 251, 0.92);
   box-shadow: inset 0 0 0 1px rgba(132, 151, 177, 0.18);
+  z-index: 1;
 }
 
 .pie-center {
   position: absolute;
   inset: 28%;
-  z-index: 1;
+  z-index: 2;
   display: grid;
   place-content: center;
   gap: 4px;

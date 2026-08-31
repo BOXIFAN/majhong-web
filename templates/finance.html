@@ -45,7 +45,8 @@
     </div>
     {% if data.income.categories %}
       <div class="pie-layout">
-        <div class="pie-chart" style="background: {{ data.income.gradient }};">
+        <div class="pie-chart">
+          <div class="pie-ring" style="background: {{ data.income.gradient }};"></div>
           <div class="pie-hole"></div>
           <div class="pie-center">
             <strong>A${{ '{:,.2f}'.format(data.income.total) }}</strong>
@@ -76,7 +77,8 @@
     </div>
     {% if data.expense.categories %}
       <div class="pie-layout">
-        <div class="pie-chart" style="background: {{ data.expense.gradient }};">
+        <div class="pie-chart">
+          <div class="pie-ring" style="background: {{ data.expense.gradient }};"></div>
           <div class="pie-hole"></div>
           <div class="pie-center">
             <strong>A${{ '{:,.2f}'.format(data.expense.total) }}</strong>
