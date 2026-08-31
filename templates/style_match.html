@@ -8,8 +8,9 @@
 </section>
 
 <section class="panel experiment-card">
+  <p class="experiment-player">{{ t('experiment.for_player', name=target.display_name) }} · <a href="{{ url_for('player_profile', user_id=target.id) }}">{{ t('experiment.view_profile') }}</a></p>
   {% if result.has_data %}
-    <p class="experiment-label">{{ t('experiment.conclusion') }}</p>
+    <p class="experiment-label">{% if is_self %}{{ t('experiment.conclusion') }}{% else %}{{ t('experiment.conclusion_other') }}{% endif %}</p>
     <h2 class="experiment-name">
       <a href="{{ result.best.wiki_url }}" target="_blank" rel="noopener">{{ result.best.name }} <span aria-hidden="true">↗</span></a>
     </h2>

@@ -4851,6 +4851,18 @@ select:focus {
   font-weight: 800;
 }
 
+.experiment-player {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.experiment-player a {
+  color: var(--brand-dark);
+  text-decoration: underline;
+}
+
 .experiment-name {
   margin: 0 0 6px;
   font-size: 34px;
