@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin.title') }} · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head">
+  <p class="eyebrow">Admin</p>
+  <h1>{{ t('admin.title') }}</h1>
+  <p>{{ t('admin.subtitle') }}</p>
+</section>
+
+<nav class="admin-tabs" aria-label="{{ t('admin.tabs_aria') }}">
+  <a href="{{ url_for('admin_users', tab='users') }}" class="{{ 'active' if tab == 'users' }}">{{ t('admin.tab_users') }}</a>
+  <a href="{{ url_for('admin_users', tab='finance') }}" class="{{ 'active' if tab == 'finance' }}">{{ t('admin.tab_finance') }}</a>
+  <a href="{{ url_for('admin_users', tab='invites') }}" class="{{ 'active' if tab == 'invites' }}">{{ t('admin.tab_invites') }}</a>
+</nav>
+
+{% if tab == 'users' %}
+<section class="panel admin-users-panel">
+  <div class="section-head">
+    <h2>{{ t('admin.users') }}</h2>
+    <span class="muted">
+      {{ t('admin.user_count', count=active_count) }}
+      {% if deleted_count %}
+        · {{ t('admin.deleted_count', count=deleted_count) }}
+      {% endif %}
+    </span>
+  </div>
+  <div class="admin-user-list">
+    {% for user in users %}
+      <article class="admin-user-card {% if user.is_deleted %}is-deleted{% endif %}">
+        <div class="account-avatar">{{ user.display_name[:1] }}</div>
+        <div class="admin-user-main">
+          <div class="admin-user-title">
+            <strong>{{ user.display_name }}</strong>
+            <span class="badge {{ 'archived' if user.is_deleted else 'active' }}">{{ t('status.deleted') if user.is_deleted else t('status.normal') }}</span>
+          </div>
+          <small>{{ t('admin.registered_at', email=user.email, role=roles[user.role], created_at=user.created_at) }}</small>
+          {% if user.is_deleted and user.deleted_at %}
+            <small class="muted">{{ t('admin.deleted_at', at=user.deleted_at) }}</small>
+          {% endif %}
+        </div>
+        <div class="admin-user-actions">
+          {% if not user.is_deleted %}
+            <form method="post" action="{{ url_for('admin_user_update', user_id=user.id) }}" class="user-edit-form">
+              <input name="display_name" value="{{ user.display_name }}" required aria-label="{{ t('admin.name_label') }}">
+              {% if user.role != 'super_admin' %}
+                <select name="role" aria-label="{{ t('admin.role_label') }}">
+                  <option value="user" {% if user.role == 'user' %}selected{% endif %}>{{ roles.user }}</option>
+                  <option value="referee" {% if user.role == 'referee' %}selected{% endif %}>{{ roles.referee }}</option>
+                </select>
+              {% else %}
+                <input value="{{ roles.super_admin }}" disabled aria-label="{{ t('admin.role_label') }}">
+              {% endif %}
+              <button class="button slim" type="submit">{{ t('admin.save') }}</button>
+            </form>
+            {% if user.role != 'super_admin' %}
+              <form method="post" action="{{ url_for('admin_user_reset_password', user_id=user.id) }}">
+                <button class="secondary-button" type="submit" data-confirm="{{ t('admin.reset_confirm', name=user.display_name) }}">{{ t('admin.reset_password') }}</button>
+              </form>
+              <form method="post" action="{{ url_for('admin_user_delete', user_id=user.id) }}">
+                <button class="danger-button" type="submit" data-confirm="{{ t('admin.delete_confirm', name=user.display_name) }}">{{ t('admin.delete') }}</button>
+              </form>
+            {% endif %}
+          {% else %}
+            <span class="muted">{{ t('status.preserved') }}</span>
+            <form method="post" action="{{ url_for('admin_user_reactivate', user_id=user.id) }}">
+              <button class="secondary-button" type="submit" data-confirm="{{ t('admin.reactivate_confirm', name=user.display_name) }}">{{ t('admin.reactivate') }}</button>
+            </form>
+          {% endif %}
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% elif tab == 'finance' %}
+<section class="metric-grid finance-metrics">
+  <article class="metric finance-metric finance-income">
+    <span>{{ t('finance.income') }}</span>
+    <strong>A${{ '{:,.2f}'.format(data.income_total) }}</strong>
+  </article>
+  <article class="metric finance-metric finance-expense">
+    <span>{{ t('finance.expense') }}</span>
+    <strong>A${{ '{:,.2f}'.format(data.expense_total) }}</strong>
+  </article>
+  <article class="metric finance-metric finance-net {% if data.net < 0 %}is-negative{% endif %}">
+    <span>{{ t('finance.net') }}</span>
+    <strong>A${{ '{:,.2f}'.format(data.net) }}</strong>
+  </article>
+  <article class="metric finance-metric">
+    <span>{{ t('finance.spend_ratio') }}</span>
+    <strong>{% if data.spend_ratio is not none %}{{ '%.1f' % data.spend_ratio }}%{% else %}{{ t('finance.no_percent') }}{% endif %}</strong>
+  </article>
+</section>
+
+<form method="post" action="{{ url_for('finance_create') }}" class="panel form finance-form">
+  <h2>{{ t('finance.new') }}</h2>
+  <div class="finance-form-grid">
+    <label>{{ t('finance.kind') }}
+      <select name="kind" data-finance-kind>
+        <option value="income" selected>{{ t('finance.income_label') }}</option>
+        <option value="expense">{{ t('finance.expense_label') }}</option>
+      </select>
+    </label>
+    <label>{{ t('finance.category') }}
+      <select name="category" data-finance-category required>
+        <option value="membership" data-catset="income">{{ t('finance.category.membership') }}</option>
+        <option value="event" data-catset="income">{{ t('finance.category.event') }}</option>
+        <option value="sponsorship" data-catset="income">{{ t('finance.category.sponsorship') }}</option>
+        <option value="venue" data-catset="expense">{{ t('finance.category.venue') }}</option>
+        <option value="prize" data-catset="expense">{{ t('finance.category.prize') }}</option>
+        <option value="equipment" data-catset="expense">{{ t('finance.category.equipment') }}</option>
+        <option value="food" data-catset="expense">{{ t('finance.category.food') }}</option>
+        <option value="other" data-catset="both">{{ t('finance.category.other') }}</option>
+      </select>
+    </label>
+    <label>{{ t('finance.date') }}
+      <input type="date" name="occurred_at" value="{{ today_date }}" required>
+    </label>
+    <label>{{ t('finance.amount') }}
+      <input type="number" name="amount" min="0.01" step="0.01" required placeholder="0.00">
+    </label>
+    <label>{{ t('finance.member') }} <small class="muted">{{ t('finance.optional') }}</small>
+      <select name="user_id" data-finance-member>
+        <option value="">—</option>
+        {% for member in members %}
+          <option value="{{ member.id }}">{{ member.display_name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+  <label>{{ t('finance.description') }} <small class="muted">{{ t('finance.optional') }}</small>
+    <input name="description" maxlength="200" placeholder="{{ t('finance.description_placeholder') }}">
+  </label>
+  <div class="form-actions">
+    <button class="button slim" type="submit">{{ t('finance.add') }}</button>
+  </div>
+</form>
+
+<section class="panel finance-records">
+  <div class="section-head">
+    <h2>{{ t('finance.member_stats') }}</h2>
+    <span class="muted">{{ t('finance.member_count', count=member_stats|length) }}</span>
+  </div>
+  {% if member_stats %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ t('table.player') }}</th>
+            <th>{{ t('finance.records') }}</th>
+            <th>{{ t('finance.income') }}</th>
+            <th>{{ t('finance.pct') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for member in member_stats %}
+            <tr>
+              <td class="strong">{{ member.display_name }}</td>
+              <td>{{ member.records }}</td>
+              <td>A${{ '{:,.2f}'.format(member.income) }}</td>
+              <td>{% if member.pct is not none %}{{ '%.1f' % member.pct }}%{% else %}{{ t('finance.no_percent') }}{% endif %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty">{{ t('finance.empty') }}</div>
+  {% endif %}
+</section>
+
+<section class="panel finance-records">
+  <div class="section-head">
+    <h2>{{ t('finance.recent') }}</h2>
+    <span class="muted">{{ t('finance.records_count', count=transactions|length) }}</span>
+  </div>
+  {% if transactions %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ t('finance.date') }}</th>
+            <th>{{ t('finance.kind') }}</th>
+            <th>{{ t('finance.category') }}</th>
+            <th>{{ t('finance.description') }}</th>
+            <th>{{ t('finance.member') }}</th>
+            <th>{{ t('finance.amount') }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tx in transactions %}
+            <tr>
+              <td>{{ tx.occurred_at }}</td>
+              <td><span class="badge {{ 'income' if tx.kind == 'income' else 'archived' }}">{{ t('finance.income_label') if tx.kind == 'income' else t('finance.expense_label') }}</span></td>
+              <td>{{ t('finance.category.' + tx.category) }}</td>
+              <td class="finance-description">{{ tx.description or '—' }}</td>
+              <td>{{ tx.member_name or '—' }}</td>
+              <td class="strong {{ 'money-income' if tx.kind == 'income' else 'money-expense' }}">
+                {{ '+' if tx.kind == 'income' else '−' }}A${{ '{:,.2f}'.format(tx.amount) }}
+              </td>
+              <td>
+                <div class="table-actions">
+                  <a class="secondary-button" href="{{ url_for('finance_edit', transaction_id=tx.id) }}">{{ t('finance.edit') }}</a>
+                  <form method="post" action="{{ url_for('finance_delete', transaction_id=tx.id) }}">
+                    <button class="danger-button" type="submit" data-confirm="{{ t('finance.delete_confirm') }}">{{ t('finance.delete') }}</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty">{{ t('finance.empty') }}</div>
+  {% endif %}
+</section>
+{% elif tab == 'invites' %}
+<section class="panel">
+  <form method="post" action="{{ url_for('invites') }}" class="inline-form invite-generator">
+    <div>
+      <strong>{{ t('invites.generate_title') }}</strong>
+      <small>{{ t('invites.generate_hint') }}</small>
+    </div>
+    <select name="role">
+      <option value="user">{{ roles.user }}</option>
+      <option value="referee">{{ roles.referee }}</option>
+    </select>
+    <button class="button" type="submit">{{ t('invites.generate') }}</button>
+  </form>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>{{ t('invites.code') }}</th><th>{{ t('invites.role') }}</th><th>{{ t('invites.status') }}</th><th>{{ t('invites.used_by') }}</th></tr></thead>
+      <tbody>
+        {% for code in codes %}
+          <tr>
+            <td class="strong">{{ code.code }}</td>
+            <td>{{ roles[code.role] }}</td>
+            <td>{{ t('status.used') if code.used_by else t('status.available') }}</td>
+            <td>{{ code.used_by_name or '-' }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -52,8 +52,6 @@ def _validate(kind: str, category: str, description: str, amount: float,
         return translate("finance.error_kind")
     if category not in allowed:
         return translate("finance.error_category")
-    if not description or not description.strip():
-        return translate("finance.error_description")
     if amount is None or amount <= 0:
         return translate("finance.error_amount")
     if occurred_at is None:
@@ -80,17 +78,7 @@ def register_routes(app) -> None:
     @app.route("/admin/finance", methods=("GET",))
     @role_required("super_admin")
     def admin_finance():
-        data = summary()
-        transactions = fetch_transactions()
-        members = _active_users()
-        member_stats = member_income_stats()
-        return render_template(
-            "admin_finance.html",
-            data=data,
-            transactions=transactions,
-            members=members,
-            member_stats=member_stats,
-        )
+        return redirect(url_for("admin_users", tab="finance"))
 
     @app.route("/admin/finance/create", methods=("POST",))
     @role_required("super_admin")
@@ -115,7 +103,7 @@ def register_routes(app) -> None:
                  g.user["id"], occurred_at, now()),
             )
             flash(translate("finance.created"), "success")
-        return redirect(url_for("admin_finance"))
+        return redirect(url_for("admin_users", tab="finance"))
 
     @app.route("/admin/finance/<int:transaction_id>/edit", methods=("GET", "POST"))
     @role_required("super_admin")
@@ -126,7 +114,7 @@ def register_routes(app) -> None:
         )
         if not transaction:
             flash(translate("finance.missing"), "error")
-            return redirect(url_for("admin_finance"))
+            return redirect(url_for("admin_users", tab="finance"))
         if request.method == "POST":
             kind = request.form.get("kind", "")
             category = request.form.get("category", "")
@@ -151,7 +139,7 @@ def register_routes(app) -> None:
                 )
                 db.commit()
                 flash(translate("finance.updated"), "success")
-                return redirect(url_for("admin_finance"))
+                return redirect(url_for("admin_users", tab="finance"))
         return render_template(
             "finance_form.html",
             transaction=transaction,
@@ -173,4 +161,4 @@ def register_routes(app) -> None:
                 (now(), transaction_id),
             )
             flash(translate("finance.deleted"), "success")
-        return redirect(url_for("admin_finance"))
+        return redirect(url_for("admin_users", tab="finance"))

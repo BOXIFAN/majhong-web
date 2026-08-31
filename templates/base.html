@@ -38,8 +38,6 @@
             {% if current_user.role == 'super_admin' %}
               <a href="{{ url_for('admin_users') }}">{{ t('nav.admin') }}</a>
               <a href="{{ url_for('announcements') }}">{{ t('announcement.manage') }}</a>
-              <a href="{{ url_for('admin_finance') }}">{{ t('nav.finance_admin') }}</a>
-              <a href="{{ url_for('invites') }}">{{ t('nav.invites') }}</a>
             {% endif %}
           {% endif %}
           <a href="{{ url_for('about') }}">{{ t('nav.about') }}</a>
@@ -91,8 +89,6 @@
             {% if current_user.role == 'super_admin' %}
               <a href="{{ url_for('admin_users') }}">{{ t('nav.admin') }}</a>
               <a href="{{ url_for('announcements') }}">{{ t('announcement.manage') }}</a>
-              <a href="{{ url_for('admin_finance') }}">{{ t('nav.finance_admin') }}</a>
-              <a href="{{ url_for('invites') }}">{{ t('nav.invites') }}</a>
             {% endif %}
           {% endif %}
           <a href="{{ url_for('about') }}">{{ t('nav.about') }}</a>

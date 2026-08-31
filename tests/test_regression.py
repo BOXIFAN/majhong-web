@@ -93,8 +93,9 @@ class PublicPageSmokeTests(unittest.TestCase):
         self.assertEqual(login.status_code, 302)
         for path in (
             "/admin/announcements",
-            "/admin/invites",
             "/admin/users",
+            "/admin/users?tab=finance",
+            "/admin/users?tab=invites",
             "/seasons/new",
             f"/seasons/{season_id}/edit",
             "/matches/new",
@@ -103,6 +104,9 @@ class PublicPageSmokeTests(unittest.TestCase):
         ):
             with self.subTest(path=path):
                 self.assertEqual(self.client.get(path).status_code, 200)
+        for path in ("/admin/invites", "/admin/finance"):
+            with self.subTest(path=path):
+                self.assertEqual(self.client.get(path).status_code, 302)
 
         meetup_create = self.client.post(
             "/admin/meetups/new",
@@ -131,6 +135,37 @@ class PublicPageSmokeTests(unittest.TestCase):
             self.assertEqual(db.execute("select count(*) from seasons where id = ?", (archived_season_id,)).fetchone()[0], 0)
             self.assertEqual(db.execute("pragma foreign_key_check").fetchall(), [])
 
+    def test_deleted_user_can_be_reactivated(self) -> None:
+        application.app.config["SEED_DEMO_DATA"] = True
+        with application.app.app_context():
+            application.init_db(force=True)
+        with sqlite3.connect(self.database) as db:
+            db.execute(
+                "update users set password_hash = ? where email = 'admin@example.com'",
+                (generate_password_hash("test-admin-password", method="pbkdf2:sha256"),),
+            )
+            db.execute(
+                "insert or replace into app_migrations (name, applied_at) values (?, 'test')",
+                (ADMIN_PASSWORD_MIGRATION,),
+            )
+            user_id = db.execute("select id from users where role = 'user' order by id limit 1").fetchone()[0]
+            db.commit()
+
+        self.client.post(
+            "/login",
+            data={"email": "admin@example.com", "password": "test-admin-password"},
+        )
+
+        self.assertEqual(self.client.post(f"/admin/users/{user_id}/delete").status_code, 302)
+        with sqlite3.connect(self.database) as db:
+            self.assertEqual(db.execute("select is_deleted from users where id = ?", (user_id,)).fetchone()[0], 1)
+
+        self.assertEqual(self.client.post(f"/admin/users/{user_id}/reactivate").status_code, 302)
+        with sqlite3.connect(self.database) as db:
+            row = db.execute("select is_deleted, deleted_at from users where id = ?", (user_id,)).fetchone()
+            self.assertEqual(row[0], 0)
+            self.assertIsNone(row[1])
+
     def test_route_endpoint_names_are_preserved(self) -> None:
         expected = {
             "index", "about", "meetups", "meetup_detail", "meetup_new", "meetup_edit",
@@ -138,7 +173,7 @@ class PublicPageSmokeTests(unittest.TestCase):
             "meetup_attendee_remove", "matches", "announcements", "announcement_edit",
             "announcement_delete", "favicon", "set_language", "register", "login", "logout",
             "account_password_update", "dashboard", "invites", "admin_users", "admin_user_update",
-            "admin_user_delete", "admin_user_reset_password", "seasons", "season_new", "season_detail",
+            "admin_user_delete", "admin_user_reactivate", "admin_user_reset_password", "seasons", "season_new", "season_detail",
             "season_edit", "season_delete", "match_new", "match_detail", "match_edit", "match_delete",
             "leaderboard", "player_profile", "export_season",
         }

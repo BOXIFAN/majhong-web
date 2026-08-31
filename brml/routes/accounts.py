@@ -9,8 +9,16 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from brml.auth import generate_invite_code, generate_temporary_password, login_required, role_required
 from brml.db import execute, get_db, query_all, query_one
+from brml.finance import fetch_transactions, member_income_stats, summary
 from brml.i18n import SUPPORTED_LOCALES, translate
 from brml.timeutils import now
+
+
+def _active_users() -> list:
+    """返回未删除用户（用于后台记账的会员下拉框）。"""
+    return query_all(
+        "select id, display_name from users where is_deleted = 0 order by display_name"
+    )
 
 
 def register_routes(app) -> None:
@@ -129,18 +137,15 @@ def register_routes(app) -> None:
                     flash(translate("flash.invite_created", code=code), "success")
                 except sqlite3.IntegrityError:
                     flash(translate("flash.invite_conflict"), "error")
-        codes = query_all(
-            """
-            select i.*, u.display_name as used_by_name
-            from invite_codes i left join users u on u.id = i.used_by
-            order by i.created_at desc
-            """
-        )
-        return render_template("invites.html", codes=codes)
+            return redirect(url_for("admin_users", tab="invites"))
+        return redirect(url_for("admin_users", tab="invites"))
 
     @app.route("/admin/users")
     @role_required("super_admin")
     def admin_users():
+        tab = request.args.get("tab", "users")
+        if tab not in ("users", "finance", "invites"):
+            tab = "users"
         users = query_all(
             """
             select u.*
@@ -148,7 +153,29 @@ def register_routes(app) -> None:
             order by u.is_deleted asc, u.role asc, u.created_at desc
             """
         )
-        return render_template("admin_users.html", users=users)
+        active_count = sum(1 for user in users if not user["is_deleted"])
+        context = {
+            "users": users,
+            "tab": tab,
+            "active_count": active_count,
+            "deleted_count": len(users) - active_count,
+        }
+        if tab == "finance":
+            context.update(
+                data=summary(),
+                transactions=fetch_transactions(),
+                members=_active_users(),
+                member_stats=member_income_stats(),
+            )
+        elif tab == "invites":
+            context["codes"] = query_all(
+                """
+                select i.*, u.display_name as used_by_name
+                from invite_codes i left join users u on u.id = i.used_by
+                order by i.created_at desc
+                """
+            )
+        return render_template("admin.html", **context)
 
     @app.route("/admin/users/<int:user_id>/update", methods=("POST",))
     @role_required("super_admin")
@@ -185,6 +212,22 @@ def register_routes(app) -> None:
             flash(translate("flash.user_deleted", name=user["display_name"]), "success")
         return redirect(url_for("admin_users"))
 
+    @app.route("/admin/users/<int:user_id>/reactivate", methods=("POST",))
+    @role_required("super_admin")
+    def admin_user_reactivate(user_id: int):
+        user = query_one("select * from users where id = ?", (user_id,))
+        if not user:
+            flash(translate("flash.user_missing"), "error")
+        elif not user["is_deleted"]:
+            flash(translate("flash.user_already_active"), "error")
+        else:
+            execute(
+                "update users set is_deleted = 0, deleted_at = null where id = ?",
+                (user_id,),
+            )
+            flash(translate("flash.user_reactivated", name=user["display_name"]), "success")
+        return redirect(url_for("admin_users", tab="users"))
+
     @app.route("/admin/users/<int:user_id>/reset-password", methods=("POST",))
     @role_required("super_admin")
     def admin_user_reset_password(user_id: int):
@@ -206,4 +249,3 @@ def register_routes(app) -> None:
                 "success",
             )
         return redirect(url_for("admin_users"))
-

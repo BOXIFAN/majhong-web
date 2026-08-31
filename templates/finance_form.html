@@ -41,12 +41,12 @@
       </select>
     </label>
   </div>
-  <label>{{ t('finance.category') }} · 摘要
-    <input name="description" value="{{ transaction.description }}" required maxlength="200">
+  <label>{{ t('finance.description') }} <small class="muted">{{ t('finance.optional') }}</small>
+    <input name="description" value="{{ transaction.description }}" maxlength="200">
   </label>
   <div class="form-actions">
     <button class="button slim" type="submit">{{ t('finance.save') }}</button>
-    <a class="secondary-button" href="{{ url_for('admin_finance') }}">{{ t('finance.back_to_admin') }}</a>
+    <a class="secondary-button" href="{{ url_for('admin_users', tab='finance') }}">{{ t('finance.back_to_admin') }}</a>
   </div>
 </form>
 {% endblock %}
