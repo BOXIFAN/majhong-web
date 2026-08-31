@@ -193,7 +193,7 @@ def _radar_values(metrics: dict) -> list[float]:
 def _radar_display(metrics: dict) -> list[str]:
     """按给定口径生成六个雷达轴的展示数值（与 _radar_values 同口径）。"""
     return [
-        f"{_clip100(metrics['first_rate'] * 2):.1f}%",
+        f"{metrics['first_rate']:.1f}%",
         f"{metrics['positive_rate']:.1f}%",
         f"{metrics['average_score']:,.0f}",
         f"{_clip100(100 - metrics['fourth_rate'] * 2):.1f}%",
