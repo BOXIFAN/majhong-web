@@ -104,6 +104,9 @@
                 <tspan class="radar-label-line" x="{{ metric.label_x }}" dy="{{ 0 if loop.first else 13 }}">{{ line }}</tspan>
               {% endfor %}
               <tspan class="radar-label-value" x="{{ metric.label_x }}" dy="15">{{ metric.value }}</tspan>
+              {% if radar_median.has_data %}
+                <tspan class="radar-label-median" x="{{ metric.label_x }}" dy="13">{{ radar_median.display[loop.index0] }}</tspan>
+              {% endif %}
             </text>
           {% endfor %}
         </svg>
