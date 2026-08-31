@@ -8,7 +8,13 @@ import json
 
 from flask import Response, flash, g, redirect, render_template, request, url_for
 
-from brml.analytics import build_finals_status, build_placement_trend, build_player_radar, get_leaderboard
+from brml.analytics import (
+    build_finals_status,
+    build_placement_trend,
+    build_player_radar,
+    get_leaderboard,
+    season_radar_median,
+)
 from brml.auth import role_required
 from brml.db import get_db, query_all, query_one
 from brml.i18n import translate
@@ -228,6 +234,7 @@ def register_routes(app) -> None:
         ) if season else []
         trend = build_placement_trend(trend_history)
         radar = build_player_radar(season_entries)
+        radar_median = season_radar_median(season["id"]) if season else {"has_data": False, "points": "", "nodes": [], "display": []}
         pagination = {
             "page": page,
             "pages": history_pages,
@@ -244,6 +251,7 @@ def register_routes(app) -> None:
             history=history,
             trend=trend,
             radar=radar,
+            radar_median=radar_median,
             pagination=pagination,
         )
 
@@ -270,4 +278,3 @@ def register_routes(app) -> None:
             mimetype="text/csv",
             headers={"Content-Disposition": f"attachment; filename=season-{season_id}-leaderboard.csv"},
         )
-

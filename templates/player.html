@@ -67,7 +67,17 @@
         <p class="eyebrow">Performance</p>
         <h2>{{ t('player.radar_title') }}</h2>
       </div>
-      <span>{{ t('player.radar_intro') }}</span>
+      <div class="player-radar-head-meta">
+        <span>{{ t('player.radar_intro') }}</span>
+        {% if radar.has_data %}
+          <div class="radar-color-legend" role="list" aria-label="{{ t('player.radar_legend_aria') }}">
+            <span class="radar-legend-item" role="listitem"><i class="radar-swatch swatch-self"></i>{{ t('player.radar_self') }}</span>
+            {% if radar_median.has_data %}
+              <span class="radar-legend-item" role="listitem"><i class="radar-swatch swatch-median"></i>{{ t('player.radar_median') }}</span>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
     </div>
     {% if radar.has_data %}
       <div class="player-radar-wrap">
@@ -80,6 +90,12 @@
           {% for metric in radar.metrics %}
             <line class="radar-axis" x1="{{ radar.center_x }}" y1="{{ radar.center_y }}" x2="{{ metric.axis_x }}" y2="{{ metric.axis_y }}"></line>
           {% endfor %}
+          {% if radar_median.has_data %}
+            <polygon class="radar-median" points="{{ radar_median.points }}"></polygon>
+            {% for node in radar_median.nodes %}
+              <circle class="radar-median-node" cx="{{ node.x }}" cy="{{ node.y }}" r="3"></circle>
+            {% endfor %}
+          {% endif %}
           <polygon class="radar-data" points="{{ radar.data_points }}"></polygon>
           {% for metric in radar.metrics %}
             <circle class="radar-node" cx="{{ metric.axis_x if metric.normalized >= 100 else radar.center_x + (metric.axis_x - radar.center_x) * metric.normalized / 100 }}" cy="{{ metric.axis_y if metric.normalized >= 100 else radar.center_y + (metric.axis_y - radar.center_y) * metric.normalized / 100 }}" r="3.4"></circle>

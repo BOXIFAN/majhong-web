@@ -2245,8 +2245,17 @@ select:focus {
   stroke-width: 2.8;
   stroke-linecap: round;
   stroke-linejoin: round;
+  stroke-dasharray: 800;
+  stroke-dashoffset: 800;
   vector-effect: non-scaling-stroke;
   filter: drop-shadow(0 8px 14px rgba(15, 118, 110, 0.18));
+  animation: trend-draw 1s ease forwards;
+}
+
+@keyframes trend-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 .trend-point {
@@ -2259,6 +2268,8 @@ select:focus {
   background: radial-gradient(circle at 34% 30%, #fff5c8 0 18%, #f8df8b 42%, #f2bf4f 100%);
   box-shadow: 0 3px 7px rgba(177, 111, 18, 0.24);
   transform: translate(-50%, -50%);
+  opacity: 0;
+  animation: radar-fade 0.4s 0.65s ease forwards;
 }
 
 .trend-axis {
@@ -2331,11 +2342,49 @@ select:focus {
   margin-bottom: 6px;
 }
 
-.player-radar-head > span {
+.player-radar-head-meta {
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+}
+
+.player-radar-head-meta > span {
   color: var(--muted);
   font-size: 12px;
   font-weight: 750;
   text-align: right;
+}
+
+.radar-color-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  justify-content: flex-end;
+}
+
+.radar-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.radar-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.14);
+}
+
+.radar-swatch.swatch-self {
+  background: var(--brand);
+}
+
+.radar-swatch.swatch-median {
+  background: var(--bad);
 }
 
 .player-radar-wrap {
@@ -2372,11 +2421,55 @@ select:focus {
 
 .radar-data {
   fill: rgba(15, 118, 110, 0.22);
+  fill-opacity: 0;
   stroke: var(--brand);
   stroke-width: 2.5;
   stroke-linejoin: round;
+  stroke-dasharray: 2400;
+  stroke-dashoffset: 2400;
   vector-effect: non-scaling-stroke;
   filter: drop-shadow(0 8px 16px rgba(15, 118, 110, 0.14));
+  animation: radar-draw 0.9s ease forwards, radar-fill 0.7s 0.35s ease forwards;
+}
+
+.radar-median {
+  fill: none;
+  stroke: var(--bad);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-dasharray: 2400;
+  stroke-dashoffset: 2400;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+  filter: drop-shadow(0 6px 12px rgba(185, 28, 28, 0.18));
+  animation: radar-draw 1s 0.25s ease forwards, radar-fade 0.6s 0.25s ease forwards;
+}
+
+.radar-median-node {
+  fill: var(--bad);
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 0.8;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+  animation: radar-fade 0.5s 1s ease forwards;
+}
+
+@keyframes radar-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes radar-fade {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes radar-fill {
+  to {
+    fill-opacity: 1;
+  }
 }
 
 .radar-node {
@@ -2384,6 +2477,8 @@ select:focus {
   stroke: #e4a92d;
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
+  opacity: 0;
+  animation: radar-fade 0.4s 0.7s ease forwards;
 }
 
 .radar-label {
@@ -3133,8 +3228,16 @@ select:focus {
     gap: 8px;
   }
 
-  .player-radar-head > span {
+  .player-radar-head-meta {
+    justify-items: start;
+  }
+
+  .player-radar-head-meta > span {
     text-align: left;
+  }
+
+  .radar-color-legend {
+    justify-content: flex-start;
   }
 
   .player-radar-wrap {
@@ -4422,6 +4525,25 @@ select:focus {
 
   .pie-ring {
     --pie-grow: 360deg;
+    animation: none !important;
+  }
+
+  .radar-data,
+  .radar-median,
+  .trend-line {
+    stroke-dashoffset: 0;
+    animation: none !important;
+  }
+
+  .radar-data {
+    fill-opacity: 1;
+  }
+
+  .radar-node,
+  .radar-median,
+  .radar-median-node,
+  .trend-point {
+    opacity: 1;
     animation: none !important;
   }
 }

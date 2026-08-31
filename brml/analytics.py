@@ -124,6 +124,118 @@ def build_player_radar(entries: list[sqlite3.Row]) -> dict:
     }
 
 
+def _raw_metrics(entries: list[sqlite3.Row]) -> dict:
+    """计算单个选手的六维原始指标（百分比与原始均分/火力）。"""
+    count = len(entries)
+
+    def pct(value: int) -> float:
+        return round(value / count * 100, 1) if count else 0.0
+
+    first_count = sum(1 for row in entries if float(row["placement"]) == 1)
+    positive_count = sum(1 for row in entries if float(row["rank_points"]) > 0)
+    fourth_avoid_count = sum(1 for row in entries if float(row["placement"]) != 4)
+    bust_avoid_count = sum(1 for row in entries if int(row["final_score"]) >= 0)
+    average_score = (
+        sum(int(row["final_score"]) for row in entries) / count
+        if count
+        else 0
+    )
+    first_scores = [int(row["final_score"]) for row in entries if float(row["placement"]) == 1]
+    firepower = sum(first_scores) / len(first_scores) if first_scores else 0
+    return {
+        "first_rate": pct(first_count),
+        "positive_rate": pct(positive_count),
+        "average_score": average_score,
+        "fourth_avoidance": pct(fourth_avoid_count),
+        "bust_avoidance": pct(bust_avoid_count),
+        "firepower": firepower,
+    }
+
+
+def _median(values: list[float]) -> float:
+    ordered = sorted(values)
+    size = len(ordered)
+    if size == 0:
+        return 0.0
+    midpoint = size // 2
+    if size % 2 == 1:
+        return ordered[midpoint]
+    return (ordered[midpoint - 1] + ordered[midpoint]) / 2
+
+
+def _normalize_radar_values(metrics: dict) -> list[float]:
+    """把六维原始指标归一化到 0-100（与 build_player_radar 相同口径）。"""
+    return [
+        metrics["first_rate"],
+        metrics["positive_rate"],
+        min(metrics["average_score"] / 50000 * 100, 100),
+        metrics["fourth_avoidance"],
+        metrics["bust_avoidance"],
+        min(metrics["firepower"] / 60000 * 100, 100),
+    ]
+
+
+def season_radar_median(season_id: int) -> dict:
+    """计算当前赛季所有选手六维指标的中位数，用于雷达图红色对比轮廓。"""
+    rows = query_all(
+        """
+        select me.user_id, me.final_score, me.placement, me.rank_points
+        from match_entries me
+        join matches m on m.id = me.match_id
+        where m.season_id = ?
+        order by me.user_id, m.played_at asc, m.id asc
+        """,
+        (season_id,),
+    )
+    by_user: dict[int, list] = {}
+    for row in rows:
+        by_user.setdefault(row["user_id"], []).append(row)
+
+    if not by_user:
+        return {"has_data": False, "points": "", "nodes": [], "display": []}
+
+    buckets = {
+        "first_rate": [],
+        "positive_rate": [],
+        "average_score": [],
+        "fourth_avoidance": [],
+        "bust_avoidance": [],
+        "firepower": [],
+    }
+    for entries in by_user.values():
+        metrics = _raw_metrics(entries)
+        for key in buckets:
+            buckets[key].append(metrics[key])
+    median_raw = {key: _median(values) for key, values in buckets.items()}
+    normalized = _normalize_radar_values(median_raw)
+
+    center_x, center_y, radius = 180, 166, 92
+    points: list[str] = []
+    nodes: list[dict] = []
+    for index, value in enumerate(normalized):
+        angle = -math.pi / 2 + index * math.pi / 3
+        value_radius = radius * max(0, min(float(value), 100)) / 100
+        x = round(center_x + math.cos(angle) * value_radius, 1)
+        y = round(center_y + math.sin(angle) * value_radius, 1)
+        points.append(f"{x},{y}")
+        nodes.append({"x": x, "y": y})
+
+    display = [
+        f"{median_raw['first_rate']:.1f}%",
+        f"{median_raw['positive_rate']:.1f}%",
+        f"{median_raw['average_score']:,.0f}",
+        f"{median_raw['fourth_avoidance']:.1f}%",
+        f"{median_raw['bust_avoidance']:.1f}%",
+        f"{median_raw['firepower']:,.0f}",
+    ]
+    return {
+        "has_data": True,
+        "points": " ".join(points),
+        "nodes": nodes,
+        "display": display,
+    }
+
+
 def get_leaderboard(season_id: int) -> list[dict]:
     """聚合指定赛季的成绩；罚分已包含在 ``rank_points`` 中。"""
     rows = query_all(
@@ -237,5 +349,4 @@ def get_penalty_records(season_id: int) -> list[sqlite3.Row]:
         """,
         (season_id,),
     )
-
 
