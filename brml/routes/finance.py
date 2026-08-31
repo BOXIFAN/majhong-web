@@ -69,6 +69,7 @@ def register_routes(app) -> None:
     # ----- 公开只读总览：所有用户可访问 -----
 
     @app.route("/finance")
+    @role_required("super_admin", "referee")
     def finance():
         data = summary()
         transactions = fetch_transactions(limit=50)

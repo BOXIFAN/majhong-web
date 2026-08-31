@@ -29,10 +29,10 @@
           <a href="{{ url_for('leaderboard') }}">{{ t('nav.leaderboard') }}</a>
           <a href="{{ url_for('matches') }}">{{ t('nav.matches') }}</a>
           <a href="{{ url_for('seasons') }}">{{ t('nav.rules') }}</a>
-          <a href="{{ url_for('finance') }}">{{ t('nav.finance') }}</a>
           {% if current_user %}
             <a href="{{ url_for('meetups') }}">{{ t('nav.meetups') }}</a>
             {% if current_user.role in ['super_admin', 'referee'] %}
+              <a href="{{ url_for('finance') }}">{{ t('nav.finance') }}</a>
               <a href="{{ url_for('match_new') }}">{{ t('nav.match_entry') }}</a>
             {% endif %}
             {% if current_user.role == 'super_admin' %}
@@ -82,10 +82,10 @@
           <a href="{{ url_for('leaderboard') }}">{{ t('nav.leaderboard') }}</a>
           <a href="{{ url_for('matches') }}">{{ t('nav.matches') }}</a>
           <a href="{{ url_for('seasons') }}">{{ t('nav.rules') }}</a>
-          <a href="{{ url_for('finance') }}">{{ t('nav.finance') }}</a>
           {% if current_user %}
             <a href="{{ url_for('meetups') }}">{{ t('nav.meetups') }}</a>
             {% if current_user.role in ['super_admin', 'referee'] %}
+              <a href="{{ url_for('finance') }}">{{ t('nav.finance') }}</a>
               <a href="{{ url_for('match_new') }}">{{ t('nav.match_entry') }}</a>
             {% endif %}
             {% if current_user.role == 'super_admin' %}
