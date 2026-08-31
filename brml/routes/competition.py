@@ -14,7 +14,6 @@ from brml.analytics import (
     build_player_radar,
     get_leaderboard,
     season_radar_median,
-    season_tobi_mean,
 )
 from brml.auth import role_required
 from brml.db import get_db, query_all, query_one
@@ -234,9 +233,8 @@ def register_routes(app) -> None:
             (user_id, season["id"]),
         ) if season else []
         trend = build_placement_trend(trend_history)
-        tobi_mean = season_tobi_mean(season["id"]) if season else 0.0
-        radar = build_player_radar(season_entries, tobi_mean)
-        radar_median = season_radar_median(season["id"], tobi_mean) if season else {"has_data": False, "points": "", "nodes": [], "display": []}
+        radar = build_player_radar(season_entries)
+        radar_median = season_radar_median(season["id"]) if season else {"has_data": False, "points": "", "nodes": [], "display": []}
         pagination = {
             "page": page,
             "pages": history_pages,

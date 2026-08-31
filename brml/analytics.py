@@ -39,17 +39,17 @@ def build_placement_trend(history: list[sqlite3.Row]) -> dict:
     }
 
 
-def build_player_radar(entries: list[sqlite3.Row], tobi_mean: float = 0.0) -> dict:
+def build_player_radar(entries: list[sqlite3.Row]) -> dict:
     """计算个人雷达图六维指标，并产出模板绘制所需的 SVG 几何数据。
 
     归一化口径：一位率 ×2、四位回避率 = 100 − 4位率×2、
-    击飞回避率按相对赛季均击飞率计算；其余三维（正分率、平均打点、火力）维持原口径。
-    ``tobi_mean`` 为当前赛季所有选手的平均击飞率，用于击飞回避率基准。
+    低分回避率 = 终局持点 ≥ 10,000 的对局占比；其余三维（正分率、平均打点、火力）维持原口径。
+    原始击飞次数与击飞回避率单独在页面展示。
     """
     match_count = len(entries)
     raw = _raw_metrics(entries)
-    values = _radar_values(raw, tobi_mean)
-    display = _radar_display(raw, tobi_mean)
+    values = _radar_values(raw)
+    display = _radar_display(raw)
     metric_specs = [
         ("player.first_rate", "player.first_rate_desc", values[0], display[0]),
         ("player.positive_rate", "player.positive_rate_desc", values[1], display[1]),
@@ -110,13 +110,20 @@ def build_player_radar(entries: list[sqlite3.Row], tobi_mean: float = 0.0) -> di
         "grid_polygons": grid_polygons,
         "data_points": " ".join(data_points),
         "metrics": metrics,
+        "tobi_count": int(raw["tobi_count"]),
+        "tobi_note": translate(
+            "player.tobi_note",
+            count=int(raw["tobi_count"]),
+            rate=f"{raw['bust_avoidance']:.1f}",
+        ),
     }
 
 
 def _raw_metrics(entries: list[sqlite3.Row]) -> dict:
     """计算单个选手的六维原始指标（百分率、均分与火力原始值）。
 
-    其中 ``fourth_rate`` 为四位率、``tobi_rate`` 为击飞率，供后续公式换算回避率。
+    其中 ``fourth_rate`` 为四位率，``low_score_rate`` 为低分回避率（终局 ≥10,000 占比），
+    另附原始 ``tobi_count`` 与 ``bust_avoidance``（击飞次数与原始击飞回避率）供页面展示。
     """
     count = len(entries)
 
@@ -127,6 +134,8 @@ def _raw_metrics(entries: list[sqlite3.Row]) -> dict:
     positive_count = sum(1 for row in entries if float(row["rank_points"]) > 0)
     fourth_count = sum(1 for row in entries if float(row["placement"]) == 4)
     tobi_count = sum(1 for row in entries if int(row["final_score"]) < 0)
+    low_score_count = sum(1 for row in entries if int(row["final_score"]) >= 10000)
+    bust_avoid_count = sum(1 for row in entries if int(row["final_score"]) >= 0)
     average_score = (
         sum(int(row["final_score"]) for row in entries) / count
         if count
@@ -139,7 +148,10 @@ def _raw_metrics(entries: list[sqlite3.Row]) -> dict:
         "positive_rate": pct(positive_count),
         "average_score": average_score,
         "fourth_rate": pct(fourth_count),
+        "low_score_rate": pct(low_score_count),
         "tobi_rate": pct(tobi_count),
+        "tobi_count": tobi_count,
+        "bust_avoidance": pct(bust_avoid_count),
         "firepower": firepower,
     }
 
@@ -159,34 +171,26 @@ def _clip100(value: float) -> float:
     return max(0.0, min(float(value), 100.0))
 
 
-def _tobi_avoidance(tobi_rate: float, tobi_mean: float) -> float:
-    """击飞避免率 = (2·赛季均击飞率 − 本人击飞率%) × 100 / (2·赛季均击飞率)。"""
-    denominator = 2 * tobi_mean
-    if denominator <= 0:
-        return 100.0 if tobi_rate <= 0 else 0.0
-    return (denominator - tobi_rate) * 100 / denominator
-
-
-def _radar_values(metrics: dict, tobi_mean: float) -> list[float]:
+def _radar_values(metrics: dict) -> list[float]:
     """按给定口径计算六个雷达轴的值（0-100，用于图形形状）。"""
     return [
         _clip100(metrics["first_rate"] * 2),
         _clip100(metrics["positive_rate"]),
         _clip100(metrics["average_score"] / 50000 * 100),
         _clip100(100 - metrics["fourth_rate"] * 2),
-        _clip100(_tobi_avoidance(metrics["tobi_rate"], tobi_mean)),
+        _clip100(metrics["low_score_rate"]),
         _clip100(metrics["firepower"] / 60000 * 100),
     ]
 
 
-def _radar_display(metrics: dict, tobi_mean: float) -> list[str]:
+def _radar_display(metrics: dict) -> list[str]:
     """按给定口径生成六个雷达轴的展示数值（与 _radar_values 同口径）。"""
     return [
         f"{_clip100(metrics['first_rate'] * 2):.1f}%",
         f"{metrics['positive_rate']:.1f}%",
         f"{metrics['average_score']:,.0f}",
         f"{_clip100(100 - metrics['fourth_rate'] * 2):.1f}%",
-        f"{_clip100(_tobi_avoidance(metrics['tobi_rate'], tobi_mean)):.1f}%",
+        f"{_clip100(metrics['low_score_rate']):.1f}%",
         f"{metrics['firepower']:,.0f}",
     ]
 
@@ -209,30 +213,20 @@ def _season_players(season_id: int) -> list[dict]:
     return [_raw_metrics(entries) for entries in by_user.values()]
 
 
-def season_tobi_mean(season_id: int) -> float:
-    """当前赛季所有选手的平均击飞率（用于击飞回避率基准）。"""
-    players = _season_players(season_id)
-    if not players:
-        return 0.0
-    return sum(player["tobi_rate"] for player in players) / len(players)
-
-
-def season_radar_median(season_id: int, tobi_mean: float | None = None) -> dict:
+def season_radar_median(season_id: int) -> dict:
     """计算当前赛季所有选手六维指标的中位数，用于雷达图红色对比轮廓。"""
     players = _season_players(season_id)
     if not players:
         return {"has_data": False, "points": "", "nodes": [], "display": []}
 
-    if tobi_mean is None:
-        tobi_mean = sum(player["tobi_rate"] for player in players) / len(players)
-    keys = ("first_rate", "positive_rate", "average_score", "fourth_rate", "tobi_rate", "firepower")
+    keys = ("first_rate", "positive_rate", "average_score", "fourth_rate", "low_score_rate", "firepower")
     buckets = {key: [] for key in keys}
     for player in players:
         for key in keys:
             buckets[key].append(player[key])
     median_raw = {key: _median(values) for key, values in buckets.items()}
-    normalized = _radar_values(median_raw, tobi_mean)
-    display = _radar_display(median_raw, tobi_mean)
+    normalized = _radar_values(median_raw)
+    display = _radar_display(median_raw)
 
     center_x, center_y, radius = 180, 166, 92
     points: list[str] = []
