@@ -53,6 +53,35 @@ def _mleague_vector(profile: dict) -> list[float]:
     ]
 
 
+def _mleague_display(profile: dict) -> list[str]:
+    """生成与本站口径一致的六维展示文本（不含误导性百分比）。
+
+    四个“率”维度用真实字段算真正的百分比；两个“点”维度用 Mリーグ积分单位：
+    平均打点 = 场均累计 pt（所有对局平均）；火力 = 每次一位平均累计 pt（近似）。
+    """
+    games = profile["games"]
+    if games <= 0:
+        return ["—"] * 6
+    first = profile["first"]
+    second = profile["second"]
+    third = profile["third"]
+    fourth = profile["fourth"]
+    avg_pt = profile["points"] / games
+    first_rate = first / games * 100
+    positive_rate = (first + second) / games * 100
+    fourth_avoid = _clip100(100 - fourth / games * 200)
+    survival = _clip100(100 - (third * 0.6 + fourth * 1.4) / games * 100)
+    firepower = profile["points"] / first if first else 0.0
+    return [
+        f"{first_rate:.1f}%",
+        f"{positive_rate:.1f}%",
+        f"{avg_pt:,.1f}pt",
+        f"{fourth_avoid:.1f}%",
+        f"{survival:.1f}%",
+        f"{firepower:,.1f}pt",
+    ]
+
+
 def _build_profiles() -> list[dict]:
     """把真实 54 位选手的数据打包为带六维向量的档案列表。"""
     profiles = []
@@ -71,6 +100,7 @@ def _build_profiles() -> list[dict]:
                 "third": player["third"],
                 "fourth": player["fourth"],
                 "vector": _mleague_vector(player),
+                "display": _mleague_display(player),
             }
         )
     return profiles

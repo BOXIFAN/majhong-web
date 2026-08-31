@@ -47,7 +47,11 @@ def register_routes(app) -> None:
         user_radar = build_player_radar(entries) if entries else None
         labels = [metric["label"] for metric in user_radar["metrics"]] if user_radar else []
         best_radar = (
-            build_vector_radar(result["best"]["vector"], labels, "%")
+            build_vector_radar(
+                result["best"]["vector"],
+                labels,
+                display_values=result["best"].get("display"),
+            )
             if result["has_data"] and labels
             else None
         )

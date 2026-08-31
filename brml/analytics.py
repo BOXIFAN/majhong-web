@@ -119,8 +119,17 @@ def build_player_radar(entries: list[sqlite3.Row]) -> dict:
     }
 
 
-def build_vector_radar(values: list[float], labels: list[str], suffix: str = "") -> dict:
-    """根据六个 0-100 的雷达值直接生成与 build_player_radar 相同的 SVG 几何。"""
+def build_vector_radar(
+    values: list[float],
+    labels: list[str],
+    suffix: str = "",
+    display_values: list[str] | None = None,
+) -> dict:
+    """根据六个 0-100 的雷达值直接生成与 build_player_radar 相同的 SVG 几何。
+
+    ``display_values`` 若提供，则用它作为各轴标签的展示文本（如带单位的点值），
+    否则回退为 ``f"{value:.1f}{suffix}"``。
+    """
     center_x, center_y, radius = 180, 166, 92
     grid_polygons = []
     for factor in (0.25, 0.5, 0.75, 1.0):
@@ -151,11 +160,16 @@ def build_vector_radar(values: list[float], labels: list[str], suffix: str = "")
         horizontal = math.cos(angle)
         anchor = "start" if horizontal > 0.35 else "end" if horizontal < -0.35 else "middle"
         label = labels[index] if index < len(labels) else ""
+        value_display = (
+            display_values[index]
+            if display_values and index < len(display_values)
+            else f"{value:.1f}{suffix}"
+        )
         metrics.append(
             {
                 "label": label,
                 "label_lines": [label],
-                "value": f"{value:.1f}{suffix}",
+                "value": value_display,
                 "normalized": round(value, 1),
                 "axis_x": round(axis_x, 1),
                 "axis_y": round(axis_y, 1),
