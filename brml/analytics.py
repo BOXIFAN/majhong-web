@@ -119,7 +119,7 @@ def build_player_radar(entries: list[sqlite3.Row]) -> dict:
     }
 
 
-def build_vector_radar(values: list[float], labels: list[str]) -> dict:
+def build_vector_radar(values: list[float], labels: list[str], suffix: str = "") -> dict:
     """根据六个 0-100 的雷达值直接生成与 build_player_radar 相同的 SVG 几何。"""
     center_x, center_y, radius = 180, 166, 92
     grid_polygons = []
@@ -155,7 +155,7 @@ def build_vector_radar(values: list[float], labels: list[str]) -> dict:
             {
                 "label": label,
                 "label_lines": [label],
-                "value": f"{value:.1f}",
+                "value": f"{value:.1f}{suffix}",
                 "normalized": round(value, 1),
                 "axis_x": round(axis_x, 1),
                 "axis_y": round(axis_y, 1),
