@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ announcement.title }} · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head">
+  <p class="eyebrow">BRML News</p>
+  <h1>{{ announcement.title }}</h1>
+  <p class="announcement-meta">{{ t('announcement.published_by', date=announcement.created_at, name=(announcement.author_name or t('home.system'))) }}</p>
+</section>
+<section class="panel announcement-detail">
+  <div class="announcement-content">{{ announcement.content }}</div>
+  <a class="secondary-button" href="{{ url_for('index') }}">{{ t('announcement.back') }}</a>
+</section>
+{% endblock %}

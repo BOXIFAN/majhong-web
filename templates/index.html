@@ -65,10 +65,14 @@
       {% if latest_announcement %}
         <span class="latest-badge">LATEST</span><h3>{{ latest_announcement.title }}</h3>
         <p class="announcement-meta">{{ t('announcement.published_by', date=latest_announcement.created_at, name=(latest_announcement.author_name or t('home.system'))) }}</p>
-        <div class="announcement-content">{{ latest_announcement.content }}</div>
+        <div class="announcement-content" id="latest-announcement-content">{{ latest_announcement.content }}</div>
+        <div class="announcement-actions">
+          <button class="announcement-expand" type="button" data-expand-target="latest-announcement-content" data-label-expand="{{ t('announcement.read_more') }}" data-label-collapse="{{ t('announcement.read_less') }}">{{ t('announcement.read_more') }}</button>
+          <a class="text-link" href="{{ url_for('announcement_view', announcement_id=latest_announcement.id) }}">{{ t('announcement.view_full') }} <span aria-hidden="true">→</span></a>
+        </div>
         {% if past_announcements %}
           <details class="past-announcements"><summary>{{ t('home.more_announcements') }} <span>{{ past_announcements|length }}</span></summary>
-            <div class="past-announcement-list">{% for announcement in past_announcements %}<details><summary><strong>{{ announcement.title }}</strong><small>{{ announcement.created_at }}</small></summary><div class="announcement-content compact">{{ announcement.content }}</div></details>{% endfor %}</div>
+            <div class="past-announcement-list">{% for announcement in past_announcements %}<details><summary><strong>{{ announcement.title }}</strong><small>{{ announcement.created_at }}</small></summary><div class="announcement-content compact">{{ announcement.content }}</div><a class="text-link past-announcement-open" href="{{ url_for('announcement_view', announcement_id=announcement.id) }}">{{ t('announcement.view_full') }} <span aria-hidden="true">→</span></a></details>{% endfor %}</div>
           </details>
         {% endif %}
       {% else %}

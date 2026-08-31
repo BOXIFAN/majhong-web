@@ -40,6 +40,22 @@ def register_routes(app) -> None:
         }
         return render_template("matches.html", matches=rows, pagination=pagination)
 
+    @app.route("/announcements/<int:announcement_id>")
+    def announcement_view(announcement_id: int):
+        announcement = query_one(
+            """
+            select a.*, u.display_name as author_name
+            from announcements a
+            left join users u on u.id = a.author_id
+            where a.id = ?
+            """,
+            (announcement_id,),
+        )
+        if not announcement:
+            flash(translate("announcement.missing"), "error")
+            return redirect(url_for("index"))
+        return render_template("announcement_detail.html", announcement=announcement)
+
     @app.route("/admin/announcements", methods=("GET", "POST"))
     @role_required("super_admin")
     def announcements():
@@ -106,4 +122,3 @@ def register_routes(app) -> None:
         if locale in SUPPORTED_LOCALES:
             session["locale"] = locale
         return redirect(request.referrer or url_for("index"))
-

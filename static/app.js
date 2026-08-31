@@ -261,3 +261,15 @@ document.querySelectorAll("[data-finance-kind]").forEach((kindSelect) => {
   kindSelect.addEventListener("change", refreshFinanceFields);
   refreshFinanceFields();
 });
+
+// 公告展开/收起：切换 line-clamp 并更新按钮文案。
+document.querySelectorAll("[data-expand-target]").forEach((button) => {
+  const target = document.getElementById(button.dataset.expandTarget);
+  if (!target) return;
+  const expandLabel = button.dataset.labelExpand;
+  const collapseLabel = button.dataset.labelCollapse;
+  button.addEventListener("click", () => {
+    const expanded = target.classList.toggle("is-expanded");
+    button.textContent = expanded ? collapseLabel : expandLabel;
+  });
+});
