@@ -3930,6 +3930,7 @@ select:focus {
   flex-wrap: wrap;
   gap: 18px;
   align-items: center;
+  justify-content: flex-end;
   margin-top: 18px;
 }
 
