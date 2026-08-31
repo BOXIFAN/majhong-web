@@ -7,7 +7,7 @@ import sqlite3
 from flask import flash, g, redirect, render_template, request, url_for
 
 from brml.auth import login_required, role_required
-from brml.config import DEFAULT_MEETUP_VENUE
+from brml.config import DEFAULT_MEETUP_VENUE, SITE_VERSION
 from brml.db import execute, get_db, query_all, query_one
 from brml.i18n import translate
 from brml.match_service import current_season
@@ -42,6 +42,7 @@ def register_routes(app) -> None:
             current_season=season,
             season_match_count=season_match_count,
             current_member_count=current_member_count,
+            site_version=SITE_VERSION,
             latest_announcement=announcements[0] if announcements else None,
             past_announcements=announcements[1:],
         )

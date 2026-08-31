@@ -18,3 +18,6 @@ ADMIN_PASSWORD_HASH = "pbkdf2:sha256:600000$OE6JuNaR26tucuw6$c7c3987d9ac3d9e86f2
 ADMIN_PASSWORD_MIGRATION = "set-admin-password-2026-08-24"
 
 DEFAULT_MEETUP_VENUE = "upc 8 Gillingham street, QLD4102"
+
+# 网站版本，用于首页显示；改版时同步更新即可。
+SITE_VERSION = "v1.1"
