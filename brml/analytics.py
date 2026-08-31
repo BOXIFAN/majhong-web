@@ -122,7 +122,8 @@ def build_player_radar(entries: list[sqlite3.Row]) -> dict:
 def _raw_metrics(entries: list[sqlite3.Row]) -> dict:
     """计算单个选手的六维原始指标（百分率、均分与火力原始值）。
 
-    其中 ``fourth_rate`` 为四位率，``low_score_rate`` 为低分回避率（终局 ≥10,000 占比），
+    其中 ``fourth_rate`` 为四位率，``hazard`` 为加权生存风险
+    （(1.0·B + 0.5·L10 + 0.2·L20)/N），供生存指数换算；
     另附原始 ``tobi_count`` 与 ``bust_avoidance``（击飞次数与原始击飞回避率）供页面展示。
     """
     count = len(entries)
@@ -133,8 +134,9 @@ def _raw_metrics(entries: list[sqlite3.Row]) -> dict:
     first_count = sum(1 for row in entries if float(row["placement"]) == 1)
     positive_count = sum(1 for row in entries if float(row["rank_points"]) > 0)
     fourth_count = sum(1 for row in entries if float(row["placement"]) == 4)
-    tobi_count = sum(1 for row in entries if int(row["final_score"]) < 0)
-    low_score_count = sum(1 for row in entries if int(row["final_score"]) >= 10000)
+    busted_count = sum(1 for row in entries if int(row["final_score"]) < 0)
+    low_score_count = sum(1 for row in entries if 0 <= int(row["final_score"]) < 10000)
+    mid_score_count = sum(1 for row in entries if 10000 <= int(row["final_score"]) < 20000)
     bust_avoid_count = sum(1 for row in entries if int(row["final_score"]) >= 0)
     average_score = (
         sum(int(row["final_score"]) for row in entries) / count
@@ -143,16 +145,21 @@ def _raw_metrics(entries: list[sqlite3.Row]) -> dict:
     )
     first_scores = [int(row["final_score"]) for row in entries if float(row["placement"]) == 1]
     firepower = sum(first_scores) / len(first_scores) if first_scores else 0
+    hazard = (
+        (1.0 * busted_count + 0.5 * low_score_count + 0.2 * mid_score_count) / count
+        if count
+        else 0.0
+    )
     return {
         "first_rate": pct(first_count),
         "positive_rate": pct(positive_count),
         "average_score": average_score,
         "fourth_rate": pct(fourth_count),
-        "low_score_rate": pct(low_score_count),
-        "tobi_rate": pct(tobi_count),
-        "tobi_count": tobi_count,
+        "hazard": hazard,
+        "tobi_count": busted_count,
         "bust_avoidance": pct(bust_avoid_count),
         "firepower": firepower,
+        "count": count,
     }
 
 
@@ -178,7 +185,7 @@ def _radar_values(metrics: dict) -> list[float]:
         _clip100(metrics["positive_rate"]),
         _clip100(metrics["average_score"] / 50000 * 100),
         _clip100(100 - metrics["fourth_rate"] * 2),
-        _clip100(metrics["low_score_rate"]),
+        _clip100(100 * (1 - metrics["hazard"])),
         _clip100(metrics["firepower"] / 60000 * 100),
     ]
 
@@ -190,7 +197,7 @@ def _radar_display(metrics: dict) -> list[str]:
         f"{metrics['positive_rate']:.1f}%",
         f"{metrics['average_score']:,.0f}",
         f"{_clip100(100 - metrics['fourth_rate'] * 2):.1f}%",
-        f"{_clip100(metrics['low_score_rate']):.1f}%",
+        f"{_clip100(100 * (1 - metrics['hazard'])):.1f}%",
         f"{metrics['firepower']:,.0f}",
     ]
 
@@ -219,7 +226,7 @@ def season_radar_median(season_id: int) -> dict:
     if not players:
         return {"has_data": False, "points": "", "nodes": [], "display": []}
 
-    keys = ("first_rate", "positive_rate", "average_score", "fourth_rate", "low_score_rate", "firepower")
+    keys = ("first_rate", "positive_rate", "average_score", "fourth_rate", "hazard", "firepower")
     buckets = {key: [] for key in keys}
     for player in players:
         for key in keys:
