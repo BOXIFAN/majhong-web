@@ -9,7 +9,7 @@
   </div>
 </section>
 
-{% if current_user.role == 'super_admin' %}
+{% if current_user and current_user.role == 'super_admin' %}
   <form class="panel meetup-create-form" method="post" action="{{ url_for('meetup_new') }}">
     <div>
       <strong>{{ t('meetup.create') }}</strong>

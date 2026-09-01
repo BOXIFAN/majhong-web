@@ -41,7 +41,7 @@
               <b>{{ attendee.display_name[:1] }}</b>
               {{ attendee.display_name }}
             </span>
-            {% if current_user.role == 'super_admin' %}
+            {% if current_user and current_user.role == 'super_admin' %}
               <form method="post" action="{{ url_for('meetup_attendee_remove', meetup_id=meetup.id, user_id=attendee.user_id) }}" onsubmit="return confirm({{ t('meetup.remove_confirm', name=attendee.display_name)|tojson }});">
                 <button class="danger-button compact" type="submit">{{ t('meetup.remove_member') }}</button>
               </form>
@@ -54,7 +54,7 @@
     {% endif %}
   </article>
 
-  {% if current_user.role == 'super_admin' %}
+  {% if current_user and current_user.role == 'super_admin' %}
     <aside class="panel meetup-admin-panel">
       <h2>{{ t('meetup.manage_attendees') }}</h2>
       {% if eligible_users %}

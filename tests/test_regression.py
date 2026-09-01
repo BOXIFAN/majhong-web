@@ -46,9 +46,51 @@ class PublicPageSmokeTests(unittest.TestCase):
                 self.assertEqual(response.status_code, 200)
 
     def test_protected_page_redirects_to_login(self) -> None:
-        response = self.client.get("/meetups")
+        response = self.client.get("/finance")
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.headers["Location"].endswith("/login"))
+
+    def test_guest_can_view_meetups_and_is_redirected_to_login_on_signup(self) -> None:
+        application.app.config["SEED_DEMO_DATA"] = True
+        with application.app.app_context():
+            application.init_db(force=True)
+        with sqlite3.connect(self.database) as db:
+            db.execute(
+                "update users set password_hash = ? where email = 'admin@example.com'",
+                (generate_password_hash("test-admin-password", method="pbkdf2:sha256"),),
+            )
+            db.execute(
+                "insert or replace into app_migrations (name, applied_at) values (?, 'test')",
+                (ADMIN_PASSWORD_MIGRATION,),
+            )
+            db.commit()
+
+        self.client.post(
+            "/login",
+            data={"email": "admin@example.com", "password": "test-admin-password"},
+        )
+        self.assertEqual(
+            self.client.post(
+                "/admin/meetups/new",
+                data={
+                    "meetup_at": "2026-12-01T19:00",
+                    "signup_deadline": "2026-11-30T19:00",
+                    "venue": "Guest test venue",
+                },
+            ).status_code,
+            302,
+        )
+        with sqlite3.connect(self.database) as db:
+            meetup_id = db.execute("select id from meetups order by id desc limit 1").fetchone()[0]
+
+        anonymous = application.app.test_client()
+        self.assertEqual(anonymous.get("/meetups").status_code, 200)
+        self.assertIn('href="/meetups"', anonymous.get("/").get_data(as_text=True))
+        self.assertEqual(anonymous.get(f"/meetups/{meetup_id}").status_code, 200)
+
+        signup = anonymous.post(f"/meetups/{meetup_id}/signup")
+        self.assertEqual(signup.status_code, 302)
+        self.assertTrue(signup.headers["Location"].endswith("/login"))
 
     def test_language_switch_is_stored_in_session(self) -> None:
         response = self.client.get("/language/en")

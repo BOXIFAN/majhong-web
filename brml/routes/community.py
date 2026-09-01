@@ -52,7 +52,6 @@ def register_routes(app) -> None:
         return render_template("about.html")
 
     @app.route("/meetups")
-    @login_required
     def meetups():
         auto_archive_expired_meetups()
         per_page = 8
@@ -90,7 +89,6 @@ def register_routes(app) -> None:
         return render_template("meetups.html", meetups=meetup_items, pagination=pagination)
 
     @app.route("/meetups/<int:meetup_id>")
-    @login_required
     def meetup_detail(meetup_id: int):
         auto_archive_expired_meetups()
         meetup = query_one(
@@ -114,7 +112,7 @@ def register_routes(app) -> None:
             (meetup_id,),
         )
         eligible_users = []
-        if g.user["role"] == "super_admin":
+        if g.user and g.user["role"] == "super_admin":
             eligible_users = query_all(
                 """
                 select u.id, u.display_name, u.role
@@ -129,7 +127,9 @@ def register_routes(app) -> None:
                 (meetup_id,),
             )
         status = meetup_status(meetup)
-        is_signed_up = any(attendee["user_id"] == g.user["id"] for attendee in attendees)
+        is_signed_up = g.user is not None and any(
+            attendee["user_id"] == g.user["id"] for attendee in attendees
+        )
         return render_template(
             "meetup_detail.html",
             meetup=meetup,
