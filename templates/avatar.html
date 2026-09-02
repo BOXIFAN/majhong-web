@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block title %}{{ t('avatar.title') }} · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head">
+  <p class="eyebrow">Avatar</p>
+  <h1>{{ t('avatar.title') }}</h1>
+  <p>{{ t('avatar.hint') }}</p>
+</section>
+
+<section class="panel avatar-page-card">
+  {% set av = avatar_meta(current_user) %}
+  <div class="avatar-preview">
+    <span class="rank-avatar avatar-xxl{% if av.kind == 'initial' %} is-initial{% endif %}"{% if av.kind == 'preset' %} style="background: {{ av.bg }}"{% endif %}>
+      {%- if av.kind == 'upload' %}<img src="{{ url_for('avatar_file', filename=av.src) }}" alt="" loading="lazy">{%- elif av.kind == 'preset' %}{{ av.emoji }}{%- else %}{{ av.letter }}{%- endif %}
+    </span>
+  </div>
+
+  <form class="avatar-form" method="post" action="{{ url_for('account_avatar') }}">
+    <div class="avatar-picker-grid">
+      <label class="avatar-option">
+        <input type="radio" name="avatar" value="" {% if not current_user.avatar %}checked{% endif %}>
+        <span class="rank-avatar is-initial">{{ current_user.display_name[:1] }}</span>
+        <small>{{ t('avatar.default') }}</small>
+      </label>
+      {% for key, emoji, bg in avatar_options %}
+        <label class="avatar-option">
+          <input type="radio" name="avatar" value="{{ key }}" {% if current_user.avatar == key %}checked{% endif %}>
+          <span class="rank-avatar" style="background: {{ bg }}">{{ emoji }}</span>
+          <small>{{ key }}</small>
+        </label>
+      {% endfor %}
+    </div>
+    <div class="form-actions">
+      <button class="button slim" type="submit">{{ t('avatar.save') }}</button>
+    </div>
+  </form>
+
+  <div class="avatar-divider"><span>{{ t('avatar.custom') }}</span></div>
+
+  <form id="avatar-upload-form" class="avatar-form" method="post" action="{{ url_for('account_avatar_upload') }}" enctype="multipart/form-data">
+    <label class="avatar-upload-label">
+      <span>{{ t('avatar.upload_label') }}</span>
+      <input id="avatar-file" type="file" name="avatar_file" accept="image/png,image/jpeg,image/webp,image/gif" required>
+    </label>
+    <small class="muted">{{ t('avatar.upload_hint') }}</small>
+    <div class="form-actions">
+      <button id="avatar-upload-submit" class="button slim" type="submit">{{ t('avatar.upload') }}</button>
+    </div>
+  </form>
+
+  <div id="avatar-crop" class="avatar-crop" hidden>
+    <small class="muted">{{ t('avatar.crop_hint') }}</small>
+    <div class="avatar-crop-stage" id="crop-stage">
+      <canvas id="crop-canvas"></canvas>
+    </div>
+    <label class="avatar-crop-zoom">
+      <span>{{ t('avatar.crop_zoom') }}</span>
+      <input id="crop-zoom" type="range" min="0" max="100" value="0">
+    </label>
+    <div class="avatar-crop-actions">
+      <button id="crop-cancel" class="secondary-button" type="button">{{ t('avatar.crop_cancel') }}</button>
+      <button id="crop-confirm" class="button slim" type="button">{{ t('avatar.crop_confirm') }}</button>
+    </div>
+  </div>
+</section>
+
+<div class="document-actions">
+  <a class="ghost-link" href="{{ url_for('player_profile', user_id=current_user.id) }}">← {{ t('avatar.back') }}</a>
+</div>
+
+<script>
+(function () {
+  var FILE_EL = document.getElementById("avatar-file");
+  if (!FILE_EL) return;
+  var FORM_EL = document.getElementById("avatar-upload-form");
+  var SUBMIT_EL = document.getElementById("avatar-upload-submit");
+  var CROP_EL = document.getElementById("avatar-crop");
+  var STAGE_EL = document.getElementById("crop-stage");
+  var CANVAS_EL = document.getElementById("crop-canvas");
+  var ZOOM_EL = document.getElementById("crop-zoom");
+  var CANCEL_EL = document.getElementById("crop-cancel");
+  var CONFIRM_EL = document.getElementById("crop-confirm");
+  var ctx = CANVAS_EL.getContext("2d");
+  var FRAME = 512;
+  var img = null;
+  var baseScale = 1;
+  var scale = 1;
+  var panX = 0;
+  var panY = 0;
+  var dragging = false;
+  var ox = 0, oy = 0, sx = 0, sy = 0;
+  var cropping = false;
+
+  function render() {
+    var S = CANVAS_EL.width;
+    ctx.clearRect(0, 0, S, S);
+    if (!img) return;
+    var dw = img.naturalWidth * scale;
+    var dh = img.naturalHeight * scale;
+    ctx.drawImage(img, (S - dw) / 2 + panX, (S - dh) / 2 + panY, dw, dh);
+  }
+
+  function startCrop() {
+    cropping = true;
+    CROP_EL.hidden = false;
+    SUBMIT_EL.disabled = true;
+    CANVAS_EL.width = FRAME;
+    CANVAS_EL.height = FRAME;
+    baseScale = Math.max(FRAME / img.naturalWidth, FRAME / img.naturalHeight);
+    scale = baseScale;
+    panX = 0;
+    panY = 0;
+    ZOOM_EL.value = 0;
+    render();
+  }
+
+  FILE_EL.addEventListener("change", function () {
+    var file = FILE_EL.files[0];
+    if (!file) return;
+    if (!/^image\/(png|jpeg|webp|gif)$/i.test(file.type)) {
+      alert("请选择有效的图片");
+      FILE_EL.value = "";
+      return;
+    }
+    var url = URL.createObjectURL(file);
+    var probe = new Image();
+    probe.onload = function () {
+      img = probe;
+      if (probe.naturalWidth > FRAME || probe.naturalHeight > FRAME) {
+        startCrop();
+      } else {
+        cropping = false;
+        CROP_EL.hidden = true;
+        SUBMIT_EL.disabled = false;
+      }
+      URL.revokeObjectURL(url);
+    };
+    probe.src = url;
+  });
+
+  STAGE_EL.addEventListener("pointerdown", function (e) {
+    dragging = true;
+    sx = e.clientX;
+    sy = e.clientY;
+    ox = panX;
+    oy = panY;
+    STAGE_EL.setPointerCapture(e.pointerId);
+  });
+  STAGE_EL.addEventListener("pointermove", function (e) {
+    if (!dragging) return;
+    var S = CANVAS_EL.width;
+    var ratio = S / STAGE_EL.clientWidth;
+    panX = ox + (e.clientX - sx) * ratio;
+    panY = oy + (e.clientY - sy) * ratio;
+    render();
+  });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(function (t) {
+    STAGE_EL.addEventListener(t, function () { dragging = false; });
+  });
+
+  ZOOM_EL.addEventListener("input", function () {
+    if (!img) return;
+    var z = 1 + Number(ZOOM_EL.value) / 100 * 1.6;
+    scale = baseScale * z;
+    render();
+  });
+
+  CANCEL_EL.addEventListener("click", function () {
+    cropping = false;
+    CROP_EL.hidden = true;
+    SUBMIT_EL.disabled = false;
+    FILE_EL.value = "";
+    img = null;
+  });
+
+  FORM_EL.addEventListener("submit", function (e) {
+    if (cropping) e.preventDefault();
+  });
+
+  CONFIRM_EL.addEventListener("click", function () {
+    if (!img) return;
+    CANVAS_EL.toBlob(function (blob) {
+      if (!blob) { alert("裁剪失败"); return; }
+      var fd = new FormData();
+      fd.append("avatar_file", blob, "avatar.jpg");
+      CONFIRM_EL.disabled = true;
+      fetch(FORM_EL.action, { method: "POST", body: fd })
+        .then(function (res) { window.location.href = res.url || FORM_EL.action; })
+        .catch(function () { alert("上传失败"); CONFIRM_EL.disabled = false; });
+    }, "image/jpeg", 0.9);
+  });
+})();
+</script>
+{% endblock %}

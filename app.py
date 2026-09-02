@@ -14,6 +14,7 @@ from brml.config import (
     DEFAULT_MEETUP_VENUE,
     SEED_DEMO_DATA,
 )
+from brml.avatars import AVATARS, avatar_meta
 from brml.db import close_db, ensure_database_initialized, init_db, query_one
 from brml.i18n import ROLE_LABELS, get_locale, translate
 from brml.migrations import (
@@ -22,6 +23,8 @@ from brml.migrations import (
     ensure_match_type_values,
     ensure_meetups_tables,
     ensure_transactions_table,
+    ensure_user_avatar_upload_column,
+    ensure_user_avatar_column,
     ensure_user_soft_delete_columns,
 )
 from brml.routes.finance import register_routes as register_finance_routes
@@ -61,6 +64,8 @@ def create_app() -> Flask:
         # 这些 ensure_* 操作必须保持幂等，用来兼容没有独立迁移工具的旧数据库。
         ensure_database_initialized()
         ensure_user_soft_delete_columns()
+        ensure_user_avatar_column()
+        ensure_user_avatar_upload_column()
         ensure_announcements_table()
         ensure_meetups_tables()
         ensure_admin_password()
@@ -86,6 +91,8 @@ def create_app() -> Flask:
             "t": translate,
             "match_type_label": match_type_label,
             "default_meetup_venue": DEFAULT_MEETUP_VENUE,
+            "avatar_options": AVATARS,
+            "avatar_meta": avatar_meta,
         }
 
     @app.cli.command("init-db")

@@ -25,7 +25,9 @@ create table users (
   role text not null check (role in ('super_admin', 'referee', 'user')),
   created_at text not null,
   is_deleted integer not null default 0,
-  deleted_at text
+  deleted_at text,
+  avatar text,
+  avatar_upload text
 );
 
 -- 社群内容与活动报名

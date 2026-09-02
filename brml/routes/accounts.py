@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import sqlite3
 
-from flask import flash, g, redirect, render_template, request, session, url_for
+from flask import flash, g, redirect, render_template, request, send_from_directory, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from PIL import Image
+
 from brml.auth import generate_invite_code, generate_temporary_password, login_required, role_required
+from brml.avatars import avatar_dir, avatar_meta, is_valid_avatar_key
 from brml.db import execute, get_db, query_all, query_one
 from brml.finance import fetch_transactions, member_income_stats, summary
 from brml.i18n import SUPPORTED_LOCALES, translate
@@ -114,6 +117,63 @@ def register_routes(app) -> None:
             )
             flash(translate("flash.password_updated"), "success")
         return redirect(url_for("player_profile", user_id=g.user["id"]))
+
+    @app.route("/account/avatar", methods=("GET", "POST"))
+    @login_required
+    def account_avatar():
+        if request.method == "POST":
+            avatar = request.form.get("avatar", "").strip()
+            if avatar and not is_valid_avatar_key(avatar):
+                flash(translate("flash.avatar_invalid"), "error")
+            else:
+                execute(
+                    "update users set avatar = ?, avatar_upload = null where id = ?",
+                    (avatar or None, g.user["id"]),
+                )
+                flash(translate("flash.avatar_updated"), "success")
+            return redirect(url_for("account_avatar"))
+        return render_template("avatar.html")
+
+    @app.route("/account/avatar/upload", methods=("POST",))
+    @login_required
+    def account_avatar_upload():
+        uploaded = request.files.get("avatar_file")
+        if not uploaded or not uploaded.filename:
+            flash(translate("flash.avatar_missing"), "error")
+            return redirect(url_for("account_avatar"))
+        ext = uploaded.filename.rsplit(".", 1)[-1].lower() if "." in uploaded.filename else ""
+        if ext not in {"jpg", "jpeg", "png", "webp", "gif"}:
+            flash(translate("flash.avatar_type_invalid"), "error")
+            return redirect(url_for("account_avatar"))
+        try:
+            image = Image.open(uploaded.stream)
+            image.thumbnail((512, 512))
+            if image.mode in ("RGBA", "LA", "P"):
+                image = image.convert("RGBA")
+                background = Image.new("RGB", image.size, (255, 255, 255))
+                background.paste(image, mask=image.split()[-1])
+                image = background
+            elif image.mode != "RGB":
+                image = image.convert("RGB")
+            filename = f"{g.user['id']}.jpg"
+            out = avatar_dir() / filename
+            quality = 88
+            image.save(out, "JPEG", quality=quality, optimize=True, progressive=True)
+            while out.stat().st_size > 1024 * 1024 and quality > 40:
+                quality -= 12
+                image.save(out, "JPEG", quality=quality, optimize=True, progressive=True)
+            execute(
+                "update users set avatar = 'upload', avatar_upload = ? where id = ?",
+                (filename, g.user["id"]),
+            )
+            flash(translate("flash.avatar_updated"), "success")
+        except Exception:
+            flash(translate("flash.avatar_invalid"), "error")
+        return redirect(url_for("account_avatar"))
+
+    @app.route("/avatars/<path:filename>")
+    def avatar_file(filename: str):
+        return send_from_directory(avatar_dir(), filename)
 
     @app.route("/dashboard")
     @login_required

@@ -73,14 +73,16 @@ def seed_demo_data(db: sqlite3.Connection, admin_id: int) -> None:
         ("Haru Ito", "haru@example.com", "user"),
     ]
     user_ids = {}
+    demo_avatars = ["dragon", "fox", "panda", "cat", "rabbit", "tiger", "koala", "frog", "penguin", "flower", "star", "paw"]
     password_hash = generate_password_hash("demo1234", method="pbkdf2:sha256")
-    for display_name, email, role in demo_users:
+    for index, (display_name, email, role) in enumerate(demo_users):
+        avatar = demo_avatars[index] if index < len(demo_avatars) else None
         user_ids[display_name] = db.execute(
             """
-            insert into users (display_name, email, password_hash, role, created_at)
-            values (?, ?, ?, ?, ?)
+            insert into users (display_name, email, password_hash, role, created_at, avatar)
+            values (?, ?, ?, ?, ?, ?)
             """,
-            (display_name, email, password_hash, role, now()),
+            (display_name, email, password_hash, role, now(), avatar),
         ).lastrowid
 
     demo_matches = [
@@ -467,5 +469,4 @@ def seed_match(
                 played_at,
             ),
         )
-
 

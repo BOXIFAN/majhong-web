@@ -2,14 +2,26 @@
 {% block title %}{{ user.display_name }} · Brisbane Riichi{% endblock %}
 {% block content %}
 <section class="page-head row">
-  <div>
+  <div class="player-head-id">
     <p class="eyebrow">{{ roles[user.role] }}</p>
-    <h1>{{ user.display_name }}</h1>
+    <div class="player-head-name">
+      {% set av = avatar_meta(user) %}
+      <span class="rank-avatar avatar-lg{% if av.kind == 'initial' %} is-initial{% endif %}"{% if av.kind == 'preset' %} style="background: {{ av.bg }}"{% endif %}>
+        {%- if av.kind == 'upload' %}<img src="{{ url_for('avatar_file', filename=av.src) }}" alt="" loading="lazy">{%- elif av.kind == 'preset' %}{{ av.emoji }}{%- else %}{{ av.letter }}{%- endif %}
+      </span>
+      <h1>{{ user.display_name }}</h1>
+    </div>
   </div>
-  {% if current_user %}
-    <a class="secondary-button" href="{{ url_for('style_match_for', user_id=user.id) }}">{{ t('experiment.style_label') }}</a>
-  {% endif %}
+  <div class="page-head-actions">
+    {% if current_user and current_user.id == user.id %}
+      <a class="secondary-button" href="{{ url_for('account_avatar') }}">{{ t('avatar.edit') }}</a>
+    {% endif %}
+    {% if current_user %}
+      <a class="secondary-button" href="{{ url_for('style_match_for', user_id=user.id) }}">{{ t('experiment.style_label') }}</a>
+    {% endif %}
+  </div>
 </section>
+
 <section class="metric-grid">
   <div class="metric"><span>{{ t('player.current_points') }}</span><strong>{{ stats.total_points if stats else 0 }}</strong></div>
   <div class="metric"><span>{{ t('player.matches') }}</span><strong>{{ stats.matches if stats else 0 }}</strong></div>

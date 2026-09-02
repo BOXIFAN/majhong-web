@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import json
 import sqlite3
 import tempfile
@@ -9,6 +10,7 @@ import unittest
 from pathlib import Path
 
 import app as application
+from PIL import Image
 from werkzeug.security import generate_password_hash
 
 from brml.analytics import build_finals_status
@@ -133,6 +135,88 @@ class PublicPageSmokeTests(unittest.TestCase):
         self.assertIn("attachment", export.headers.get("Content-Disposition", ""))
         self.assertIn("text/csv", export.headers.get("Content-Type", ""))
         self.assertIn("Export summary test", export.get_data(as_text=True))
+
+    def test_avatar_picker_updates_profile_and_leaderboard_renders_avatar(self) -> None:
+        application.app.config["SEED_DEMO_DATA"] = True
+        with application.app.app_context():
+            application.init_db(force=True)
+        with sqlite3.connect(self.database) as db:
+            db.execute(
+                "update users set password_hash = ? where email = 'admin@example.com'",
+                (generate_password_hash("test-admin-password", method="pbkdf2:sha256"),),
+            )
+            db.execute(
+                "insert or replace into app_migrations (name, applied_at) values (?, 'test')",
+                (ADMIN_PASSWORD_MIGRATION,),
+            )
+            admin_id = db.execute("select id from users where email = 'admin@example.com'").fetchone()[0]
+            db.commit()
+        self.client.post(
+            "/login",
+            data={"email": "admin@example.com", "password": "test-admin-password"},
+        )
+
+        avatar_page = self.client.get("/account/avatar")
+        self.assertEqual(avatar_page.status_code, 200)
+        self.assertIn("avatar-crop", avatar_page.get_data(as_text=True))
+
+        self.assertEqual(self.client.post("/account/avatar", data={"avatar": "cat"}).status_code, 302)
+        with sqlite3.connect(self.database) as db:
+            self.assertEqual(db.execute("select avatar from users where id = ?", (admin_id,)).fetchone()[0], "cat")
+
+        profile = self.client.get(f"/players/{admin_id}")
+        self.assertEqual(profile.status_code, 200)
+        self.assertIn("🐱", profile.get_data(as_text=True))
+
+        board = self.client.get("/leaderboard")
+        self.assertEqual(board.status_code, 200)
+        body = board.get_data(as_text=True)
+        self.assertIn("rank-player", body)
+        self.assertIn("rank-avatar", body)
+
+    def test_uploaded_avatar_is_compressed_and_served(self) -> None:
+        application.app.config["SEED_DEMO_DATA"] = True
+        with application.app.app_context():
+            application.init_db(force=True)
+        with sqlite3.connect(self.database) as db:
+            db.execute(
+                "update users set password_hash = ? where email = 'admin@example.com'",
+                (generate_password_hash("test-admin-password", method="pbkdf2:sha256"),),
+            )
+            db.execute(
+                "insert or replace into app_migrations (name, applied_at) values (?, 'test')",
+                (ADMIN_PASSWORD_MIGRATION,),
+            )
+            admin_id = db.execute("select id from users where email = 'admin@example.com'").fetchone()[0]
+            db.commit()
+        self.client.post(
+            "/login",
+            data={"email": "admin@example.com", "password": "test-admin-password"},
+        )
+
+        image = Image.new("RGB", (1200, 1200), (200, 40, 40))
+        buffer = io.BytesIO()
+        image.save(buffer, "PNG")
+        buffer.seek(0)
+        response = self.client.post(
+            "/account/avatar/upload",
+            data={"avatar_file": (buffer, "avatar.png")},
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(response.status_code, 302)
+
+        filename = f"{admin_id}.jpg"
+        with sqlite3.connect(self.database) as db:
+            avatar, avatar_upload = db.execute(
+                "select avatar, avatar_upload from users where id = ?", (admin_id,)
+            ).fetchone()
+            self.assertEqual(avatar, "upload")
+            self.assertEqual(avatar_upload, filename)
+
+        served = self.client.get(f"/avatars/{filename}")
+        self.assertEqual(served.status_code, 200)
+        self.assertLess(len(served.data), 1024 * 1024)
+        self.assertIn("image/jpeg", served.headers.get("Content-Type", ""))
 
     def test_language_switch_is_stored_in_session(self) -> None:
         response = self.client.get("/language/en")

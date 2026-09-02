@@ -330,6 +330,8 @@ def get_leaderboard(season_id: int) -> list[dict]:
         select
             u.id as user_id,
             u.display_name,
+            u.avatar,
+            u.avatar_upload,
             count(me.id) as matches,
             round(coalesce(sum(me.rank_points), 0), 1) as total_points,
             round(avg(me.placement), 2) as avg_place,
@@ -340,7 +342,7 @@ def get_leaderboard(season_id: int) -> list[dict]:
         join match_entries me on me.user_id = u.id
         join matches m on m.id = me.match_id
         where m.season_id = ?
-        group by u.id, u.display_name
+        group by u.id, u.display_name, u.avatar, u.avatar_upload
         order by total_points desc, avg_place asc, matches desc
         """,
         (season_id,),

@@ -23,7 +23,15 @@
           {% for row in rows %}
             <tr class="{% if loop.index <= 4 %}top-rank{% elif loop.revindex <= 4 %}low-rank{% endif %}">
               <td>{{ loop.index }}</td>
-              <td><a href="{{ url_for('player_profile', user_id=row.user_id) }}">{{ row.display_name }}</a></td>
+              <td>
+                <a class="rank-player" href="{{ url_for('player_profile', user_id=row.user_id) }}">
+                  {% set av = avatar_meta(row) %}
+                  <span class="rank-avatar{% if av.kind == 'initial' %} is-initial{% endif %}"{% if av.kind == 'preset' %} style="background: {{ av.bg }}"{% endif %}>
+                    {%- if av.kind == 'upload' %}<img src="{{ url_for('avatar_file', filename=av.src) }}" alt="" loading="lazy">{%- elif av.kind == 'preset' %}{{ av.emoji }}{%- else %}{{ av.letter }}{%- endif %}
+                  </span>
+                  <span class="rank-name">{{ row.display_name }}</span>
+                </a>
+              </td>
               <td class="strong">{{ row.total_points }}</td>
               <td>{{ row.matches }}</td>
               <td>{{ row.avg_place }}</td>

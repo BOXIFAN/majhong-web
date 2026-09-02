@@ -18,6 +18,24 @@ def ensure_user_soft_delete_columns() -> None:
     db.commit()
 
 
+def ensure_user_avatar_column() -> None:
+    """为早期数据库补齐用户自定义头像字段。"""
+    db = get_db()
+    columns = {row["name"] for row in db.execute("pragma table_info(users)").fetchall()}
+    if "avatar" not in columns:
+        db.execute("alter table users add column avatar text")
+    db.commit()
+
+
+def ensure_user_avatar_upload_column() -> None:
+    """为早期数据库补齐用户上传头像文件名。"""
+    db = get_db()
+    columns = {row["name"] for row in db.execute("pragma table_info(users)").fetchall()}
+    if "avatar_upload" not in columns:
+        db.execute("alter table users add column avatar_upload text")
+    db.commit()
+
+
 def ensure_announcements_table() -> None:
     """为部署中的旧数据库补建公告表。"""
     db = get_db()
