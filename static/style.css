@@ -5352,8 +5352,33 @@ select:focus {
 }
 
 @media (max-width: 560px) {
-  .page-head-actions {
+  .page-head.row.player-page-head {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 10px 16px;
+  }
+
+  .player-page-head .page-head-actions {
+    flex: 0 0 auto;
+    width: auto;
+    margin-left: auto;
     justify-content: flex-end;
-    width: 100%;
+  }
+
+  .player-page-head .player-head-id .eyebrow {
+    margin: 2px 0 10px;
+  }
+
+  .player-page-head .page-head-actions .secondary-button,
+  .player-page-head .page-head-actions .button {
+    padding: 9px 14px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .player-page-head .player-head-name h1 {
+    font-size: 26px;
   }
 }
