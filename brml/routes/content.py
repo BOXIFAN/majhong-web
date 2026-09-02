@@ -7,6 +7,7 @@ from flask import flash, g, redirect, render_template, request, session, url_for
 from brml.auth import role_required
 from brml.db import execute, query_all, query_one
 from brml.i18n import SUPPORTED_LOCALES, translate
+from brml.match_service import current_season
 from brml.timeutils import now
 
 
@@ -17,17 +18,31 @@ def register_routes(app) -> None:
     def matches():
         per_page = 20
         page = max(request.args.get("page", 1, type=int), 1)
-        total = query_one("select count(*) as c from matches")["c"]
+        season_id = request.args.get("season_id", type=int)
+        if not season_id:
+            season = current_season()
+            season_id = season["id"] if season else None
+        seasons_data = query_all("select * from seasons order by start_date desc, id desc")
+        selected_season = (
+            query_one("select * from seasons where id = ?", (season_id,)) if season_id else None
+        )
+        filters = ""
+        params: tuple = ()
+        if season_id:
+            filters = "where m.season_id = ?"
+            params = (season_id,)
+        total = query_one(f"select count(*) as c from matches m {filters}", params)["c"]
         pages = max((total + per_page - 1) // per_page, 1)
         if page > pages:
-            return redirect(url_for("matches", page=pages))
+            return redirect(url_for("matches", page=pages, season_id=season_id))
         rows = query_all(
-            """
+            f"""
             select m.*, u.display_name as referee_name
             from matches m left join users u on u.id = m.referee_id
+            {filters}
             order by m.played_at desc, m.id desc limit ? offset ?
             """,
-            (per_page, (page - 1) * per_page),
+            params + (per_page, (page - 1) * per_page),
         )
         pagination = {
             "page": page,
@@ -38,7 +53,14 @@ def register_routes(app) -> None:
             "prev_page": page - 1,
             "next_page": page + 1,
         }
-        return render_template("matches.html", matches=rows, pagination=pagination)
+        return render_template(
+            "matches.html",
+            matches=rows,
+            pagination=pagination,
+            seasons=seasons_data,
+            selected_season=selected_season,
+            season_id=season_id,
+        )
 
     @app.route("/announcements/<int:announcement_id>")
     def announcement_view(announcement_id: int):

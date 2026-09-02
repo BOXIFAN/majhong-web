@@ -218,6 +218,33 @@ class PublicPageSmokeTests(unittest.TestCase):
         self.assertLess(len(served.data), 1024 * 1024)
         self.assertIn("image/jpeg", served.headers.get("Content-Type", ""))
 
+    def test_matches_page_filters_by_season(self) -> None:
+        application.app.config["SEED_DEMO_DATA"] = True
+        with application.app.app_context():
+            application.init_db(force=True)
+        with sqlite3.connect(self.database) as db:
+            season_id = db.execute("select id from seasons order by id desc limit 1").fetchone()[0]
+            expected = db.execute(
+                "select count(*) from matches where season_id = ?", (season_id,)
+            ).fetchone()[0]
+
+        body = self.client.get(f"/matches?season_id={season_id}").get_data(as_text=True)
+        self.assertIn("selected", body)
+        self.assertEqual(body.count('class="match-card"'), expected)
+
+        with sqlite3.connect(self.database) as db:
+            active_row = db.execute(
+                "select id from seasons where status = 'active' order by id desc limit 1"
+            ).fetchone()
+        if active_row:
+            active_id = active_row[0]
+            with sqlite3.connect(self.database) as db:
+                expected_default = db.execute(
+                    "select count(*) from matches where season_id = ?", (active_id,)
+                ).fetchone()[0]
+            default_body = self.client.get("/matches").get_data(as_text=True)
+            self.assertEqual(default_body.count('class="match-card"'), min(expected_default, 20))
+
     def test_language_switch_is_stored_in_session(self) -> None:
         response = self.client.get("/language/en")
         self.assertEqual(response.status_code, 302)

@@ -6,7 +6,17 @@
     <p class="eyebrow">Match History</p>
     <h1>{{ t('nav.matches') }}</h1>
   </div>
-  <span class="muted">{{ t('home.match_count', count=pagination.total) }}</span>
+  <div class="page-head-actions">
+    <span class="muted">{{ t('home.match_count', count=pagination.total) }}</span>
+    <form class="inline-form" method="get">
+      <select name="season_id" onchange="this.form.submit()">
+        <option value="">{{ t('season.all') }}</option>
+        {% for season in seasons %}
+          <option value="{{ season.id }}" {% if selected_season and season.id == selected_season.id %}selected{% endif %}>{{ season.name }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
 </section>
 <section class="panel">
   {% if matches %}
@@ -21,9 +31,9 @@
     </div>
     {% if pagination.pages > 1 %}
       <nav class="pagination" aria-label="{{ t('pagination.recent_matches') }}">
-        {% if pagination.has_prev %}<a href="{{ url_for('matches', page=pagination.prev_page) }}">{{ t('pagination.prev') }}</a>{% else %}<span class="disabled">{{ t('pagination.prev') }}</span>{% endif %}
+        {% if pagination.has_prev %}<a href="{{ url_for('matches', page=pagination.prev_page, season_id=season_id) }}">{{ t('pagination.prev') }}</a>{% else %}<span class="disabled">{{ t('pagination.prev') }}</span>{% endif %}
         <strong>{{ pagination.page }} / {{ pagination.pages }}</strong>
-        {% if pagination.has_next %}<a href="{{ url_for('matches', page=pagination.next_page) }}">{{ t('pagination.next') }}</a>{% else %}<span class="disabled">{{ t('pagination.next') }}</span>{% endif %}
+        {% if pagination.has_next %}<a href="{{ url_for('matches', page=pagination.next_page, season_id=season_id) }}">{{ t('pagination.next') }}</a>{% else %}<span class="disabled">{{ t('pagination.next') }}</span>{% endif %}
       </nav>
     {% endif %}
   {% else %}

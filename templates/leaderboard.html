@@ -6,13 +6,15 @@
     <p class="eyebrow">Leaderboard</p>
     <h1>{{ t('nav.leaderboard') }}</h1>
   </div>
-  <form class="inline-form" method="get">
-    <select name="season_id" onchange="this.form.submit()">
-      {% for season in seasons %}
-        <option value="{{ season.id }}" {% if selected_season and season.id == selected_season.id %}selected{% endif %}>{{ season.name }}</option>
-      {% endfor %}
-    </select>
-  </form>
+  <div class="page-head-actions">
+    <form class="inline-form" method="get">
+      <select name="season_id" onchange="this.form.submit()">
+        {% for season in seasons %}
+          <option value="{{ season.id }}" {% if selected_season and season.id == selected_season.id %}selected{% endif %}>{{ season.name }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
 </section>
 <section class="panel">
   {% if rows %}
