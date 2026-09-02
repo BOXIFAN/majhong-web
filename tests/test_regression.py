@@ -92,6 +92,48 @@ class PublicPageSmokeTests(unittest.TestCase):
         self.assertEqual(signup.status_code, 302)
         self.assertTrue(signup.headers["Location"].endswith("/login"))
 
+    def test_finance_page_shows_summary_and_exports_ledger(self) -> None:
+        application.app.config["SEED_DEMO_DATA"] = True
+        with application.app.app_context():
+            application.init_db(force=True)
+        with sqlite3.connect(self.database) as db:
+            db.execute(
+                "update users set password_hash = ? where email = 'admin@example.com'",
+                (generate_password_hash("test-admin-password", method="pbkdf2:sha256"),),
+            )
+            db.execute(
+                "insert or replace into app_migrations (name, applied_at) values (?, 'test')",
+                (ADMIN_PASSWORD_MIGRATION,),
+            )
+            db.commit()
+        self.client.post(
+            "/login",
+            data={"email": "admin@example.com", "password": "test-admin-password"},
+        )
+        self.assertEqual(
+            self.client.post(
+                "/admin/finance/create",
+                data={
+                    "kind": "income",
+                    "category": "membership",
+                    "description": "Export summary test",
+                    "amount": "12.50",
+                    "occurred_at": "2026-09-02",
+                },
+            ).status_code,
+            302,
+        )
+
+        page = self.client.get("/finance")
+        self.assertEqual(page.status_code, 200)
+        self.assertIn("Export summary test", page.get_data(as_text=True))
+
+        export = self.client.get("/finance/export")
+        self.assertEqual(export.status_code, 200)
+        self.assertIn("attachment", export.headers.get("Content-Disposition", ""))
+        self.assertIn("text/csv", export.headers.get("Content-Type", ""))
+        self.assertIn("Export summary test", export.get_data(as_text=True))
+
     def test_language_switch_is_stored_in_session(self) -> None:
         response = self.client.get("/language/en")
         self.assertEqual(response.status_code, 302)

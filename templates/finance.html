@@ -1,10 +1,13 @@
 {% extends "base.html" %}
 {% block title %}{{ t('finance.title') }} · Brisbane Riichi{% endblock %}
 {% block content %}
-<section class="page-head">
-  <p class="eyebrow">Club Finance</p>
-  <h1>{{ t('finance.title') }}</h1>
-  <p>{{ t('finance.subtitle') }}</p>
+<section class="page-head row">
+  <div>
+    <p class="eyebrow">Club Finance</p>
+    <h1>{{ t('finance.title') }}</h1>
+    <p>{{ t('finance.subtitle') }}</p>
+  </div>
+  <a class="button" href="{{ url_for('finance_export') }}">{{ t('finance.export') }}</a>
 </section>
 
 <section class="metric-grid finance-metrics">
@@ -116,6 +119,7 @@
             <th>{{ t('finance.date') }}</th>
             <th>{{ t('finance.kind') }}</th>
             <th>{{ t('finance.category') }}</th>
+            <th>{{ t('finance.description') }}</th>
             <th>{{ t('finance.member') }}</th>
             <th>{{ t('finance.amount') }}</th>
           </tr>
@@ -126,6 +130,7 @@
               <td>{{ tx.occurred_at }}</td>
               <td><span class="badge {{ 'income' if tx.kind == 'income' else 'archived' }}">{{ t('finance.income_label') if tx.kind == 'income' else t('finance.expense_label') }}</span></td>
               <td>{{ t('finance.category.' + tx.category) }}</td>
+              <td class="finance-description">{{ tx.description or '—' }}</td>
               <td>{{ tx.member_name or '—' }}</td>
               <td class="strong {{ 'money-income' if tx.kind == 'income' else 'money-expense' }}">
                 {{ '+' if tx.kind == 'income' else '−' }}A${{ '{:,.2f}'.format(tx.amount) }}

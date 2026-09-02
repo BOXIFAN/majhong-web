@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+import csv
+import io
+from datetime import date, datetime
 
-from flask import flash, g, redirect, render_template, request, url_for
+from flask import Response, flash, g, redirect, render_template, request, url_for
 
 from brml.auth import role_required
 from brml.db import execute, get_db, query_all, query_one
@@ -72,6 +74,54 @@ def register_routes(app) -> None:
         data = summary()
         transactions = fetch_transactions(limit=50)
         return render_template("finance.html", data=data, transactions=transactions)
+
+    @app.route("/finance/export")
+    @role_required("super_admin", "referee")
+    def finance_export():
+        rows = query_all(
+            """
+            select t.*, u.display_name as member_name
+            from transactions t
+            left join users u on u.id = t.user_id
+            where t.deleted_at is null
+            order by t.occurred_at desc, t.id desc
+            """
+        )
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(
+            [
+                translate("finance.date"),
+                translate("finance.kind"),
+                translate("finance.category"),
+                translate("finance.description"),
+                translate("finance.member"),
+                translate("finance.amount"),
+            ]
+        )
+        for row in rows:
+            kind_label = (
+                translate("finance.income_label")
+                if row["kind"] == "income"
+                else translate("finance.expense_label")
+            )
+            category_label = translate(f"finance.category.{row['category']}")
+            writer.writerow(
+                [
+                    row["occurred_at"],
+                    kind_label,
+                    category_label,
+                    row["description"] or "",
+                    row["member_name"] or "",
+                    f"{row['amount']:.2f}",
+                ]
+            )
+        filename = f"club-ledger-{date.today().isoformat()}.csv"
+        return Response(
+            "\ufeff" + output.getvalue(),
+            mimetype="text/csv; charset=utf-8",
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
 
     # ----- 后台记账：仅超级管理员可读写 -----
 
