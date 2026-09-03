@@ -14,10 +14,10 @@
       </div>
     </div>
     <div class="home-hero-visual" aria-hidden="true">
-      <span class="hero-tile hero-tile-east">東</span>
-      <span class="hero-tile hero-tile-five"><span>五</span><span>萬</span></span>
+      <span class="hero-tile hero-tile-east"><img src="{{ url_for('static', filename='mj-east.svg') }}" alt=""></span>
+      <span class="hero-tile hero-tile-five"><img src="{{ url_for('static', filename='mj-five-wan.svg') }}" alt=""></span>
       <span class="hero-stick"></span>
-      <div class="hero-table-mark"><span>PLAY</span><strong>雀</strong><span>CONNECT</span></div>
+      <div class="hero-table-mark"><span>PLAY</span><strong><svg class="hero-que" viewBox="38 371.52 851.75 865.48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M862 1181Q825 1189 797 1186Q769 1183 738 1178Q735 1178 732 1177.5Q729 1177 726 1176Q676 1181 622 1183.5Q568 1186 516 1190Q464 1194 420 1205Q418 1207 417 1218.5Q416 1230 411 1237Q390 1235 376 1221Q362 1207 351.5 1188Q341 1169 329 1152Q345 1103 347 1046Q349 989 348 940Q348 924 348 910Q348 896 348 883Q336 887 328.5 895.5Q321 904 313 911.5Q305 919 290 921Q252 964 198 988Q144 1012 82 1029Q62 1025 56.5 1014.5Q51 1004 38 996Q124 965 192 916.5Q260 868 323 816Q322 802 322 792Q322 782 321 770Q358 776 386.5 760Q415 744 414 710Q389 681 335 681Q345 673 361 672Q377 671 393 672Q408 672 421.5 671.5Q435 671 444 665Q449 586 444.5 521Q440 456 407 413Q397 409 391 401Q385 393 385 378Q404 369 431 372.5Q458 376 484 387.5Q510 399 528 417Q546 435 548 455Q548 459 546.5 462.5Q545 466 543 470Q539 476 538 480Q533 501 532.5 524Q532 547 533 571Q533 579 533 586.5Q533 594 533 602Q551 597 557.5 580.5Q564 564 563 550Q580 536 599 538.5Q618 541 634.5 554Q651 567 659.5 584Q668 601 662 616Q631 638 596 659Q561 680 538 710Q538 734 525 746.5Q512 759 494 766.5Q476 774 461 785Q494 792 524.5 786.5Q555 781 574 765Q592 751 598 730Q604 709 590 684Q600 679 618 679Q636 679 655 684Q674 689 686.5 699Q699 709 699 725Q699 736 692 741.5Q685 747 677 752Q669 757 664 768Q717 758 768 766.5Q819 775 847 813Q823 819 790.5 820Q758 821 723.5 821.5Q689 822 660 829Q654 842 654.5 849.5Q655 857 658 866Q659 871 660.5 876.5Q662 882 663 889Q692 877 720 882Q748 887 772.5 901Q797 915 814 932Q788 939 764.5 940Q741 941 716 941.5Q691 942 659 949Q655 957 654.5 966.5Q654 976 654 985Q655 990 655 994.5Q655 999 654 1002Q705 994 748 1006.5Q791 1019 816 1048Q796 1055 773.5 1056Q751 1057 727 1057Q709 1057 690 1057.5Q671 1058 653 1062Q650 1068 650.5 1076.5Q651 1085 651 1094Q652 1102 652 1110Q652 1118 650 1124Q665 1131 684 1125Q703 1119 709 1109Q738 1109 770.5 1118Q803 1127 828.5 1142.5Q854 1158 862 1181ZM292 602Q291 615 279 632.5Q267 650 251.5 668.5Q236 687 224 704.5Q212 722 210 736Q174 742 160.5 724.5Q147 707 138 684Q135 677 132 669.5Q129 662 125 656Q126 652 130 648Q133 646 135 643Q137 640 135 634Q164 629 181.5 610.5Q199 592 213.5 568.5Q228 545 246 527Q265 537 279 561Q293 585 292 602ZM862 674Q834 668 814.5 654Q795 640 777.5 625Q760 610 738 602Q734 577 721 561.5Q708 546 693.5 533Q679 520 667 503Q665 497 670 495Q687 491 713.5 498.5Q740 506 769 520Q798 534 823 551.5Q848 569 861 586Q874 601 883 619Q892 637 889 651.5Q886 666 862 674ZM590 1130Q591 1115 590.5 1097Q590 1079 583 1063Q570 1064 558.5 1066Q547 1068 536 1070Q508 1075 482 1078Q456 1081 425 1073Q422 1079 422 1087.5Q422 1096 422 1105Q423 1114 423 1123Q423 1132 420 1138ZM579 900Q578 877 576 865.5Q574 854 566 837Q523 841 492 843.5Q461 846 425 854Q425 857 424 862Q422 873 420.5 885Q419 897 420 911Q440 913 471.5 910.5Q503 908 537 904Q547 903 558 902Q569 901 579 900ZM585 1013Q583 1007 583 1000.5Q583 994 583 988Q583 979 582.5 970Q582 961 578 953Q569 954 559.5 955Q550 956 540 958Q513 961 484 964.5Q455 968 423 967L426 1020Q470 1021 506 1019.5Q542 1018 585 1013Z"/></svg></strong><span>CONNECT</span></div>
     </div>
   </section>
 
@@ -45,11 +45,11 @@
         <span class="explore-copy"><strong>{{ t('nav.leaderboard') }}</strong><small>{{ t('home.leaderboard_desc') }}</small></span><span class="explore-arrow" aria-hidden="true">→</span>
       </a>
       <a class="explore-card explore-matches" href="{{ url_for('matches') }}">
-        <span class="explore-number">02</span><span class="explore-icon explore-red-dragon" aria-hidden="true">中</span>
+        <span class="explore-number">02</span><span class="explore-icon explore-red-dragon" aria-hidden="true"><img src="{{ url_for('static', filename='mj-red-dragon.svg') }}" alt=""></span>
         <span class="explore-copy"><strong>{{ t('home.recent_matches') }}</strong><small>{{ t('home.matches_desc') }}</small></span><span class="explore-arrow" aria-hidden="true">→</span>
       </a>
       <a class="explore-card explore-rules" href="{{ url_for('seasons') }}">
-        <span class="explore-number">03</span><span class="explore-icon" aria-hidden="true">南</span>
+        <span class="explore-number">03</span><span class="explore-icon" aria-hidden="true"><img src="{{ url_for('static', filename='mj-south.svg') }}" alt=""></span>
         <span class="explore-copy"><strong>{{ t('nav.rules') }}</strong><small>{{ t('home.rules_desc') }}</small></span><span class="explore-arrow" aria-hidden="true">→</span>
       </a>
     </div>
