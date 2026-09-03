@@ -1,13 +1,15 @@
 {% extends "base.html" %}
 {% block title %}{{ t('nav.matches') }} · Brisbane Riichi{% endblock %}
 {% block content %}
-<section class="page-head row">
-  <div>
+<section class="page-head row season-filter-page">
+  <div class="page-head-title">
     <p class="eyebrow">Match History</p>
-    <h1>{{ t('nav.matches') }}</h1>
+    <div class="page-head-title-main">
+      <h1>{{ t('nav.matches') }}</h1>
+      <span class="muted page-head-count">{{ t('home.match_count', count=pagination.total) }}</span>
+    </div>
   </div>
   <div class="page-head-actions">
-    <span class="muted">{{ t('home.match_count', count=pagination.total) }}</span>
     <form class="inline-form" method="get">
       <select name="season_id" onchange="this.form.submit()">
         <option value="">{{ t('season.all') }}</option>

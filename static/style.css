@@ -5259,6 +5259,43 @@ select:focus {
   text-align: center;
 }
 
+.page-head-title {
+  min-width: 0;
+}
+
+.page-head-title-main {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.page-head-count {
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .page-head.row.season-filter-page {
+    align-items: center;
+    text-align: center;
+  }
+
+  .page-head.row.season-filter-page .page-head-actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: center;
+  }
+
+  .page-head.row.season-filter-page .page-head-actions .inline-form {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .page-head.row.season-filter-page .page-head-actions select {
+    width: 100%;
+  }
+}
+
 .rank-avatar img,
 .account-avatar img {
   width: 100%;
