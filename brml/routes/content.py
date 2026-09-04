@@ -18,8 +18,11 @@ def register_routes(app) -> None:
     def matches():
         per_page = 20
         page = max(request.args.get("page", 1, type=int), 1)
+        raw_season_id = request.args.get("season_id")
         season_id = request.args.get("season_id", type=int)
-        if not season_id:
+        if raw_season_id is None:
+            # 未指定赛季（默认进入首页入口）时按当前激活赛季展示；
+            # 显式选择“全部赛季”（season_id 为空串）时保持 season_id=None，展示所有赛季。
             season = current_season()
             season_id = season["id"] if season else None
         seasons_data = query_all("select * from seasons order by start_date desc, id desc")
@@ -33,8 +36,11 @@ def register_routes(app) -> None:
             params = (season_id,)
         total = query_one(f"select count(*) as c from matches m {filters}", params)["c"]
         pages = max((total + per_page - 1) // per_page, 1)
+        # 分页链接需要用空串保留“全部赛季”状态（url_for 会输出 season_id=），
+        # 否则跳页时会退回到默认的“当前赛季”。
+        season_param = season_id if season_id else ""
         if page > pages:
-            return redirect(url_for("matches", page=pages, season_id=season_id))
+            return redirect(url_for("matches", page=pages, season_id=season_param))
         rows = query_all(
             f"""
             select m.*, u.display_name as referee_name
@@ -59,7 +65,7 @@ def register_routes(app) -> None:
             pagination=pagination,
             seasons=seasons_data,
             selected_season=selected_season,
-            season_id=season_id,
+            season_id=season_param,
         )
 
     @app.route("/announcements/<int:announcement_id>")
