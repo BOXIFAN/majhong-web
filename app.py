@@ -33,6 +33,7 @@ from brml.routes.community import register_routes as register_community_routes
 from brml.routes.competition import register_routes as register_competition_routes
 from brml.routes.content import register_routes as register_content_routes
 from brml.routes.experiment import register_routes as register_experiment_routes
+from brml.routes.mobile import register_routes as register_mobile_routes
 from brml.routes.seasons import register_routes as register_season_routes
 from brml.match_service import current_season, match_type_label
 from brml.rules import FIELD_LABELS, RULE_LABELS
@@ -115,6 +116,8 @@ def create_app() -> Flask:
     register_competition_routes(app)
 
     register_finance_routes(app)
+
+    register_mobile_routes(app)
 
     register_experiment_routes(app)
 

@@ -37,6 +37,42 @@ def is_valid_avatar_key(key: str) -> bool:
     return key in _BY_KEY
 
 
+def save_uploaded_avatar(user_id: int, uploaded) -> str:
+    """压缩并保存上传头像，返回 ``ok`` / ``missing`` / ``type_invalid`` / ``invalid``。"""
+    from PIL import Image
+
+    if not uploaded or not uploaded.filename:
+        return "missing"
+    ext = uploaded.filename.rsplit(".", 1)[-1].lower() if "." in uploaded.filename else ""
+    if ext not in {"jpg", "jpeg", "png", "webp", "gif"}:
+        return "type_invalid"
+    try:
+        image = Image.open(uploaded.stream)
+        image.thumbnail((512, 512))
+        if image.mode in ("RGBA", "LA", "P"):
+            image = image.convert("RGBA")
+            background = Image.new("RGB", image.size, (255, 255, 255))
+            background.paste(image, mask=image.split()[-1])
+            image = background
+        elif image.mode != "RGB":
+            image = image.convert("RGB")
+        out = avatar_dir() / f"{user_id}.jpg"
+        quality = 88
+        image.save(out, "JPEG", quality=quality, optimize=True, progressive=True)
+        while out.stat().st_size > 1024 * 1024 and quality > 40:
+            quality -= 12
+            image.save(out, "JPEG", quality=quality, optimize=True, progressive=True)
+    except Exception:
+        return "invalid"
+    from brml.db import execute
+
+    execute(
+        "update users set avatar = 'upload', avatar_upload = ? where id = ?",
+        (f"{user_id}.jpg", user_id),
+    )
+    return "ok"
+
+
 def avatar_meta(item: dict | None) -> dict | None:
     """根据用户行返回渲染所需信息：``preset`` / ``upload`` / ``initial``。"""
     if not item:

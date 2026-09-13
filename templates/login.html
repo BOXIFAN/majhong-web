@@ -4,6 +4,7 @@
 <section class="auth-card">
   <h1>{{ t('auth.login') }}</h1>
   <form method="post" class="form">
+    {% if request.args.get('next') %}<input type="hidden" name="next" value="{{ request.args.get('next') }}">{% endif %}
     <label>{{ t('auth.email') }}<input name="email" type="email" required></label>
     <label>{{ t('auth.password') }}<input name="password" type="password" required></label>
     <label class="remember-login">

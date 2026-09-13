@@ -1,0 +1,682 @@
+{% set is_zh = locale == 'zh' %}
+<!doctype html>
+<html lang="{{ 'zh-CN' if is_zh else 'en' }}" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#eef1f7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="BRML">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>{{ t('nav.home') }} · Brisbane Riichi Mahjong</title>
+    <link rel="manifest" href="{{ url_for('mobile_manifest') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='pwa/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='pwa/icon-192.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='app-pwa.css') }}">
+    <script>
+      // 首屏前套用主题，避免闪白
+      (function () {
+        try {
+          var saved = window.localStorage.getItem("brml-theme");
+          if (saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+            document.documentElement.dataset.theme = "dark";
+          }
+        } catch (error) {
+          /* 隐私模式下忽略 */
+        }
+      })();
+    </script>
+  </head>
+  <body data-default-view="{{ active_view }}">
+    <div class="app-shell">
+      <header class="app-topbar">
+        <a class="brand" href="{{ url_for('mobile_app') }}">
+          <span class="brand-mark"><img src="{{ url_for('static', filename='web_logo.jpg') }}" alt=""></span>
+          <span class="brand-text">
+            <strong>Brisbane Riichi</strong>
+            <small>Mahjong League{% if season %} · {{ season.name }}{% endif %}</small>
+          </span>
+        </a>
+        <button class="theme-toggle" type="button" id="themeToggle" aria-label="{{ t('mobile.theme_toggle') }}">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2"></circle>
+            <path d="M12 2.6v2.2M12 19.2v2.2M4.4 12H2.2M21.8 12h-2.2M6.3 6.3 4.8 4.8M19.2 19.2l-1.5-1.5M17.7 6.3l1.5-1.5M4.8 19.2l1.5-1.5"></path>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.5 14.3A8.6 8.6 0 0 1 9.7 3.5a8.6 8.6 0 1 0 10.8 10.8Z"></path>
+          </svg>
+        </button>
+      </header>
+
+      <main id="app-main">
+        <!-- ============ 排行榜 ============ -->
+        <section class="view is-active" id="view-leaderboard" data-view="leaderboard">
+          <div class="page-head">
+            <h1>{{ t('nav.leaderboard') }}</h1>
+            <p>{% if season %}{{ season.name }} · {{ leaderboard|length }} {{ t('home.members') }}{% else %}{{ t('home.not_enabled') }}{% endif %}</p>
+          </div>
+
+          <div class="stack">
+            {% if current_user %}
+              <section class="card hero">
+                <div class="hero-top">
+                  <div>
+                    <p class="eyebrow">{{ t('mobile.my_position') }}</p>
+                    <p class="hero-points"><strong>{{ my_row.total_points if my_row else '0.0' }}</strong><span>{{ t('mobile.season_points') }}</span></p>
+                  </div>
+                  <div class="rank-chip">
+                    <strong>{{ rank_of.get(my_row.user_id, '—') if my_row else '—' }}</strong>
+                    <small>{{ t('mobile.current_rank') }}</small>
+                  </div>
+                </div>
+
+                {% if finals and finals.logged_in %}
+                  <div class="finals">
+                    <div class="finals-head">
+                      <strong>{{ t('mobile.finals_progress', matches=finals.matches, required=finals.required_matches) }}</strong>
+                      <span>
+                        {%- if finals.matches_met -%}
+                          {{ t('mobile.finals_met') }}
+                        {%- else -%}
+                          {{ t('mobile.finals_remaining', count=finals.remaining_matches) }}
+                        {%- endif -%}
+                      </span>
+                    </div>
+                    <div class="meter" role="progressbar" aria-label="{{ t('mobile.finals_progress', matches=finals.matches, required=finals.required_matches) }}"
+                         aria-valuenow="{{ finals.matches }}" aria-valuemin="0" aria-valuemax="{{ finals.required_matches }}">
+                      {% set pct = (finals.matches / finals.required_matches * 100) if finals.required_matches else 0 %}
+                      <span style="width: {{ [pct, 100]|min }}%"></span>
+                    </div>
+                  </div>
+                {% endif %}
+
+                {% if my_form %}
+                  <div class="trend">
+                    {% for item in my_form %}
+                      <b class="{{ 'pos' if item.rank_points > 0 else ('neg' if item.rank_points < 0 else '') }}">
+                        {{ t('mobile.place', place=item.placement|round(1)|string|replace('.0', '')) }}
+                        {{ '+' if item.rank_points > 0 else ('' if item.rank_points == 0 else '−') }}{{ item.rank_points|abs }}
+                      </b>
+                    {% endfor %}
+                  </div>
+                {% elif not my_row %}
+                  <p class="muted">{{ t('mobile.no_matches_self') }}</p>
+                {% endif %}
+              </section>
+            {% elif not current_user %}
+              <section class="card guest-card">
+                <strong>{{ t('mobile.guest_title') }}</strong>
+                <p class="muted">{{ t('mobile.guest_hint') }}</p>
+                <a class="btn" href="{{ url_for('login') }}?next=%2Fapp">{{ t('mobile.login') }}</a>
+              </section>
+            {% endif %}
+
+            <section class="card board">
+              <div class="card-head">
+                <strong>{{ t('mobile.board_title') }}</strong>
+                <span>{{ t('mobile.board_head') }}</span>
+              </div>
+              {% if leaderboard %}
+                <div class="board-rows">
+                {% for row in leaderboard %}
+                  {% set av = avatar_meta(row) %}
+                  <div class="row{{ ' me' if current_user and row.user_id == current_user.id else '' }}">
+                    <span class="rank-no">{{ rank_of[row.user_id] }}</span>
+                    <span class="rank-avatar">
+                      {%- if av.kind == 'upload' -%}
+                        <img src="{{ url_for('avatar_file', filename=av.src) }}" alt="" loading="lazy">
+                      {%- elif av.kind == 'preset' -%}
+                        <span style="background: {{ av.bg }}">{{ av.emoji }}</span>
+                      {%- else -%}
+                        {{ av.letter }}
+                      {%- endif -%}
+                    </span>
+                    <span class="row-name">
+                      {{ row.display_name }}
+                      <small>{{ row.matches }} {{ t('home.matches') }} · {{ t('table.avg_place') }} {{ row.avg_place }}</small>
+                    </span>
+                    <span class="row-points">{{ row.total_points }}</span>
+                  </div>
+                {% endfor %}
+                </div>
+              {% else %}
+                <p class="empty">{{ t('leaderboard.empty') }}</p>
+              {% endif %}
+            </section>
+
+            <p class="footnote">{{ t('mobile.points_rule') }}</p>
+          </div>
+        </section>
+
+        <!-- ============ 近期对局 ============ -->
+        <section class="view" id="view-matches" data-view="matches" hidden>
+          <div class="page-head">
+            <h1>{{ t('mobile.nav_matches') }}</h1>
+            <p>{% if season %}{{ season.name }}{% endif %}</p>
+          </div>
+
+          <div class="stack">
+            <section class="card list">
+              {% if match_days %}
+                <div class="match-days">
+                  {% for day in match_days %}
+                    <div class="day">
+                      <div class="date-head">
+                        <span>{{ day.date_label }} {{ day.weekday }}</span>
+                      </div>
+                      {% for match in day.matches %}
+                        <button class="row tappable" type="button" data-match-id="{{ match.id }}"
+                                aria-label="{{ day.date_label }} {{ match.time_label }} {{ t('mobile.match_detail') }}">
+                          {% if match.my_entry %}
+                            {% set place = match.my_entry.placement %}
+                            <span class="place-badge{{ ' first' if place == 1 else (' last' if place == 4 else '') }}">
+                              {%- if place == 1 or place == 2 or place == 3 or place == 4 -%}
+                                {{ t('mobile.place', place=place|int) }}
+                              {%- else -%}
+                                {{ t('mobile.place_tied', place=place) }}
+                              {%- endif -%}
+                            </span>
+                          {% else %}
+                            <span class="place-badge">{{ match.time_label }}</span>
+                          {% endif %}
+                          <span class="row-name wrap">
+                            {% for entry in match.entries %}{{ entry.display_name }}{{ '、' if not loop.last else '' }}{% endfor %}
+                            <small>{{ match.time_label }} · {{ match_type_label(match.table_name) }} · {{ t('home.referee', name=(match.referee_name or t('home.system'))) }}</small>
+                          </span>
+                          {% if match.my_entry %}
+                            <span class="delta {{ 'pos' if match.my_entry.rank_points > 0 else ('neg' if match.my_entry.rank_points < 0 else '') }}">
+                              {{ '+' if match.my_entry.rank_points > 0 else ('' if match.my_entry.rank_points == 0 else '−') }}{{ match.my_entry.rank_points|abs }}
+                            </span>
+                          {% else %}
+                            <span class="chev" aria-hidden="true">›</span>
+                          {% endif %}
+                        </button>
+                      {% endfor %}
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p class="empty">{{ t('mobile.no_matches') }}</p>
+              {% endif %}
+            </section>
+
+            <p class="footnote">{{ t('mobile.match_detail_hint') }}</p>
+          </div>
+        </section>
+
+        <!-- ============ 子页面：比赛详情 ============ -->
+        <section class="view" id="view-match" data-view="match" hidden>
+          <button class="back-link" type="button" data-route="matches">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"></path></svg>
+            {{ t('mobile.back') }}
+          </button>
+          <div class="page-head">
+            <h1 id="matchTitle">{{ t('mobile.match_detail') }}</h1>
+            <p id="matchSubtitle"></p>
+          </div>
+          <div class="stack">
+            <section class="card">
+              <div class="card-head">
+                <strong id="matchTotal"></strong>
+                <span id="matchMeta"></span>
+              </div>
+              <div class="rules-table" id="matchEntries"></div>
+            </section>
+            <p class="footnote" id="matchNote"></p>
+          </div>
+        </section>
+
+        <!-- ============ 我的 ============ -->
+        <section class="view" id="view-me" data-view="me" hidden>
+          <div class="page-head">
+            <h1>{{ t('mobile.nav_me') }}</h1>
+            {% if current_user %}<p>{{ roles[current_user.role] }}{% if season %} · {{ season.name }}{% endif %}</p>{% endif %}
+          </div>
+
+          <div class="stack">
+            {% if current_user %}
+              {% set av = avatar_meta(current_user) %}
+              <section class="card account-card">
+                <div class="account">
+                  <span class="avatar">
+                    {%- if av.kind == 'upload' -%}
+                      <img src="{{ url_for('avatar_file', filename=av.src) }}" alt="">
+                    {%- elif av.kind == 'preset' -%}
+                      <span class="avatar-preset" style="background: {{ av.bg }}">{{ av.emoji }}</span>
+                    {%- else -%}
+                      {{ av.letter }}
+                    {%- endif -%}
+                  </span>
+                  <span class="account-meta">
+                    <strong>{{ current_user.display_name }}</strong>
+                    <small>{{ current_user.email }}</small>
+                    <span class="tag">{{ roles[current_user.role] }}</span>
+                  </span>
+                </div>
+                {% if my_row %}
+                  <div class="metric-grid">
+                    <div class="metric"><span>{{ t('mobile.season_points') }}</span><strong>{{ my_row.total_points }}</strong></div>
+                    <div class="metric"><span>{{ t('table.avg_place') }}</span><strong>{{ my_row.avg_place }}</strong></div>
+                    <div class="metric"><span>{{ t('table.first_rate') }}</span><strong>{{ my_row.first_rate }}%</strong></div>
+                  </div>
+                {% else %}
+                  <p class="empty">{{ t('mobile.no_matches') }}</p>
+                {% endif %}
+              </section>
+
+              {% if not can_enter_match %}
+                <section class="card locked-card">
+                  <strong>{{ t('mobile.entry_locked') }}</strong>
+                  <p class="muted">{{ t('mobile.entry_locked_hint') }}</p>
+                </section>
+              {% endif %}
+
+              <section class="card links-card">
+                <div class="link-list">
+                  <button type="button" data-route="profile">{{ t('mobile.link_profile') }} <span>→</span></button>
+                  <button type="button" data-route="rules">{{ t('mobile.link_rules') }} <span>→</span></button>
+                  <button type="button" data-route="meetups">{{ t('mobile.link_meetups') }} <span>→</span></button>
+                  <button type="button" data-route="avatar">{{ t('mobile.avatar_title') }} <span>→</span></button>
+                  <a href="{{ url_for('logout') }}?next=%2Fapp%23%2Fme">{{ t('auth.logout') }} <span>→</span></a>
+                </div>
+              </section>
+            {% else %}
+              <section class="card">
+                <div class="card-head"><strong>{{ t('mobile.login') }}</strong><span>BRML</span></div>
+                <form class="login-form" method="post" action="{{ url_for('login') }}">
+                  <input type="hidden" name="next" value="/app">
+                  <label>
+                    <span>{{ t('mobile.login_email') }}</span>
+                    <input type="email" name="email" autocomplete="username" required>
+                  </label>
+                  <label>
+                    <span>{{ t('mobile.login_password') }}</span>
+                    <input type="password" name="password" autocomplete="current-password" required>
+                  </label>
+                  <label class="checkbox">
+                    <input type="checkbox" name="remember" value="1" checked>
+                    <span>{{ t('auth.remember') }}</span>
+                  </label>
+                  <button class="btn-block" type="submit">{{ t('mobile.login') }}</button>
+                </form>
+                <p class="muted center">{{ t('mobile.guest_hint') }}</p>
+              </section>
+            {% endif %}
+
+            <p class="footnote">{{ t('mobile.install_hint') }}</p>
+          </div>
+        </section>
+
+        <!-- ============ 子页面：个人页 ============ -->
+        {% if current_user %}
+          <section class="view" id="view-profile" data-view="profile" hidden>
+            <button class="back-link" type="button" data-route="me">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"></path></svg>
+              {{ t('mobile.back') }}
+            </button>
+            <div class="page-head">
+              <h1>{{ t('mobile.profile_title') }}</h1>
+              <p>{% if season %}{{ season.name }} · {% endif %}{{ roles[current_user.role] }}</p>
+            </div>
+            <div class="stack">
+              <section class="card">
+                <div class="account">
+                  {% set me_av = avatar_meta(current_user) %}
+                  <span class="avatar">
+                    {%- if me_av.kind == 'upload' -%}
+                      <img src="{{ url_for('avatar_file', filename=me_av.src) }}" alt="">
+                    {%- elif me_av.kind == 'preset' -%}
+                      <span class="avatar-preset" style="background: {{ me_av.bg }}">{{ me_av.emoji }}</span>
+                    {%- else -%}
+                      {{ me_av.letter }}
+                    {%- endif -%}
+                  </span>
+                  <span class="account-meta">
+                    <strong>{{ current_user.display_name }}</strong>
+                    <small>{{ current_user.email }}</small>
+                  </span>
+                </div>
+                {% if my_row %}
+                  <div class="metric-grid four">
+                    <div class="metric"><span>{{ t('mobile.season_points') }}</span><strong>{{ my_row.total_points }}</strong></div>
+                    <div class="metric"><span>{{ t('home.matches') }}</span><strong>{{ my_row.matches }}</strong></div>
+                    <div class="metric"><span>{{ t('table.avg_place') }}</span><strong>{{ my_row.avg_place }}</strong></div>
+                    <div class="metric"><span>{{ t('table.first_rate') }}</span><strong>{{ my_row.first_rate }}%</strong></div>
+                  </div>
+                {% else %}
+                  <p class="empty">{{ t('mobile.no_games') }}</p>
+                {% endif %}
+              </section>
+
+              {% if placement_counts %}
+                <section class="card">
+                  <div class="card-head"><strong>{{ t('mobile.distribution') }}</strong><span>{{ my_row.matches if my_row else 0 }} {{ t('home.matches') }}</span></div>
+                  {% set total_places = placement_counts.values()|sum %}
+                  <div class="dist">
+                    {% for place in [1, 2, 3, 4] %}
+                      {% set count = placement_counts.get(place, 0) %}
+                      <span class="d{{ place }}" style="flex: {{ count if count else 0.001 }}"></span>
+                    {% endfor %}
+                  </div>
+                  <div class="legend">
+                    {% for place in [1, 2, 3, 4] %}
+                      <span><i class="l{{ place }}"></i>{{ t('mobile.place', place=place) }} {{ placement_counts.get(place, 0) }}</span>
+                    {% endfor %}
+                  </div>
+                </section>
+              {% endif %}
+
+              <section class="card">
+                <div class="card-head"><strong>{{ t('mobile.my_games') }}</strong><span>{{ my_games|length }}</span></div>
+                {% if my_games %}
+                  {% for game in my_games %}
+                    <div class="row">
+                      <span class="place-badge{{ ' first' if game.placement == 1 else (' last' if game.placement == 4 else '') }}">
+                        {%- if game.placement in [1, 2, 3, 4] -%}
+                          {{ t('mobile.place', place=game.placement|int) }}
+                        {%- else -%}
+                          {{ t('mobile.place_tied', place=game.placement) }}
+                        {%- endif -%}
+                      </span>
+                      <span class="row-name wrap">
+                        {{ game.date_label }} {{ game.time_label }} · {{ match_type_label(game.table_name) }}
+                        <small>{{ t('match.final_score') }} {{ game.final_score|int }}</small>
+                      </span>
+                      <span class="delta {{ 'pos' if game.rank_points > 0 else ('neg' if game.rank_points < 0 else '') }}">
+                        {{ '+' if game.rank_points > 0 else ('' if game.rank_points == 0 else '−') }}{{ game.rank_points|abs }}
+                      </span>
+                    </div>
+                  {% endfor %}
+                {% else %}
+                  <p class="empty">{{ t('mobile.no_games') }}</p>
+                {% endif %}
+              </section>
+            </div>
+          </section>
+
+          <!-- ============ 子页面：赛季规则 ============ -->
+          <section class="view" id="view-rules" data-view="rules" hidden>
+            <button class="back-link" type="button" data-route="me">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"></path></svg>
+              {{ t('mobile.back') }}
+            </button>
+            <div class="page-head">
+              <h1>{{ t('mobile.rules_title') }}</h1>
+              <p>{{ season.name if season else t('home.not_enabled') }}</p>
+            </div>
+            <div class="stack">
+              <section class="card">
+                <div class="rules-table">
+                  {% for row in rule_rows %}
+                    <div class="rules-row">
+                      <span class="rules-label">{{ row.label }}</span>
+                      <span class="rules-value">{{ row.value }}</span>
+                    </div>
+                  {% endfor %}
+                </div>
+              </section>
+              <p class="footnote">{{ t('mobile.rules_note') }}</p>
+            </div>
+          </section>
+
+          <!-- ============ 子页面：活动报名 ============ -->
+          <section class="view" id="view-meetups" data-view="meetups" hidden>
+            <button class="back-link" type="button" data-route="me">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"></path></svg>
+              {{ t('mobile.back') }}
+            </button>
+            <div class="page-head">
+              <h1>{{ t('mobile.meetups_title') }}</h1>
+              <p>{{ next_meetup.venue if next_meetup else default_meetup_venue }}</p>
+            </div>
+            <div class="stack">
+              <section class="card">
+                <div class="card-head"><strong>{{ t('mobile.upcoming') }}</strong><span>{{ meetups.upcoming|length }}</span></div>
+                {% if meetups.upcoming %}
+                  {% for item in meetups.upcoming %}
+                    <div class="meetup-row">
+                      <span class="meetup-when">
+                        <strong>{{ item.day_label }}</strong>
+                        <small>{{ item.month_label }}</small>
+                      </span>
+                      <span class="meetup-info">
+                        <strong>{{ item.weekday }} {{ item.time_label }}</strong>
+                        <small>{{ item.venue }} · {{ t('meetup.attendee_count', count=item.attendee_count) }}</small>
+                      </span>
+                      {% if item.signed_up %}
+                        <span class="btn-quiet">{{ t('meetup.signed_up') }}</span>
+                      {% elif current_user %}
+                        <form method="post" action="{{ url_for('mobile_meetup_signup', meetup_id=item.id) }}">
+                          <button class="btn" type="submit">{{ t('meetup.signup') }}</button>
+                        </form>
+                      {% else %}
+                        <a class="btn" href="{{ url_for('login') }}?next=%2Fapp">{{ t('mobile.login') }}</a>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                {% else %}
+                  <p class="empty">{{ t('mobile.meetups_empty') }}</p>
+                {% endif %}
+              </section>
+
+              {% if meetups.past %}
+                <section class="card">
+                  <div class="card-head"><strong>{{ t('mobile.past') }}</strong><span>{{ meetups.past|length }}</span></div>
+                  {% for item in meetups.past %}
+                    <div class="meetup-row is-past">
+                      <span class="meetup-when">
+                        <strong>{{ item.day_label }}</strong>
+                        <small>{{ item.month_label }}</small>
+                      </span>
+                      <span class="meetup-info">
+                        <strong>{{ item.weekday }} {{ item.time_label }}</strong>
+                        <small>{{ item.venue }} · {{ t('meetup.attendee_count', count=item.attendee_count) }}</small>
+                      </span>
+                      <span class="tag quiet">{{ t('mobile.past') }}</span>
+                    </div>
+                  {% endfor %}
+                </section>
+              {% endif %}
+            </div>
+          </section>
+
+          <!-- ============ 子页面：选择头像 ============ -->
+          <section class="view" id="view-avatar" data-view="avatar" hidden>
+            <button class="back-link" type="button" data-route="me">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"></path></svg>
+              {{ t('mobile.back') }}
+            </button>
+            <div class="page-head">
+              <h1>{{ t('mobile.avatar_title') }}</h1>
+              <p>{{ current_user.display_name }}</p>
+            </div>
+            <div class="stack">
+              <section class="card">
+                <div class="card-head"><strong>{{ t('mobile.preset_avatar') }}</strong><span>{{ avatars|length }}</span></div>
+                <form class="avatar-grid" method="post" action="{{ url_for('mobile_avatar_update') }}">
+                  {% for key, emoji, bg in avatars %}
+                    <button class="avatar-choice" type="submit" name="avatar" value="{{ key }}"
+                            style="--choice-bg: {{ bg }}"
+                            aria-pressed="{{ 'true' if current_user.avatar == key else 'false' }}"
+                            aria-label="{{ emoji }}">
+                      <span>{{ emoji }}</span>
+                    </button>
+                  {% endfor %}
+                </form>
+              </section>
+
+              <section class="card">
+                <div class="card-head"><strong>{{ t('mobile.upload_avatar') }}</strong></div>
+                <form method="post" action="{{ url_for('mobile_avatar_upload') }}" enctype="multipart/form-data">
+                  <label class="file-field" for="avatarFile">{{ t('mobile.upload') }}</label>
+                  <input id="avatarFile" type="file" name="avatar_file" accept="image/png,image/jpeg,image/webp,image/gif" required>
+                  <p class="ruleline">{{ t('mobile.upload_hint') }}</p>
+                  <button class="btn-block" type="submit">{{ t('mobile.upload_avatar') }}</button>
+                </form>
+              </section>
+            </div>
+          </section>
+        {% endif %}
+
+        <!-- ============ 录入比赛（裁判及以上） ============ -->
+        {% if can_enter_match %}
+          <section class="view" id="view-entry" data-view="entry" hidden>
+            <div class="page-head">
+              <h1>{{ t('nav.match_entry') }}</h1>
+              <p>{% if season %}{{ season.name }} · {% endif %}{{ match_time }} · {{ t('mobile.entry_auto_time') }}</p>
+            </div>
+
+            {% if entry_errors %}
+              <div class="banner error" role="alert">
+                {% for error in entry_errors %}<span>{{ error }}</span>{% endfor %}
+              </div>
+            {% endif %}
+
+            <form method="post" action="{{ url_for('mobile_match_create') }}" id="entryForm"
+                  data-start-total="{{ start_total }}"
+                  data-total-ok="{{ t('mobile.entry_total_ok', total='{total}') }}"
+                  data-total-bad="{{ t('mobile.entry_total_bad', total='{total}') }}">
+              <div class="stack">
+                <section class="card">
+                  <div class="card-head">
+                    <strong>{{ t('mobile.entry_seats') }}</strong>
+                    <span class="chip-total" id="totalChip"></span>
+                  </div>
+
+                  {% for idx in range(4) %}
+                    {% set score_value = form_values.get('score_' ~ idx) or (start_total // 4) %}
+                    {% set penalty_value = form_values.get('penalty_' ~ idx) or 0 %}
+                    <div class="seat" data-seat="{{ idx }}">
+                      <div class="seat-top">
+                        <span class="seat-chip">{{ seats[idx] }}</span>
+                        <span class="place" data-out="place"></span>
+                        <span class="pts" data-out="points"></span>
+                      </div>
+                      <div class="seat-inputs">
+                        <label class="field player">
+                          <span>{{ t('table.player') }}</span>
+                          <select name="player_{{ idx }}" data-in="player" required>
+                            <option value="">{{ t('match.choose_player') }}</option>
+                            {% for player in players %}
+                              <option value="{{ player.id }}"{{ ' selected' if form_values.get('player_' ~ idx)|string == player.id|string else '' }}>
+                                {{ player.display_name }}
+                              </option>
+                            {% endfor %}
+                          </select>
+                        </label>
+                        <label class="field score">
+                          <span>{{ t('match.final_score') }}</span>
+                          <input type="number" inputmode="numeric" name="score_{{ idx }}" value="{{ score_value }}" data-in="score" data-seat="{{ idx }}" required>
+                        </label>
+                        <label class="field pen">
+                          <span>{{ t('mobile.penalty_short') }}</span>
+                          <input type="number" inputmode="numeric" min="0" name="penalty_{{ idx }}" value="{{ penalty_value }}" data-in="penalty" data-seat="{{ idx }}">
+                        </label>
+                      </div>
+                      <label class="field reason" data-reason-for="{{ idx }}"{{ '' if penalty_value|int > 0 else ' hidden' }}>
+                        <span>{{ t('mobile.entry_penalty_reason') }}</span>
+                        <input type="text" name="penalty_reason_{{ idx }}" value="{{ form_values.get('penalty_reason_' ~ idx) or '' }}" maxlength="200">
+                      </label>
+                    </div>
+                  {% endfor %}
+
+                  <p class="ruleline">{{ t('mobile.entry_hint', total=start_total) }}</p>
+                </section>
+
+                <section class="card">
+                  <div class="seat-inputs meta">
+                    <label class="field">
+                      <span>{{ t('match.type') }}</span>
+                      <select name="table_name">
+                        <option value="meetup"{{ ' selected' if form_values.get('table_name') != 'casual' else '' }}>{{ t('match.type_meetup') }}</option>
+                        <option value="casual"{{ ' selected' if form_values.get('table_name') == 'casual' else '' }}>{{ t('match.type_casual') }}</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <span>{{ t('match.memo') }}</span>
+                      <input type="text" name="memo" maxlength="120" value="{{ form_values.get('memo') or '' }}" placeholder="{{ t('match.optional') }}">
+                    </label>
+                  </div>
+                </section>
+
+                <button class="btn-block" type="submit">{{ t('match.submit') }}</button>
+              </div>
+            </form>
+          </section>
+        {% endif %}
+      </main>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <script type="application/json" id="flashData">{{ messages|tojson }}</script>
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    <div class="dock-wrap">
+      <nav class="dock" aria-label="{{ t('mobile.menu_label') }}">
+        <div class="dock-pill glass">
+          <button class="tab" type="button" data-route="leaderboard" aria-current="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M8 4h8v4.4a4 4 0 0 1-8 0Z"></path>
+              <path d="M8 5.2H5.4a2.4 2.4 0 0 0 2.4 4M16 5.2h2.6a2.4 2.4 0 0 1-2.4 4"></path>
+              <path d="M12 12.4V16M9 20h6M10 16h4l.6 4h-5.2Z"></path>
+            </svg>
+            <span>{{ t('nav.leaderboard') }}</span>
+          </button>
+          <button class="tab" type="button" data-route="matches" aria-current="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 6.6v5.1l3.2 1.9"></path>
+              <circle cx="12" cy="12" r="8.4"></circle>
+            </svg>
+            <span>{{ t('mobile.nav_matches') }}</span>
+          </button>
+          <button class="tab" type="button" data-route="me" aria-current="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="8.6" r="3.7"></circle>
+              <path d="M4.7 19.6a7.3 7.3 0 0 1 14.6 0"></path>
+            </svg>
+            <span>{{ t('mobile.nav_me') }}</span>
+          </button>
+        </div>
+
+        {% if can_enter_match %}
+          <button class="add-bubble" type="button" id="addMatch" data-route="entry" aria-current="false" aria-label="{{ t('nav.match_entry') }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M12 5.5v13M5.5 12h13"></path>
+            </svg>
+            <span>{{ t('nav.match_entry') }}</span>
+          </button>
+        {% else %}
+          <button class="add-bubble is-locked" type="button" id="addMatch" aria-disabled="true" aria-label="{{ t('nav.match_entry') }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M12 5.5v13M5.5 12h13"></path>
+            </svg>
+            <span>{{ t('nav.match_entry') }}</span>
+          </button>
+        {% endif %}
+      </nav>
+    </div>
+
+    <div class="toast" id="appToast" role="status" aria-live="polite"></div>
+
+    <script type="application/json" id="appI18n">{{ {
+      'entryLocked': t('mobile.entry_locked_hint'),
+      'place': t('mobile.place', place='{place}'),
+      'placeTied': t('mobile.place_tied', place='{place}'),
+      'totalMismatch': t('mobile.total_mismatch', total='{total}'),
+      'matchNotFound': t('mobile.match_not_found'),
+      'matchBreakdown': t('mobile.match_breakdown'),
+      'matchScoringNote': t('mobile.match_scoring_note', return_points='{return_points}'),
+      'scoreLabel': t('mobile.score_label'),
+      'penaltyLabel': t('mobile.penalty_short'),
+      'totalLabel': t('mobile.total_label')
+    }|tojson }}</script>
+    {% if can_enter_match and rules %}
+      <script type="application/json" id="entryRules">{{ rules['points']|tojson }}</script>
+    {% endif %}
+    <script type="application/json" id="matchData">{{ match_details|tojson }}</script>
+    <script src="{{ url_for('static', filename='app-pwa.js') }}" defer></script>
+  </body>
+</html>

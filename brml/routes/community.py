@@ -11,7 +11,7 @@ from brml.config import DEFAULT_MEETUP_VENUE, SITE_VERSION
 from brml.db import execute, get_db, query_all, query_one
 from brml.i18n import translate
 from brml.match_service import current_season
-from brml.meetup_service import auto_archive_expired_meetups, meetup_status
+from brml.meetup_service import auto_archive_expired_meetups, meetup_status, signup_member
 from brml.timeutils import now, parse_local_datetime
 
 
@@ -191,22 +191,17 @@ def register_routes(app) -> None:
     @app.route("/meetups/<int:meetup_id>/signup", methods=("POST",))
     @login_required
     def meetup_signup(meetup_id: int):
-        auto_archive_expired_meetups()
-        meetup = query_one("select * from meetups where id = ?", (meetup_id,))
-        if not meetup:
+        result = signup_member(meetup_id, g.user["id"])
+        if result == "missing":
             flash(translate("meetup.missing"), "error")
             return redirect(url_for("meetups"))
-        if meetup_status(meetup) != "open":
+        if result == "closed":
             flash(translate("meetup.signup_closed"), "error")
             return redirect(url_for("meetup_detail", meetup_id=meetup_id))
-        try:
-            execute(
-                "insert into meetup_signups (meetup_id, user_id, created_at) values (?, ?, ?)",
-                (meetup_id, g.user["id"], now()),
-            )
-            flash(translate("meetup.signup_success"), "success")
-        except sqlite3.IntegrityError:
+        if result == "duplicate":
             flash(translate("meetup.signup_duplicate"), "error")
+        else:
+            flash(translate("meetup.signup_success"), "success")
         return redirect(url_for("meetup_detail", meetup_id=meetup_id))
 
     @app.route("/admin/meetups/<int:meetup_id>/archive", methods=("POST",))

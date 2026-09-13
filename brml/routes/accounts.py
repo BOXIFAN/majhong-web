@@ -7,10 +7,8 @@ import sqlite3
 from flask import flash, g, redirect, render_template, request, send_from_directory, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from PIL import Image
-
 from brml.auth import generate_invite_code, generate_temporary_password, login_required, role_required
-from brml.avatars import avatar_dir, avatar_meta, is_valid_avatar_key
+from brml.avatars import avatar_dir, avatar_meta, is_valid_avatar_key, save_uploaded_avatar
 from brml.db import execute, get_db, query_all, query_one
 from brml.finance import fetch_transactions, member_income_stats, summary
 from brml.i18n import SUPPORTED_LOCALES, translate
@@ -25,6 +23,17 @@ def _active_users() -> list:
 
 
 def register_routes(app) -> None:
+    def safe_next_url() -> str | None:
+        """登录后回跳地址：只接受站内相对路径，避免开放重定向。"""
+        candidate = (request.form.get("next") or request.args.get("next") or "").strip()
+        if candidate.startswith("/") and not candidate.startswith("//"):
+            return candidate
+        return None
+
+    def safe_stay_url(endpoint: str) -> str:
+        """表单处理后的回跳地址：带 next 时回到指定页面，否则回到默认端点。"""
+        return safe_next_url() or url_for(endpoint)
+
     # ----- 登录、账号与后台用户管理 -----
 
     @app.route("/register", methods=("GET", "POST"))
@@ -86,7 +95,7 @@ def register_routes(app) -> None:
                     session["locale"] = selected_locale
                 session["user_id"] = user["id"]
                 flash(translate("flash.login_success"), "success")
-                return redirect(url_for("index"))
+                return redirect(safe_next_url() or url_for("index"))
             flash(translate("flash.login_invalid"), "error")
         return render_template("login.html")
 
@@ -97,7 +106,7 @@ def register_routes(app) -> None:
         if selected_locale in SUPPORTED_LOCALES:
             session["locale"] = selected_locale
         flash(translate("flash.logout_success"), "success")
-        return redirect(url_for("index"))
+        return redirect(safe_next_url() or url_for("index"))
 
     @app.route("/account/password", methods=("POST",))
     @login_required
@@ -131,45 +140,22 @@ def register_routes(app) -> None:
                     (avatar or None, g.user["id"]),
                 )
                 flash(translate("flash.avatar_updated"), "success")
-            return redirect(url_for("account_avatar"))
+            return redirect(safe_stay_url("account_avatar"))
         return render_template("avatar.html")
 
     @app.route("/account/avatar/upload", methods=("POST",))
     @login_required
     def account_avatar_upload():
-        uploaded = request.files.get("avatar_file")
-        if not uploaded or not uploaded.filename:
+        result = save_uploaded_avatar(g.user["id"], request.files.get("avatar_file"))
+        if result == "missing":
             flash(translate("flash.avatar_missing"), "error")
-            return redirect(url_for("account_avatar"))
-        ext = uploaded.filename.rsplit(".", 1)[-1].lower() if "." in uploaded.filename else ""
-        if ext not in {"jpg", "jpeg", "png", "webp", "gif"}:
+        elif result == "type_invalid":
             flash(translate("flash.avatar_type_invalid"), "error")
-            return redirect(url_for("account_avatar"))
-        try:
-            image = Image.open(uploaded.stream)
-            image.thumbnail((512, 512))
-            if image.mode in ("RGBA", "LA", "P"):
-                image = image.convert("RGBA")
-                background = Image.new("RGB", image.size, (255, 255, 255))
-                background.paste(image, mask=image.split()[-1])
-                image = background
-            elif image.mode != "RGB":
-                image = image.convert("RGB")
-            filename = f"{g.user['id']}.jpg"
-            out = avatar_dir() / filename
-            quality = 88
-            image.save(out, "JPEG", quality=quality, optimize=True, progressive=True)
-            while out.stat().st_size > 1024 * 1024 and quality > 40:
-                quality -= 12
-                image.save(out, "JPEG", quality=quality, optimize=True, progressive=True)
-            execute(
-                "update users set avatar = 'upload', avatar_upload = ? where id = ?",
-                (filename, g.user["id"]),
-            )
-            flash(translate("flash.avatar_updated"), "success")
-        except Exception:
+        elif result == "invalid":
             flash(translate("flash.avatar_invalid"), "error")
-        return redirect(url_for("account_avatar"))
+        else:
+            flash(translate("flash.avatar_updated"), "success")
+        return redirect(safe_stay_url("account_avatar"))
 
     @app.route("/avatars/<path:filename>")
     def avatar_file(filename: str):

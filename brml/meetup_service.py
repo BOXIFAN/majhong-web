@@ -2,10 +2,32 @@
 
 from __future__ import annotations
 
+import sqlite3
 from datetime import datetime, timedelta
 
 from brml.db import get_db
 from brml.timeutils import brisbane_local_now, now
+
+
+def signup_member(meetup_id: int, user_id: int) -> str:
+    """为成员报名活动，返回 ``ok`` / ``missing`` / ``closed`` / ``duplicate``。"""
+    auto_archive_expired_meetups()
+    meetup = get_db().execute("select * from meetups where id = ?", (meetup_id,)).fetchone()
+    if not meetup:
+        return "missing"
+    if meetup_status(meetup) != "open":
+        return "closed"
+    try:
+        db = get_db()
+        db.execute(
+            "insert into meetup_signups (meetup_id, user_id, created_at) values (?, ?, ?)",
+            (meetup_id, user_id, now()),
+        )
+        db.commit()
+        return "ok"
+    except sqlite3.IntegrityError:
+        return "duplicate"
+
 
 def meetup_status(meetup) -> str:
     """按手动归档标记和报名截止时间计算活动状态。"""
@@ -28,4 +50,3 @@ def auto_archive_expired_meetups() -> None:
         (now(), now(), cutoff),
     )
     db.commit()
-
