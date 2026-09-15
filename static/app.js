@@ -273,3 +273,85 @@ document.querySelectorAll("[data-expand-target]").forEach((button) => {
     button.textContent = expanded ? collapseLabel : expandLabel;
   });
 });
+
+/*
+ * Plan B：数据叙事动效。
+ * 两件事：把模板里的 data-vt 转成跨页面共享元素名；把标记过的数字滚到目标值。
+ * 服务端渲染的文本始终是最终值，脚本未执行或被降级时页面照常显示。
+ */
+(() => {
+  // 共享元素命名集中在脚本里控制，模板只声明“哪个节点参与转场”。
+  document.querySelectorAll("[data-vt]").forEach((el) => {
+    el.style.viewTransitionName = el.dataset.vt;
+  });
+
+  const countUpTargets = Array.from(document.querySelectorAll("[data-countup]"));
+  if (!countUpTargets.length) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  // 前缀/数值/后缀三段式：A$1,234.56、12.3%、-320 都能就地还原。
+  const numberPattern = /^(\D*?)(-?[\d,]+(?:\.\d+)?)(\D*)$/;
+
+  function formatNumber(value, decimals, grouped) {
+    let text = value.toFixed(decimals);
+    if (grouped) {
+      const [whole, fraction] = text.split(".");
+      text = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",") + (fraction ? `.${fraction}` : "");
+    }
+    return text;
+  }
+
+  function roll(el) {
+    const original = el.textContent.trim();
+    const parts = original.match(numberPattern);
+    if (!parts) return;
+
+    const [, prefix, raw, suffix] = parts;
+    const target = Number(raw.replace(/,/g, ""));
+    if (!Number.isFinite(target) || target === 0) return;
+
+    const decimals = (raw.split(".")[1] || "").length;
+    const grouped = raw.includes(",");
+    const negative = target < 0;
+    const magnitude = Math.abs(target);
+    const duration = 700;
+
+    // 延后一点再起步，让整页转场的首帧截到的是服务端的最终值而不是中途数字。
+    window.setTimeout(() => {
+      const start = performance.now();
+
+      function frame(now) {
+        const progress = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const shown = formatNumber(magnitude * eased, decimals, grouped);
+        el.textContent = `${prefix}${negative ? "-" : ""}${shown}${suffix}`;
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          el.textContent = original; // 收尾回到服务端原文，避免任何格式误差
+        }
+      }
+
+      requestAnimationFrame(frame);
+    }, 120);
+  }
+
+  if (!("IntersectionObserver" in window)) {
+    countUpTargets.forEach(roll);
+    return;
+  }
+
+  // 只在数字进入视口时滚动一次，长页面下半部分不会在加载时就白白播完。
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        observer.unobserve(entry.target);
+        roll(entry.target);
+      });
+    },
+    { rootMargin: "0px 0px -12% 0px" }
+  );
+
+  countUpTargets.forEach((el) => observer.observe(el));
+})();

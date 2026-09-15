@@ -1,7 +1,7 @@
 /* BRML App Service Worker：只接管 /app/ 作用域，静态资源缓存优先，页面离线兜底。 */
 
 // 改动静态资源后把版本号 +1，客户端下次打开即会换新缓存。
-const CACHE = "brml-app-v3";
+const CACHE = "brml-app-v4";
 const PRECACHE = [
   "/app",
   "/static/app-pwa.css",

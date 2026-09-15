@@ -17,6 +17,14 @@
   --glass-inner-edge: rgba(132, 151, 177, 0.14);
   --shadow: 0 24px 64px rgba(31, 45, 68, 0.14), 0 4px 14px rgba(31, 45, 68, 0.06);
   --soft-shadow: 0 14px 38px rgba(31, 45, 68, 0.1), 0 2px 8px rgba(31, 45, 68, 0.04);
+
+  /* 动效 token：新增动画统一复用这三档时长，避免再出现 160/420/900ms 各自为政。 */
+  --dur-fast: 140ms;
+  --dur-page: 260ms;
+  --dur-story: 700ms;
+  --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.32, 0.64, 1);
+  --stagger-step: 26ms;
 }
 
 * {
@@ -5437,5 +5445,172 @@ select:focus {
 
   .player-page-head .player-head-name h1 {
     font-size: 26px;
+  }
+}
+
+/* ===== Plan B：数据叙事动效 =====
+   整块追加，回退时删除本区即可，不影响上方任何既有规则。
+   约束：只动 opacity / transform；时长一律走 :root 里的动效 token。 */
+
+/* ------ 跨页面转场：默认关闭，等真机验证后再启用 ------
+   2026-09-15 实测：开启 navigation: auto 之后，任何 POST 跳转（登录、录入提交、删除等）
+   会让新文档的动画时间线停在 0，带 animation-fill-mode: both 的列表行永久停在透明状态，
+   登录后榜单会显示为空。无头 Chrome 与真实窗口 Chrome 均可复现，因此默认关闭。
+   下方的共享元素命名已经接好，确认浏览器行为正常后取消注释这一段即可启用。 */
+/*
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: var(--dur-page);
+    animation-timing-function: var(--ease-out);
+  }
+}
+*/
+
+/* ------ 榜单/战绩卡片换季时原地更新 ------
+   同名的两层会在新旧文档之间做形变，避免整块面板闪一下再出现。 */
+.vt-board-panel {
+  view-transition-name: brml-board;
+}
+
+/* 战绩列表换页时同样让面板原地形变，而不是整块重绘。 */
+.vt-match-panel {
+  view-transition-name: brml-matches;
+}
+
+/* ------ 数据行错峰入场 ------ */
+@keyframes data-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 用结构选择器挂载，避免改动既有 class，回归测试依赖这些 class 字面值。 */
+.board-table tbody tr,
+.matches-page-list .match-card,
+.player-history-list .match-card {
+  animation: data-in var(--dur-page) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * var(--stagger-step));
+}
+
+/* ------ 排行榜：前三名与末位视觉分层 ------ */
+.board-table tbody tr.top-rank td:first-child {
+  font-weight: 900;
+  color: var(--brand-dark);
+  font-variant-numeric: tabular-nums;
+  box-shadow: inset 3px 0 0 rgba(15, 118, 110, 0.45);
+}
+
+.board-table tbody tr.low-rank td:first-child {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 前三名在整行入场后再轻微弹一下，强调名次本身。 */
+.board-table tbody tr.top-rank .rank-no-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+  animation: badge-pop var(--dur-page) var(--ease-spring) both;
+  animation-delay: calc(var(--i, 0) * var(--stagger-step) + 90ms);
+}
+
+.board-table tbody tr.top-rank:first-child .rank-no-badge {
+  background: linear-gradient(135deg, #c9820f, #a35f06);
+}
+
+@keyframes badge-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ------ 图表序列：网格与坐标轴先就位，数据与读数随后 ------ */
+.radar-grid-polygon,
+.radar-axis,
+.trend-grid {
+  opacity: 0;
+  animation: radar-fade 320ms ease forwards;
+}
+
+.radar-label,
+.trend-axis {
+  opacity: 0;
+  animation: radar-fade 320ms 420ms ease forwards;
+}
+
+/* 饼图图例跟随色环扫入逐个出现，形成一次完整的“绘制”过程。 */
+.pie-legend li:not(.pie-legend-head) {
+  animation: data-in var(--dur-page) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * var(--stagger-step) + 200ms);
+}
+
+/* ------ 数字滚动期间的等宽保护 ------
+   数字逐帧变化时保持字宽稳定，避免整行左右抖动。 */
+[data-countup] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------ 全局降级兜底 ------
+   文件中部原有的降级规则只作用于首页子树，新增动画统一在这里收敛。
+   动效归零后补回终态，避免描线类图形停在不可见状态。 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .radar-data,
+  .radar-median,
+  .trend-line {
+    stroke-dashoffset: 0;
+  }
+
+  .radar-data,
+  .radar-median,
+  .radar-median-node,
+  .radar-node,
+  .radar-grid-polygon,
+  .radar-axis,
+  .radar-label,
+  .trend-grid,
+  .trend-axis,
+  .trend-point {
+    opacity: 1;
+  }
+
+  .radar-data {
+    fill-opacity: 1;
+  }
+
+  .pie-ring {
+    --pie-grow: 360deg;
   }
 }

@@ -16,19 +16,19 @@
     </form>
   </div>
 </section>
-<section class="panel">
+<section class="panel vt-board-panel">
   {% if rows %}
     <div class="table-wrap">
-      <table>
+      <table class="board-table">
         <thead><tr><th>#</th><th>{{ t('table.player') }}</th><th>{{ t('table.points') }}</th><th>{{ t('table.matches') }}</th><th>{{ t('table.avg_place') }}</th><th>{{ t('table.first_rate') }}</th><th>{{ t('table.fourth_rate') }}</th></tr></thead>
         <tbody>
           {% for row in rows %}
-            <tr class="{% if loop.index <= 4 %}top-rank{% elif loop.revindex <= 4 %}low-rank{% endif %}">
-              <td>{{ loop.index }}</td>
+            <tr class="{% if loop.index <= 4 %}top-rank{% elif loop.revindex <= 4 %}low-rank{% endif %}" style="--i: {{ [loop.index0, 12]|min }}">
+              <td>{% if loop.index <= 4 %}<span class="rank-no-badge">{{ loop.index }}</span>{% else %}{{ loop.index }}{% endif %}</td>
               <td>
                 <a class="rank-player" href="{{ url_for('player_profile', user_id=row.user_id) }}">
                   {% set av = avatar_meta(row) %}
-                  <span class="rank-avatar{% if av.kind == 'initial' %} is-initial{% endif %}"{% if av.kind == 'preset' %} style="background: {{ av.bg }}"{% endif %}>
+                  <span class="rank-avatar{% if av.kind == 'initial' %} is-initial{% endif %}" data-vt="avatar-{{ row.user_id }}"{% if av.kind == 'preset' %} style="background: {{ av.bg }}"{% endif %}>
                     {%- if av.kind == 'upload' %}<img src="{{ url_for('avatar_file', filename=av.src) }}" alt="" loading="lazy">{%- elif av.kind == 'preset' %}{{ av.emoji }}{%- else %}{{ av.letter }}{%- endif %}
                   </span>
                   <span class="rank-name">{{ row.display_name }}</span>

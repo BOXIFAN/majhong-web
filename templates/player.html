@@ -6,7 +6,7 @@
     <p class="eyebrow">{{ roles[user.role] }}</p>
     <div class="player-head-name">
       {% set av = avatar_meta(user) %}
-      <span class="rank-avatar avatar-lg{% if av.kind == 'initial' %} is-initial{% endif %}"{% if av.kind == 'preset' %} style="background: {{ av.bg }}"{% endif %}>
+      <span class="rank-avatar avatar-lg{% if av.kind == 'initial' %} is-initial{% endif %}" data-vt="avatar-{{ user.id }}"{% if av.kind == 'preset' %} style="background: {{ av.bg }}"{% endif %}>
         {%- if av.kind == 'upload' %}<img src="{{ url_for('avatar_file', filename=av.src) }}" alt="" loading="lazy">{%- elif av.kind == 'preset' %}{{ av.emoji }}{%- else %}{{ av.letter }}{%- endif %}
       </span>
       <h1>{{ user.display_name }}</h1>
@@ -23,9 +23,9 @@
 </section>
 
 <section class="metric-grid">
-  <div class="metric"><span>{{ t('player.current_points') }}</span><strong>{{ stats.total_points if stats else 0 }}</strong></div>
-  <div class="metric"><span>{{ t('player.matches') }}</span><strong>{{ stats.matches if stats else 0 }}</strong></div>
-  <div class="metric"><span>{{ t('player.avg_place') }}</span><strong>{{ stats.avg_place if stats else '-' }}</strong></div>
+  <div class="metric"><span>{{ t('player.current_points') }}</span><strong data-countup>{{ stats.total_points if stats else 0 }}</strong></div>
+  <div class="metric"><span>{{ t('player.matches') }}</span><strong data-countup>{{ stats.matches if stats else 0 }}</strong></div>
+  <div class="metric"><span>{{ t('player.avg_place') }}</span><strong data-countup>{{ stats.avg_place if stats else '-' }}</strong></div>
   <div class="metric"><span>{{ t('player.first_fourth') }}</span><strong>{{ (stats.first_rate ~ '% / ' ~ stats.fourth_rate ~ '%') if stats else '-' }}</strong></div>
 </section>
 <section class="grid two">
@@ -54,7 +54,7 @@
       </div>
       <div class="match-list player-history-list">
         {% for item in history %}
-          <a class="match-card player-history-card" href="{{ url_for('match_detail', match_id=item.match_id) }}">
+          <a class="match-card player-history-card" style="--i: {{ [loop.index0, 12]|min }}" data-vt="match-{{ item.match_id }}" href="{{ url_for('match_detail', match_id=item.match_id) }}">
             <span>{{ item.played_at }}</span>
             <strong>{{ item.rank_points }}</strong>
             <small>{{ t('player.placement_detail', placement=item.placement, score=item.final_score) }}</small>

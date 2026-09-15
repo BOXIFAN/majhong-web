@@ -28,8 +28,8 @@
       <span class="season-status {{ 'is-active' if current_season and current_season.status == 'active' else '' }}"><i aria-hidden="true"></i>{{ current_season.status|capitalize if current_season else t('home.not_enabled') }}</span>
     </div>
     <dl class="season-stats">
-      <div><dt>{{ t('home.members') }}</dt><dd>{{ current_member_count }}</dd></div>
-      <div><dt>{{ t('home.matches') }}</dt><dd>{{ season_match_count }}</dd></div>
+      <div><dt>{{ t('home.members') }}</dt><dd data-countup>{{ current_member_count }}</dd></div>
+      <div><dt>{{ t('home.matches') }}</dt><dd data-countup>{{ season_match_count }}</dd></div>
       <div><dt>{{ t('home.site_version') }}</dt><dd>{{ site_version }}</dd></div>
     </dl>
   </section>

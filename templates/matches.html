@@ -20,11 +20,11 @@
     </form>
   </div>
 </section>
-<section class="panel">
+<section class="panel vt-match-panel">
   {% if matches %}
     <div class="match-list matches-page-list">
       {% for match in matches %}
-        <a class="match-card" href="{{ url_for('match_detail', match_id=match.id) }}">
+        <a class="match-card" style="--i: {{ [loop.index0, 12]|min }}" data-vt="match-{{ match.id }}" href="{{ url_for('match_detail', match_id=match.id) }}">
           <span>{{ match_type_label(match.table_name) }}</span>
           <strong>{{ match.played_at }}</strong>
           <small>{{ t('home.referee', name=(match.referee_name or t('home.system'))) }}</small>

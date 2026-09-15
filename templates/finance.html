@@ -13,19 +13,19 @@
 <section class="metric-grid finance-metrics">
   <article class="metric finance-metric finance-income">
     <span>{{ t('finance.income') }}</span>
-    <strong>A${{ '{:,.2f}'.format(data.income_total) }}</strong>
+    <strong data-countup>A${{ '{:,.2f}'.format(data.income_total) }}</strong>
   </article>
   <article class="metric finance-metric finance-expense">
     <span>{{ t('finance.expense') }}</span>
-    <strong>A${{ '{:,.2f}'.format(data.expense_total) }}</strong>
+    <strong data-countup>A${{ '{:,.2f}'.format(data.expense_total) }}</strong>
   </article>
   <article class="metric finance-metric finance-net {% if data.net < 0 %}is-negative{% endif %}">
     <span>{{ t('finance.net') }}</span>
-    <strong>A${{ '{:,.2f}'.format(data.net) }}</strong>
+    <strong data-countup>A${{ '{:,.2f}'.format(data.net) }}</strong>
   </article>
   <article class="metric finance-metric">
     <span>{{ t('finance.spend_ratio') }}</span>
-    <strong>{% if data.spend_ratio is not none %}{{ '%.1f' % data.spend_ratio }}%{% else %}{{ t('finance.no_percent') }}{% endif %}</strong>
+    <strong data-countup>{% if data.spend_ratio is not none %}{{ '%.1f' % data.spend_ratio }}%{% else %}{{ t('finance.no_percent') }}{% endif %}</strong>
   </article>
 </section>
 
@@ -52,14 +52,14 @@
           <div class="pie-ring" style="background: {{ data.income.gradient }};"></div>
           <div class="pie-hole"></div>
           <div class="pie-center">
-            <strong>A${{ '{:,.2f}'.format(data.income.total) }}</strong>
+            <strong data-countup>A${{ '{:,.2f}'.format(data.income.total) }}</strong>
             <small>{{ t('finance.income') }}</small>
           </div>
         </div>
         <ul class="pie-legend">
           <li class="pie-legend-head"><span>{{ t('finance.category') }}</span><span>{{ t('finance.pct') }}</span></li>
           {% for item in data.income.categories %}
-            <li>
+            <li style="--i: {{ [loop.index0, 12]|min }}">
               <span class="pie-legend-swatch" style="background: {{ item.color }};"></span>
               <span class="pie-legend-label">{{ t('finance.category.' + item.category) }}</span>
               <strong>A${{ '{:,.2f}'.format(item.amount) }}</strong>
@@ -84,14 +84,14 @@
           <div class="pie-ring" style="background: {{ data.expense.gradient }};"></div>
           <div class="pie-hole"></div>
           <div class="pie-center">
-            <strong>A${{ '{:,.2f}'.format(data.expense.total) }}</strong>
+            <strong data-countup>A${{ '{:,.2f}'.format(data.expense.total) }}</strong>
             <small>{{ t('finance.expense') }}</small>
           </div>
         </div>
         <ul class="pie-legend">
           <li class="pie-legend-head"><span>{{ t('finance.category') }}</span><span>{{ t('finance.pct') }}</span></li>
           {% for item in data.expense.categories %}
-            <li>
+            <li style="--i: {{ [loop.index0, 12]|min }}">
               <span class="pie-legend-swatch" style="background: {{ item.color }};"></span>
               <span class="pie-legend-label">{{ t('finance.category.' + item.category) }}</span>
               <strong>A${{ '{:,.2f}'.format(item.amount) }}</strong>
