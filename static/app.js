@@ -46,6 +46,85 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") setMobileMenu(false);
 });
 
+// 顶部统计卡片在桌面完整展示；移动端首次进入时收起，减少纵向占用。
+const mobileDetailsQuery = window.matchMedia("(max-width: 960px)");
+const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+const mobileCollapsibleDetails = Array.from(document.querySelectorAll("details[data-mobile-collapsible]"));
+const mobileDetailsStates = new WeakMap();
+
+function finishDetailsAnimation(details, state) {
+  state.sizeAnimation = null;
+  state.contentAnimation?.cancel();
+  state.contentAnimation = null;
+  details.open = state.expanded;
+  details.style.removeProperty("height");
+  details.style.removeProperty("overflow");
+}
+
+function setResponsiveDetails(details, open, animate = false) {
+  const state = mobileDetailsStates.get(details);
+  const summary = details.querySelector(":scope > summary");
+  const content = details.querySelector(":scope > .player-metric-grid");
+  if (!state || !summary || !content) return;
+
+  state.sizeAnimation?.cancel();
+  state.contentAnimation?.cancel();
+  state.sizeAnimation = null;
+  state.contentAnimation = null;
+  state.expanded = open;
+
+  if (!animate || reducedMotionQuery.matches) {
+    details.open = open;
+    details.style.removeProperty("height");
+    details.style.removeProperty("overflow");
+    return;
+  }
+
+  const startHeight = details.getBoundingClientRect().height;
+  if (open) details.open = true;
+  const borderHeight = details.offsetHeight - details.clientHeight;
+  const endHeight = open ? details.scrollHeight : summary.offsetHeight + borderHeight;
+
+  details.style.height = `${startHeight}px`;
+  details.style.overflow = "hidden";
+  state.sizeAnimation = details.animate(
+    { height: [`${startHeight}px`, `${endHeight}px`] },
+    { duration: open ? 340 : 240, easing: "cubic-bezier(0.32, 0.72, 0, 1)" },
+  );
+  state.contentAnimation = content.animate(
+    open
+      ? [
+          { opacity: 0, transform: "translateY(-10px) scale(0.985)" },
+          { opacity: 1, transform: "translateY(0) scale(1)" },
+        ]
+      : [
+          { opacity: 1, transform: "translateY(0) scale(1)" },
+          { opacity: 0, transform: "translateY(-8px) scale(0.99)" },
+        ],
+    { duration: open ? 300 : 180, easing: "cubic-bezier(0.32, 0.72, 0, 1)", fill: "both" },
+  );
+  state.sizeAnimation.onfinish = () => finishDetailsAnimation(details, state);
+}
+
+mobileCollapsibleDetails.forEach((details) => {
+  const state = { expanded: details.open, sizeAnimation: null, contentAnimation: null };
+  mobileDetailsStates.set(details, state);
+  details.querySelector(":scope > summary")?.addEventListener("click", (event) => {
+    if (!mobileDetailsQuery.matches) return;
+    event.preventDefault();
+    setResponsiveDetails(details, !state.expanded, true);
+  });
+});
+
+function syncResponsiveDetails(event) {
+  mobileCollapsibleDetails.forEach((details) => {
+    setResponsiveDetails(details, !event.matches);
+  });
+}
+
+syncResponsiveDetails(mobileDetailsQuery);
+mobileDetailsQuery.addEventListener?.("change", syncResponsiveDetails);
+
 // 所有破坏性表单通过 data-confirm 复用同一套二次确认逻辑。
 document.querySelectorAll("[data-confirm]").forEach((button) => {
   button.addEventListener("click", (event) => {

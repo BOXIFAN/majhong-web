@@ -336,6 +336,8 @@ def get_leaderboard(season_id: int) -> list[dict]:
             round(coalesce(sum(me.rank_points), 0), 1) as total_points,
             round(avg(me.placement), 2) as avg_place,
             round(avg(case when me.placement = 1 then 1.0 else 0 end) * 100, 1) as first_rate,
+            round(avg(case when me.placement = 2 then 1.0 else 0 end) * 100, 1) as second_rate,
+            round(avg(case when me.placement = 3 then 1.0 else 0 end) * 100, 1) as third_rate,
             round(avg(case when me.placement = 4 then 1.0 else 0 end) * 100, 1) as fourth_rate,
             coalesce(sum(me.penalty_points), 0) as penalty_points
         from users u

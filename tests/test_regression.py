@@ -375,6 +375,33 @@ class PublicPageSmokeTests(unittest.TestCase):
         actual = {rule.endpoint for rule in application.app.url_map.iter_rules()}
         self.assertTrue(expected.issubset(actual))
 
+    def test_player_profile_shows_all_placement_rates_without_style_match_entry(self) -> None:
+        application.app.config["SEED_DEMO_DATA"] = True
+        with application.app.app_context():
+            application.init_db(force=True)
+        with sqlite3.connect(self.database) as db:
+            user_id = db.execute(
+                "select user_id from match_entries order by user_id limit 1"
+            ).fetchone()[0]
+            placements = db.execute(
+                "select placement from match_entries me join matches m on m.id = me.match_id "
+                "where me.user_id = ? and m.season_id = ("
+                "select id from seasons where status = 'active' order by id desc limit 1)",
+                (user_id,),
+            ).fetchall()
+
+        total = len(placements)
+        second_rate = round(sum(row[0] == 2 for row in placements) / total * 100, 1)
+        third_rate = round(sum(row[0] == 3 for row in placements) / total * 100, 1)
+        html = self.client.get(f"/players/{user_id}").get_data(as_text=True)
+
+        self.assertIn("二位 / 三位", html)
+        self.assertIn(f"{second_rate}% / {third_rate}%", html)
+        self.assertNotIn("牌风匹配", html)
+        self.assertIn('class="player-metrics-details" data-mobile-collapsible open', html)
+        self.assertIn("详细参数", html)
+        self.assertNotIn('class="radar-details"', html)
+
     def test_existing_database_is_not_overwritten_without_force(self) -> None:
         with application.app.app_context():
             with self.assertRaises(FileExistsError):

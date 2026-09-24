@@ -16,18 +16,19 @@
     {% if current_user and current_user.id == user.id %}
       <a class="secondary-button" href="{{ url_for('account_avatar') }}">{{ t('avatar.edit') }}</a>
     {% endif %}
-    {% if current_user %}
-      <a class="secondary-button" href="{{ url_for('style_match_for', user_id=user.id) }}">{{ t('experiment.style_label') }}</a>
-    {% endif %}
   </div>
 </section>
 
-<section class="metric-grid">
-  <div class="metric"><span>{{ t('player.current_points') }}</span><strong data-countup>{{ stats.total_points if stats else 0 }}</strong></div>
-  <div class="metric"><span>{{ t('player.matches') }}</span><strong data-countup>{{ stats.matches if stats else 0 }}</strong></div>
-  <div class="metric"><span>{{ t('player.avg_place') }}</span><strong data-countup>{{ stats.avg_place if stats else '-' }}</strong></div>
-  <div class="metric"><span>{{ t('player.first_fourth') }}</span><strong>{{ (stats.first_rate ~ '% / ' ~ stats.fourth_rate ~ '%') if stats else '-' }}</strong></div>
-</section>
+<details class="player-metrics-details" data-mobile-collapsible open>
+  <summary>{{ t('player.radar_details') }}</summary>
+  <section class="metric-grid player-metric-grid">
+    <div class="metric"><span>{{ t('player.current_points') }}</span><strong data-countup>{{ stats.total_points if stats else 0 }}</strong></div>
+    <div class="metric"><span>{{ t('player.matches') }}</span><strong data-countup>{{ stats.matches if stats else 0 }}</strong></div>
+    <div class="metric"><span>{{ t('player.avg_place') }}</span><strong data-countup>{{ stats.avg_place if stats else '-' }}</strong></div>
+    <div class="metric"><span>{{ t('player.first_fourth') }}</span><strong>{{ (stats.first_rate ~ '% / ' ~ stats.fourth_rate ~ '%') if stats else '-' }}</strong></div>
+    <div class="metric"><span>{{ t('player.second_third') }}</span><strong>{{ (stats.second_rate ~ '% / ' ~ stats.third_rate ~ '%') if stats else '-' }}</strong></div>
+  </section>
+</details>
 <section class="grid two">
   <div class="panel">
     <h2>{{ t('player.recent_trend') }}</h2>

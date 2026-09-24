@@ -1517,6 +1517,14 @@ tbody tr:hover {
   margin-bottom: 22px;
 }
 
+.player-metric-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.player-metrics-details > summary {
+  display: none;
+}
+
 .metric {
   padding: 20px;
 }
@@ -3294,6 +3302,69 @@ select:focus {
 
   .radar-legend {
     grid-template-columns: 1fr;
+  }
+
+  .player-metrics-details {
+    display: block;
+    margin-bottom: 22px;
+    border: 1px solid rgba(15, 118, 110, 0.14);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.26);
+    overflow: hidden;
+    transition:
+      background-color var(--dur-page) var(--ease-out),
+      border-color var(--dur-page) var(--ease-out),
+      box-shadow var(--dur-page) var(--ease-out);
+  }
+
+  .player-metrics-details[open] {
+    border-color: rgba(15, 118, 110, 0.22);
+    background: rgba(255, 255, 255, 0.38);
+    box-shadow: 0 12px 28px rgba(31, 45, 68, 0.07);
+  }
+
+  .player-metrics-details > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+    padding: 12px 14px;
+    color: var(--brand-dark);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 850;
+    list-style: none;
+  }
+
+  .player-metrics-details > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .player-metrics-details > summary::after {
+    content: "+";
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background: rgba(15, 118, 110, 0.1);
+    font-size: 18px;
+    line-height: 1;
+    transition:
+      transform var(--dur-page) var(--ease-spring),
+      background-color var(--dur-page) var(--ease-out);
+  }
+
+  .player-metrics-details[open] > summary::after {
+    content: "−";
+    transform: rotate(180deg);
+    background: rgba(15, 118, 110, 0.16);
+  }
+
+  .player-metrics-details .player-metric-grid {
+    gap: 12px;
+    margin: 0;
+    padding: 0 12px 12px;
   }
 
   .player-history-card {
