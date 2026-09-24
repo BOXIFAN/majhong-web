@@ -199,3 +199,72 @@ def ensure_transactions_table() -> None:
     if "deleted_at" not in columns:
         db.execute("alter table transactions add column deleted_at text")
     db.commit()
+
+
+def ensure_board_tables() -> None:
+    """为部署中的旧数据库补建留言板相关表（幂等）。"""
+    db = get_db()
+    db.execute(
+        """
+        create table if not exists board_posts (
+          id integer primary key autoincrement,
+          user_id integer not null,
+          caption text,
+          image text not null,
+          created_at text not null,
+          updated_at text not null,
+          expires_at text not null,
+          deleted_at text,
+          deleted_by integer,
+          foreign key (user_id) references users(id),
+          foreign key (deleted_by) references users(id)
+        )
+        """
+    )
+    db.execute(
+        """
+        create table if not exists board_comments (
+          id integer primary key autoincrement,
+          post_id integer not null,
+          user_id integer not null,
+          content text not null,
+          created_at text not null,
+          deleted_at text,
+          deleted_by integer,
+          foreign key (post_id) references board_posts(id),
+          foreign key (user_id) references users(id),
+          foreign key (deleted_by) references users(id)
+        )
+        """
+    )
+    db.execute(
+        """
+        create table if not exists board_likes (
+          id integer primary key autoincrement,
+          post_id integer not null,
+          user_id integer not null,
+          created_at text not null,
+          unique (post_id, user_id),
+          foreign key (post_id) references board_posts(id),
+          foreign key (user_id) references users(id)
+        )
+        """
+    )
+    db.execute(
+        """
+        create table if not exists board_deletions (
+          id integer primary key autoincrement,
+          post_id integer,
+          comment_id integer,
+          author_id integer,
+          actor_id integer,
+          action text not null,
+          deleted_at text not null
+        )
+        """
+    )
+    # 为早期数据回填到期时间，保证列表渲染不依赖空值判断。
+    db.execute(
+        "update board_posts set expires_at = datetime(created_at, '+30 days') where expires_at is null or expires_at = ''"
+    )
+    db.commit()

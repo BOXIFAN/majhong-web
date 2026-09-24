@@ -3,23 +3,26 @@
 from __future__ import annotations
 
 import os
+import sqlite3
 from datetime import timedelta
 from pathlib import Path
 
 import click
-from flask import Flask, g, session
+from flask import Flask, flash, g, redirect, session, url_for
 
 from brml.config import (
+    BOARD_MAX_REQUEST_BYTES,
     DATABASE,
     DEFAULT_MEETUP_VENUE,
     SEED_DEMO_DATA,
 )
 from brml.avatars import AVATARS, avatar_meta
-from brml.db import close_db, ensure_database_initialized, init_db, query_one
+from brml.db import close_db, ensure_database_initialized, get_db, init_db, query_one
 from brml.i18n import ROLE_LABELS, get_locale, translate
 from brml.migrations import (
     ensure_admin_password,
     ensure_announcements_table,
+    ensure_board_tables,
     ensure_match_type_values,
     ensure_meetups_tables,
     ensure_transactions_table,
@@ -27,6 +30,13 @@ from brml.migrations import (
     ensure_user_avatar_column,
     ensure_user_soft_delete_columns,
 )
+from brml.board_service import (
+    board_storage_mb,
+    cleanup_expired_posts,
+    max_upload_mb,
+    sweep_orphan_images,
+)
+from brml.routes.board import register_routes as register_board_routes
 from brml.routes.finance import register_routes as register_finance_routes
 from brml.routes.accounts import register_routes as register_account_routes
 from brml.routes.community import register_routes as register_community_routes
@@ -51,6 +61,8 @@ def create_app() -> Flask:
     app.config.from_mapping(
         DATABASE_PATH=DATABASE,
         SEED_DEMO_DATA=SEED_DEMO_DATA,
+        # 留言板允许上传较大的原图（服务端会自动压缩），这里只需要挡住异常巨大的请求体。
+        MAX_CONTENT_LENGTH=BOARD_MAX_REQUEST_BYTES,
         SECRET_KEY=os.environ.get("SECRET_KEY", "dev-secret-change-me"),
         PERMANENT_SESSION_LIFETIME=timedelta(days=30),
         SESSION_COOKIE_HTTPONLY=True,
@@ -69,6 +81,7 @@ def create_app() -> Flask:
         ensure_user_avatar_upload_column()
         ensure_announcements_table()
         ensure_meetups_tables()
+        ensure_board_tables()
         ensure_admin_password()
         ensure_match_type_values()
         ensure_transactions_table()
@@ -96,6 +109,12 @@ def create_app() -> Flask:
             "avatar_meta": avatar_meta,
         }
 
+    @app.errorhandler(413)
+    def handle_request_too_large(_error):
+        """上传体积超过请求上限时回到留言板表单，避免直接抛出错误页。"""
+        flash(translate("board.image_too_large", max_upload_mb=max_upload_mb()), "error")
+        return redirect(url_for("board_new"))
+
     @app.cli.command("init-db")
     @click.option("--force", is_flag=True, help="Overwrite an existing database after taking a backup.")
     def init_db_command(force: bool) -> None:
@@ -105,11 +124,33 @@ def create_app() -> Flask:
             raise click.ClickException(str(error)) from error
         print("Initialized the database.")
 
+    @app.cli.command("board-cleanup")
+    def board_cleanup_command() -> None:
+        """删除到期留言与孤儿图片，并收缩数据库文件；建议交给定时任务每日执行。"""
+        # 定时任务可能在没有任何请求的情况下运行，这里先补齐表结构再清理。
+        ensure_board_tables()
+        count = cleanup_expired_posts(sweep_min_age_seconds=0)
+        orphans = sweep_orphan_images(min_age_seconds=0)
+        # VACUUM 会把删除后的空闲页还给文件系统，让 Render 磁盘占用真正下降。
+        vacuumed = False
+        try:
+            get_db().execute("vacuum")
+            vacuumed = True
+        except sqlite3.Error as error:  # pragma: no cover - 依赖运行环境
+            print(f"Vacuum skipped: {error}")
+        print(
+            f"Removed {count} expired/deleted board post(s), "
+            f"{orphans} orphan image(s); vacuum: {'ok' if vacuumed else 'skipped'}; "
+            f"board image storage: {board_storage_mb()} MB."
+        )
+
     register_community_routes(app)
 
     register_content_routes(app)
 
     register_account_routes(app)
+
+    register_board_routes(app)
 
     register_season_routes(app)
 

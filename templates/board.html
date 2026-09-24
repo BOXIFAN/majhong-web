@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}{{ t('board.title') }} · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head row board-page-head">
+  <div>
+    <p class="eyebrow">BRML Board</p>
+    <h1>{{ t('board.title') }}</h1>
+    <p>{{ t('board.subtitle') }}</p>
+  </div>
+  <ul class="board-rules">
+    <li>{{ t('board.rule_retention', days=retention_days) }}</li>
+    <li>{{ t('board.rule_daily', limit=daily_limit) }}</li>
+    {% if posts_left is not none %}
+      <li class="{{ 'is-full' if posts_left == 0 }}">
+        {{ t('board.rule_remaining', count=posts_left) }}
+      </li>
+    {% endif %}
+  </ul>
+</section>
+
+{% if posts %}
+  <div class="board-grid">
+    {% for post in posts %}
+      {% set av = avatar_meta(post) %}
+      <article class="board-card" id="post-{{ post.id }}">
+        <header class="board-card-head">
+          <a class="board-author" href="{{ url_for('player_profile', user_id=post.user_id) }}">
+            <span class="board-avatar"{% if av.kind == 'preset' %} style="background: {{ av.bg }}"{% endif %}>
+              {%- if av.kind == 'upload' -%}
+                <img src="{{ url_for('avatar_file', filename=av.src) }}" alt="" loading="lazy">
+              {%- elif av.kind == 'preset' -%}
+                {{ av.emoji }}
+              {%- else -%}
+                {{ av.letter }}
+              {%- endif -%}
+            </span>
+            <span class="board-author-meta">
+              <strong>{{ post.display_name }}</strong>
+              <small title="{{ post.created_label }}">{{ post.created_short }}</small>
+            </span>
+          </a>
+          <div class="board-card-tools">
+            <span class="board-days" title="{{ t('board.expires_at', date=post.expires_label) }}">
+              {{ post.days_label }}
+            </span>
+            {% if current_user and (current_user.id == post.user_id or current_user.role == 'super_admin') %}
+              {# 只有作者能编辑；管理员只参与删除，与本页面的后端权限保持一致。 #}
+              {% if current_user.id == post.user_id %}
+                <a class="board-tool is-edit" href="{{ url_for('board_post_edit', post_id=post.id) }}">{{ t('board.edit') }}</a>
+              {% endif %}
+              <form method="post" action="{{ url_for('board_post_delete', post_id=post.id) }}"
+                    onsubmit="return confirm({{ t('board.delete_confirm')|tojson }});">
+                <button class="board-tool is-danger" type="submit">{{ t('board.delete') }}</button>
+              </form>
+            {% endif %}
+          </div>
+        </header>
+
+        <a class="board-photo" href="{{ url_for('board_post_detail', post_id=post.id) }}">
+          <img src="{{ url_for('board_image', post_id=post.id) }}"
+               alt="{{ t('board.image_alt', name=post.display_name) }}" loading="lazy" decoding="async">
+        </a>
+
+        {% if post.caption %}<p class="board-caption">{{ post.caption }}</p>{% endif %}
+
+        <div class="board-actions">
+          {% if current_user %}
+            <form method="post" action="{{ url_for('board_like_toggle', post_id=post.id) }}">
+              <button class="board-like{{ ' is-liked' if post.liked }}" type="submit"
+                      aria-pressed="{{ 'true' if post.liked else 'false' }}">
+                <span aria-hidden="true">♥</span>{{ post.like_count }}
+              </button>
+            </form>
+          {% else %}
+            <a class="board-like" href="{{ url_for('login') }}"><span aria-hidden="true">♥</span>{{ post.like_count }}</a>
+          {% endif %}
+          <a class="board-comment-link" href="{{ url_for('board_post_detail', post_id=post.id) }}">
+            {{ t('board.comment_count', count=post.comment_count) }}
+          </a>
+        </div>
+
+        {% if post.preview_comments %}
+          <ul class="board-comments">
+            {% for comment in post.preview_comments %}
+              {% set cav = avatar_meta(comment) %}
+              <li>
+                <span class="board-comment-avatar"{% if cav.kind == 'preset' %} style="background: {{ cav.bg }}"{% endif %}>
+                  {%- if cav.kind == 'upload' -%}
+                    <img src="{{ url_for('avatar_file', filename=cav.src) }}" alt="" loading="lazy">
+                  {%- elif cav.kind == 'preset' -%}
+                    {{ cav.emoji }}
+                  {%- else -%}
+                    {{ cav.letter }}
+                  {%- endif -%}
+                </span>
+                <span class="board-comment-body">
+                  <strong>{{ comment.display_name }}</strong>{{ comment.content }}
+                </span>
+                {% if current_user and (current_user.id == comment.user_id or current_user.role == 'super_admin') %}
+                  <form method="post" action="{{ url_for('board_comment_delete', comment_id=comment.id) }}"
+                        onsubmit="return confirm({{ t('board.comment_delete_confirm')|tojson }});">
+                    <button class="board-comment-delete" type="submit" aria-label="{{ t('board.comment_delete') }}">×</button>
+                  </form>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+          {% if post.hidden_comment_count %}
+            <a class="board-more" href="{{ url_for('board_post_detail', post_id=post.id) }}">
+              {{ t('board.view_all_comments', count=post.comment_count) }}
+            </a>
+          {% endif %}
+        {% endif %}
+
+        {% if current_user %}
+          <form class="board-comment-form" method="post" action="{{ url_for('board_comment_add', post_id=post.id) }}">
+            <input name="content" type="text" maxlength="500" placeholder="{{ t('board.comment_placeholder') }}" required>
+            <button class="button slim" type="submit">{{ t('board.comment_submit') }}</button>
+          </form>
+        {% else %}
+          <p class="board-login-hint">{{ t('board.login_to_interact') }}</p>
+        {% endif %}
+      </article>
+    {% endfor %}
+  </div>
+
+  {% if pagination.pages > 1 %}
+    <nav class="pagination board-pagination" aria-label="{{ t('pagination.board') }}">
+      {% if pagination.has_prev %}<a href="{{ url_for('board', page=pagination.prev_page) }}">{{ t('pagination.prev') }}</a>{% else %}<span class="disabled">{{ t('pagination.prev') }}</span>{% endif %}
+      <strong>{{ pagination.page }} / {{ pagination.pages }}</strong>
+      {% if pagination.has_next %}<a href="{{ url_for('board', page=pagination.next_page) }}">{{ t('pagination.next') }}</a>{% else %}<span class="disabled">{{ t('pagination.next') }}</span>{% endif %}
+    </nav>
+  {% endif %}
+{% else %}
+  <section class="panel"><div class="empty">{{ t('board.empty') }}</div></section>
+{% endif %}
+
+<a class="board-fab" href="{{ url_for('board_new') }}" aria-label="{{ t('board.new') }}" title="{{ t('board.new') }}">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+    <path d="M12 5v14M5 12h14"></path>
+  </svg>
+</a>
+{% endblock %}

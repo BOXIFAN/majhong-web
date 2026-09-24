@@ -6,6 +6,10 @@
 drop table if exists penalties;
 drop table if exists match_entries;
 drop table if exists matches;
+drop table if exists board_likes;
+drop table if exists board_comments;
+drop table if exists board_posts;
+drop table if exists board_deletions;
 drop table if exists meetup_signups;
 drop table if exists meetups;
 drop table if exists announcements;
@@ -78,6 +82,56 @@ create table meetup_signups (
   unique (meetup_id, user_id),
   foreign key (meetup_id) references meetups(id),
   foreign key (user_id) references users(id)
+);
+
+-- 留言板：玩家分享近期和到的大牌。图片仅保留一个月（expires_at），
+-- 到期由 board_service.cleanup_expired_posts 物理删除；管理端删除用软删除保留审计。
+create table board_posts (
+  id integer primary key autoincrement,
+  user_id integer not null,
+  caption text,
+  image text not null,
+  created_at text not null,
+  updated_at text not null,
+  expires_at text not null,
+  deleted_at text,
+  deleted_by integer,
+  foreign key (user_id) references users(id),
+  foreign key (deleted_by) references users(id)
+);
+
+create table board_comments (
+  id integer primary key autoincrement,
+  post_id integer not null,
+  user_id integer not null,
+  content text not null,
+  created_at text not null,
+  deleted_at text,
+  deleted_by integer,
+  foreign key (post_id) references board_posts(id),
+  foreign key (user_id) references users(id),
+  foreign key (deleted_by) references users(id)
+);
+
+create table board_likes (
+  id integer primary key autoincrement,
+  post_id integer not null,
+  user_id integer not null,
+  created_at text not null,
+  unique (post_id, user_id),
+  foreign key (post_id) references board_posts(id),
+  foreign key (user_id) references users(id)
+);
+
+-- 删除审计：内容本身是真删除，这里只保留编号与时间，便于追溯是谁删了哪一条。
+create table board_deletions (
+  id integer primary key autoincrement,
+  post_id integer,
+  comment_id integer,
+  author_id integer,
+  actor_id integer,
+  action text not null,
+  deleted_at text not null
 );
 
 create table app_migrations (

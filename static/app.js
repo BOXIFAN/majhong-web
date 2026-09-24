@@ -15,6 +15,21 @@ function refreshScoreTotal() {
 scoreInputs.forEach((input) => input.addEventListener("input", refreshScoreTotal));
 refreshScoreTotal();
 
+// 留言板发布表单：选图后就地预览，方便发布前确认是哪张大牌。
+const boardFileInput = document.querySelector("[data-image-preview]");
+
+boardFileInput?.addEventListener("change", () => {
+  const preview = document.getElementById(boardFileInput.dataset.imagePreview);
+  const file = boardFileInput.files?.[0];
+  if (!preview || !file || !file.type.startsWith("image/")) return;
+  const url = URL.createObjectURL(file);
+  const image = new Image();
+  image.onload = () => URL.revokeObjectURL(url);
+  image.alt = "";
+  image.src = url;
+  preview.replaceChildren(image);
+});
+
 // 提示消息淡出后仍保留在 DOM 中，避免读屏软件在读取过程中节点突然消失。
 document.querySelectorAll(".flash").forEach((flash) => {
   setTimeout(() => {

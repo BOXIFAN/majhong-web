@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% set editing = post is not none %}
+{% block title %}{{ t('board.edit') if editing else t('board.new') }} · {{ t('board.title') }} · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head row board-form-head">
+  <div>
+    <p class="eyebrow">BRML Board</p>
+    <h1>{{ t('board.edit') if editing else t('board.new') }}</h1>
+    <p>{{ t('board.form_hint', days=retention_days) }}</p>
+  </div>
+  <a class="secondary-button board-back-top" href="{{ url_for('board') }}">{{ t('board.back') }}</a>
+</section>
+
+{% if not editing and posts_left is not none %}
+  <p class="board-quota{{ ' is-full' if posts_left == 0 }}">
+    {{ t('board.rule_remaining', count=posts_left) }} / {{ t('board.rule_daily', limit=daily_limit) }}
+  </p>
+{% endif %}
+
+<form class="panel form board-form" method="post" enctype="multipart/form-data"
+      action="{{ url_for('board_post_edit', post_id=post.id) if editing else url_for('board_new') }}">
+  <label class="board-upload">
+    <span>{{ t('board.image_label') }}</span>
+    <input type="file" name="image" accept="image/*" data-image-preview="boardPreview" {% if not editing %}required{% endif %}>
+    <small>{{ t('board.image_hint', compress_mb=compress_mb, max_upload_mb=max_upload_mb) }}{% if editing %} {{ t('board.image_replace_hint') }}{% endif %}</small>
+  </label>
+  <div class="board-preview" id="boardPreview">
+    {% if editing %}
+      <img src="{{ url_for('board_image', post_id=post.id) }}" alt="{{ t('board.current_image') }}">
+    {% else %}
+      <span class="board-preview-empty">{{ t('board.image_placeholder') }}</span>
+    {% endif %}
+  </div>
+
+  <label>{{ t('board.caption_label') }}
+    <textarea name="caption" maxlength="{{ caption_max }}" rows="3"
+              placeholder="{{ t('board.caption_placeholder') }}">{{ request.form.get('caption', post.caption if editing and post.caption else '') }}</textarea>
+  </label>
+
+  <div class="form-actions">
+    <a class="secondary-button board-cancel" href="{{ url_for('board') }}">{{ t('match.cancel') }}</a>
+    <button class="button slim" type="submit">{{ t('board.save') if editing else t('board.publish') }}</button>
+  </div>
+</form>
+
+{# 移动端把返回按钮放到页面左下角，并隐藏表单里重复的取消按钮。 #}
+<a class="secondary-button board-back-bottom" href="{{ url_for('board') }}">
+  <span aria-hidden="true">←</span>{{ t('board.back') }}
+</a>
+{% endblock %}

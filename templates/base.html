@@ -30,6 +30,7 @@
           <a href="{{ url_for('matches') }}">{{ t('nav.matches') }}</a>
           <a href="{{ url_for('seasons') }}">{{ t('nav.rules') }}</a>
           <a href="{{ url_for('meetups') }}">{{ t('nav.meetups') }}</a>
+          <a href="{{ url_for('board') }}">{{ t('nav.board') }}</a>
           {% if current_user %}
             {% if current_user.role in ['super_admin', 'referee'] %}
               <a href="{{ url_for('finance') }}">{{ t('nav.finance') }}</a>
@@ -38,6 +39,7 @@
             {% if current_user.role == 'super_admin' %}
               <a href="{{ url_for('admin_users') }}">{{ t('nav.admin') }}</a>
               <a href="{{ url_for('announcements') }}">{{ t('announcement.manage') }}</a>
+              <a href="{{ url_for('board_admin') }}">{{ t('nav.board_admin') }}</a>
             {% endif %}
           {% endif %}
           <a href="{{ url_for('about') }}">{{ t('nav.about') }}</a>
@@ -81,6 +83,7 @@
           <a href="{{ url_for('matches') }}">{{ t('nav.matches') }}</a>
           <a href="{{ url_for('seasons') }}">{{ t('nav.rules') }}</a>
           <a href="{{ url_for('meetups') }}">{{ t('nav.meetups') }}</a>
+          <a href="{{ url_for('board') }}">{{ t('nav.board') }}</a>
           {% if current_user %}
             {% if current_user.role in ['super_admin', 'referee'] %}
               <a href="{{ url_for('finance') }}">{{ t('nav.finance') }}</a>
@@ -89,6 +92,7 @@
             {% if current_user.role == 'super_admin' %}
               <a href="{{ url_for('admin_users') }}">{{ t('nav.admin') }}</a>
               <a href="{{ url_for('announcements') }}">{{ t('announcement.manage') }}</a>
+              <a href="{{ url_for('board_admin') }}">{{ t('nav.board_admin') }}</a>
             {% endif %}
           {% endif %}
           <a href="{{ url_for('about') }}">{{ t('nav.about') }}</a>

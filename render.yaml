@@ -9,6 +9,9 @@ services:
         value: /var/data/mahjong.db
       - key: SEED_DEMO_DATA
         value: "false"
+      # 留言板图库容量上限（MB）：达到上限会拒绝新留言，避免写满 1GB 磁盘。
+      - key: BOARD_STORAGE_BUDGET_MB
+        value: "300"
       - key: SECRET_KEY
         generateValue: true
     disk:

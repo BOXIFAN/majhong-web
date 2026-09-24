@@ -19,5 +19,12 @@ ADMIN_PASSWORD_MIGRATION = "set-admin-password-2026-08-24"
 
 DEFAULT_MEETUP_VENUE = "upc 8 Gillingham street, QLD4102"
 
+# 留言板单次请求的体积上限：比图片硬上限略大，留出 multipart 头部开销。
+BOARD_MAX_REQUEST_BYTES = 26 * 1024 * 1024
+
+# 留言图库容量上限（MB）。达到上限后会拒绝新留言，避免把 Render 的 1GB 磁盘写满；
+# 需要更大空间时改这个环境变量即可，例如 BOARD_STORAGE_BUDGET_MB=600。
+BOARD_STORAGE_BUDGET_MB = int(os.environ.get("BOARD_STORAGE_BUDGET_MB", "300"))
+
 # 网站版本，用于首页显示；改版时同步更新即可。
 SITE_VERSION = "v1.2.1"

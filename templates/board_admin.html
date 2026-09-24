@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{{ t('board.admin_title') }} · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="page-head row board-page-head">
+  <div>
+    <p class="eyebrow">Admin</p>
+    <h1>{{ t('board.admin_title') }}</h1>
+    <p>{{ t('board.admin_subtitle') }}</p>
+  </div>
+  <a class="secondary-button board-back-top" href="{{ url_for('board') }}">{{ t('board.back') }}</a>
+</section>
+
+<p class="board-storage-note">
+  {{ t('board.admin_storage', used=storage_used_mb, budget=storage_budget_mb) }}
+  · {{ t('board.admin_deletion_log', days=deletion_log_days) }}
+</p>
+
+{% if posts %}
+  <div class="board-admin-list">
+    {% for post in posts %}
+      {% set av = avatar_meta(post) %}
+      <article class="panel board-admin-card">
+        <header class="board-card-head">
+          <a class="board-author" href="{{ url_for('player_profile', user_id=post.user_id) }}">
+            <span class="board-avatar"{% if av.kind == 'preset' %} style="background: {{ av.bg }}"{% endif %}>
+              {%- if av.kind == 'upload' -%}
+                <img src="{{ url_for('avatar_file', filename=av.src) }}" alt="" loading="lazy">
+              {%- elif av.kind == 'preset' -%}
+                {{ av.emoji }}
+              {%- else -%}
+                {{ av.letter }}
+              {%- endif -%}
+            </span>
+            <span class="board-author-meta">
+              <strong>{{ post.display_name }}</strong>
+              <small title="{{ post.created_label }}">{{ post.created_short }} · {{ t('board.expires_at', date=post.expires_label) }} · {{ t('board.likes_label', count=post.like_count) }} · {{ t('board.comment_count', count=post.comment_count) }}</small>
+            </span>
+          </a>
+          <div class="board-card-tools">
+            <a class="board-tool" href="{{ url_for('board_post_detail', post_id=post.id) }}">{{ t('board.view') }}</a>
+            <form method="post" action="{{ url_for('board_post_delete', post_id=post.id) }}"
+                  onsubmit="return confirm({{ t('board.admin_delete_confirm')|tojson }});">
+              <button class="board-tool is-danger" type="submit">{{ t('board.delete') }}</button>
+            </form>
+          </div>
+        </header>
+        <div class="board-admin-body">
+          <a class="board-admin-thumb" href="{{ url_for('board_image', post_id=post.id) }}" target="_blank" rel="noopener">
+            <img src="{{ url_for('board_image', post_id=post.id) }}" alt="" loading="lazy">
+          </a>
+          <div>
+            {% if post.caption %}<p class="board-caption">{{ post.caption }}</p>{% endif %}
+            {% if post.comments %}
+              <ul class="board-comments is-full">
+                {% for comment in post.comments %}
+                  <li>
+                    <span class="board-comment-body">
+                      <strong>{{ comment.display_name }}</strong>{{ comment.content }}
+                    </span>
+                    <form method="post" action="{{ url_for('board_comment_delete', comment_id=comment.id) }}"
+                          onsubmit="return confirm({{ t('board.comment_delete_confirm')|tojson }});">
+                      <button class="board-comment-delete" type="submit" aria-label="{{ t('board.comment_delete') }}">×</button>
+                    </form>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="muted">{{ t('board.no_comments') }}</p>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <section class="panel"><div class="empty">{{ t('board.empty') }}</div></section>
+{% endif %}
+
+<a class="secondary-button board-back-bottom" href="{{ url_for('board') }}">
+  <span aria-hidden="true">←</span>{{ t('board.back') }}
+</a>
+{% endblock %}
