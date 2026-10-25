@@ -159,7 +159,6 @@
         <h3>{{ title_parts[0] }}</h3>
         {% if title_parts|length > 1 %}<p class="announcement-title-en">{{ title_parts[1:]|join(' / ') }}</p>{% endif %}
         <p class="announcement-meta">{{ t('announcement.published_by', date=latest_announcement.created_at[:16], name=(latest_announcement.author_name or t('home.system'))) }}</p>
-        {% if latest_announcement.is_english and locale == 'zh' %}<p class="announcement-lang">{{ t('announcement.english_only') }}</p>{% endif %}
         <div class="announcement-content is-clamped" id="latest-announcement-content">{{ latest_announcement.content }}</div>
         <div class="announcement-actions">
           <a class="text-link" href="{{ url_for('announcement_view', announcement_id=latest_announcement.id) }}">{{ t('announcement.view_full') }} <span aria-hidden="true">→</span></a>

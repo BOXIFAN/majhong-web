@@ -12,7 +12,7 @@
 T = {
     "zh": {
         "rules.page_title": "赛季规则",
-        "rules.page_lead": "当前赛季生效的完整规则。8 个章节与右栏目录一一对应，点击即可直达。",
+        "rules.page_lead": "当前赛季生效的完整规则与关键数据。",
         "rules.empty_hint": "赛季规则还没有发布。可以先去关于页面了解加入方式，或查看活动报名。",
         "rules.new_season": "新建赛季",
         "rules.current_status": "当前生效",

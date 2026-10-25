@@ -31,12 +31,10 @@
     <div class="player-metric is-primary">
       <span class="player-metric-label">{{ t('player2.points_label') }}</span>
       <strong class="player-metric-value" data-countup>{{ '{:,.1f}'.format(stats.total_points) if stats else '-' }}</strong>
-      <span class="player-metric-hint">{{ t('player2.points_hint') }}</span>
     </div>
     <div class="player-metric">
       <span class="player-metric-label">{{ t('player2.matches_label') }}</span>
       <strong class="player-metric-value" data-countup>{{ stats.matches if stats else '-' }}</strong>
-      <span class="player-metric-hint">{{ t('player2.matches_hint') }}</span>
     </div>
     <div class="player-metric">
       <span class="player-metric-label">{{ t('player2.avg_place_label') }}</span>
@@ -60,7 +58,6 @@
               <strong class="player-pair-value">{{ '%.1f'|format(stats.fourth_rate) ~ '%' if stats else '-' }}</strong>
             </span>
           </div>
-          <span class="player-metric-hint">{{ t('player2.rate_denominator', count=stats.matches) if stats else '' }}</span>
         </div>
         <div class="player-metric is-split">
           <span class="player-metric-label">{{ t('player2.second_third_label') }}</span>
@@ -75,19 +72,16 @@
               <strong class="player-pair-value">{{ '%.1f'|format(stats.third_rate) ~ '%' if stats else '-' }}</strong>
             </span>
           </div>
-          <span class="player-metric-hint">{{ t('player2.rate_denominator', count=stats.matches) if stats else '' }}</span>
         </div>
       </div>
     </details>
     {% endif %}
   </section>
-  <p class="player-metrics-note">{{ t('player2.metrics_note') }}</p>
 
   <section class="player-layout">
     <div class="panel player-trend-card">
       <div class="r-section-head">
         <h2>{{ t('player.recent_trend') }}</h2>
-        <p>{{ t('player2.trend_help') }}</p>
       </div>
       {% if history %}
         <div class="trend-chart" role="group" aria-label="{{ t('player.trend_aria') }}">
@@ -190,7 +184,6 @@
             {% endfor %}
           </svg>
         </div>
-        <p class="player-radar-note">{{ t('player2.radar_note') }}</p>
         {% if radar.tobi_note %}<p class="player-radar-tobi">{{ radar.tobi_note }}</p>{% endif %}
       {% else %}
         <div class="r-empty">
