@@ -1,0 +1,1348 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f5f7fb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>BRML App 效果 · Brisbane Riichi Mahjong</title>
+    <style>
+      /* ============ 主题变量：两套主题共用一份布局，只切换可变区域 ============ */
+      html[data-theme="light"] {
+        --bg: #eef1f7;
+        --bg-tint-a: rgba(15, 118, 110, 0.18);
+        --bg-tint-b: rgba(194, 65, 12, 0.14);
+        --panel: rgba(255, 255, 255, 0.8);
+        --panel-solid: #ffffff;
+        --panel-quiet: rgba(255, 255, 255, 0.5);
+        --ink: #172033;
+        --muted: #667085;
+        --line: rgba(23, 32, 51, 0.1);
+        --line-strong: rgba(23, 32, 51, 0.16);
+        --brand: #0f766e;
+        --brand-ink: #ffffff;
+        --brand-soft: rgba(15, 118, 110, 0.12);
+        --accent: #c2410c;
+        --accent-soft: rgba(194, 65, 12, 0.12);
+        --good: #15803d;
+        --good-soft: rgba(21, 128, 61, 0.12);
+        --bad: #b91c1c;
+        --bad-soft: rgba(185, 28, 28, 0.12);
+        --dock-fill: rgba(255, 255, 255, 0.82);
+        --dock-fill-2: rgba(255, 255, 255, 0.7);
+        --dock-edge: rgba(255, 255, 255, 0.9);
+        --dock-thumb: rgba(23, 32, 51, 0.06);
+        --dock-ink: #17171a;
+        --dock-shadow: 0 14px 34px rgba(20, 28, 40, 0.18), 0 2px 6px rgba(20, 28, 40, 0.08);
+        --dock-sheen: rgba(255, 255, 255, 0.75);
+        --photo-shadow: 0 10px 26px rgba(24, 34, 51, 0.12);
+      }
+
+      html[data-theme="dark"] {
+        --bg: #080c11;
+        --bg-tint-a: rgba(45, 212, 191, 0.16);
+        --bg-tint-b: rgba(251, 146, 60, 0.12);
+        --panel: rgba(26, 34, 44, 0.8);
+        --panel-solid: #171f28;
+        --panel-quiet: rgba(26, 34, 44, 0.5);
+        --ink: #e9eef6;
+        --muted: #97a4b4;
+        --line: rgba(233, 238, 246, 0.12);
+        --line-strong: rgba(233, 238, 246, 0.2);
+        --brand: #2dd4bf;
+        --brand-ink: #06231f;
+        --brand-soft: rgba(45, 212, 191, 0.16);
+        --accent: #fb923c;
+        --accent-soft: rgba(251, 146, 60, 0.16);
+        --good: #4ade80;
+        --good-soft: rgba(74, 222, 128, 0.16);
+        --bad: #f87171;
+        --bad-soft: rgba(248, 113, 113, 0.16);
+        --dock-fill: rgba(38, 46, 58, 0.72);
+        --dock-fill-2: rgba(30, 38, 48, 0.62);
+        --dock-edge: rgba(255, 255, 255, 0.14);
+        --dock-thumb: rgba(255, 255, 255, 0.12);
+        --dock-ink: #eef2f8;
+        --dock-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
+        --dock-sheen: rgba(255, 255, 255, 0.22);
+        --photo-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+      }
+
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 15px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: -20%;
+        z-index: 0;
+        pointer-events: none;
+        background:
+          radial-gradient(38% 30% at 18% 12%, var(--bg-tint-a), transparent 70%),
+          radial-gradient(42% 32% at 88% 20%, var(--bg-tint-b), transparent 72%),
+          radial-gradient(46% 34% at 62% 96%, var(--bg-tint-a), transparent 74%);
+        filter: blur(6px);
+      }
+
+      .shell {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 18px 16px 156px;
+      }
+
+      /* ============ 顶栏（跨页面常驻） ============ */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+
+      .brand-mark {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        overflow: hidden;
+        flex: none;
+        box-shadow: var(--photo-shadow);
+        background: var(--panel-solid);
+      }
+
+      .brand-mark img { width: 100%; height: 100%; display: block; object-fit: cover; }
+      .brand-text strong { display: block; font-size: 15px; font-weight: 500; letter-spacing: -0.01em; }
+      .brand-text small { display: block; font-size: 11px; color: var(--muted); }
+
+      .theme-toggle {
+        position: relative;
+        flex: none;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: 1px solid var(--dock-edge);
+        background: var(--dock-fill);
+        color: var(--ink);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        box-shadow: var(--dock-shadow), inset 0 1px 0 var(--dock-sheen);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        transition: transform 0.18s ease;
+      }
+
+      .theme-toggle:active { transform: scale(0.94); }
+      .theme-toggle svg { width: 20px; height: 20px; display: block; }
+      .theme-toggle .icon-moon { display: none; }
+      html[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+      html[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+
+      /* ============ 预览身份（仅演示用） ============ */
+      .preview-strip {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding: 6px 9px;
+        margin-bottom: 16px;
+        border: 1px dashed var(--line-strong);
+        border-radius: 14px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .preview-strip .seg { display: flex; gap: 4px; padding: 3px; border-radius: 999px; background: var(--panel-quiet); }
+
+      .preview-strip button {
+        font: inherit;
+        font-size: 11px;
+        padding: 4px 10px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+      }
+
+      .preview-strip button[aria-pressed="true"] {
+        background: var(--panel-solid);
+        color: var(--ink);
+        box-shadow: 0 2px 8px rgba(24, 34, 51, 0.12);
+      }
+
+      /* ============ 独立页面 ============ */
+      .view { display: none; }
+      .view.is-active { display: block; animation: view-in 0.24s cubic-bezier(0.32, 0.72, 0, 1) both; }
+
+      @keyframes view-in {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .page-head { margin-bottom: 14px; }
+      .page-head h1 { margin: 0; font-size: 24px; font-weight: 500; letter-spacing: -0.02em; }
+      .page-head p { margin: 3px 0 0; font-size: 12px; color: var(--muted); }
+
+      .stack { display: grid; gap: 14px; }
+
+      .eyebrow {
+        margin: 0;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 16px;
+        backdrop-filter: blur(18px) saturate(150%);
+        -webkit-backdrop-filter: blur(18px) saturate(150%);
+        box-shadow: var(--photo-shadow);
+      }
+
+      /* ============ 排行榜 ============ */
+      .hero { position: relative; overflow: hidden; padding: 18px 16px 16px; }
+
+      .hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+
+      .hero-points { display: flex; align-items: baseline; gap: 6px; margin: 6px 0 0; }
+
+      .hero-points strong {
+        font-size: 40px;
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: -0.03em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .hero-points span { font-size: 13px; color: var(--muted); }
+
+      .rank-chip {
+        flex: none;
+        text-align: center;
+        padding: 8px 11px;
+        border-radius: 16px;
+        background: var(--brand-soft);
+        color: var(--brand);
+      }
+
+      .rank-chip strong { display: block; font-size: 20px; font-weight: 500; line-height: 1.1; font-variant-numeric: tabular-nums; }
+      .rank-chip small { display: block; font-size: 11px; }
+
+      .finals { margin-top: 16px; }
+
+      .finals-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 7px;
+      }
+
+      .finals-head strong { font-size: 13px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+      .meter { height: 8px; border-radius: 999px; background: var(--panel-quiet); overflow: hidden; }
+      .meter > span { display: block; height: 100%; border-radius: 999px; background: var(--brand); }
+
+      .trend { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+
+      .trend b {
+        font-size: 11px;
+        font-weight: 500;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: var(--panel-quiet);
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .trend b.pos { background: var(--good-soft); color: var(--good); }
+      .trend b.neg { background: var(--bad-soft); color: var(--bad); }
+
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--line);
+        font-size: 14px;
+      }
+
+      .row:last-child { border-bottom: 0; padding-bottom: 0; }
+
+      .row.me {
+        background: var(--brand-soft);
+        border-radius: 14px;
+        border-bottom-color: transparent;
+        padding: 9px 10px;
+        margin: 4px -10px;
+      }
+
+      .rank-no { flex: none; width: 22px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+      .row-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .row-name small { display: block; font-size: 11px; color: var(--muted); }
+      .row-points { flex: none; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+      .footnote { margin: 12px 2px 0; font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+      /* ============ 活动 / 对局 ============ */
+      .meetup { display: flex; align-items: center; gap: 12px; }
+
+      .meetup-when {
+        flex: none;
+        width: 54px;
+        text-align: center;
+        padding: 7px 0;
+        border-radius: 14px;
+        background: var(--panel-quiet);
+      }
+
+      .meetup-when strong { display: block; font-size: 17px; font-weight: 500; line-height: 1.1; font-variant-numeric: tabular-nums; }
+      .meetup-when small { display: block; font-size: 11px; color: var(--muted); }
+      .meetup-info { min-width: 0; flex: 1 1 auto; }
+      .meetup-info strong { display: block; font-size: 14px; font-weight: 500; }
+      .meetup-info small { display: block; font-size: 12px; color: var(--muted); }
+
+      .btn {
+        font: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 9px 14px;
+        border-radius: 13px;
+        border: 1px solid transparent;
+        background: var(--brand);
+        color: var(--brand-ink);
+        cursor: pointer;
+        flex: none;
+      }
+
+      .date-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        padding: 2px 2px 8px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .place-badge {
+        flex: none;
+        min-width: 44px;
+        text-align: center;
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: var(--panel-quiet);
+        color: var(--muted);
+      }
+
+      .place-badge.first { background: var(--accent-soft); color: var(--accent); }
+      .place-badge.last { background: var(--bad-soft); color: var(--bad); }
+
+      .delta { flex: none; min-width: 62px; text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; }
+      .delta.pos { color: var(--good); }
+      .delta.neg { color: var(--bad); }
+
+      /* ============ 我的 ============ */
+      .account { display: flex; align-items: center; gap: 12px; }
+
+      .avatar {
+        flex: none;
+        width: 52px;
+        height: 52px;
+        border-radius: 18px;
+        display: grid;
+        place-items: center;
+        font-size: 24px;
+        background: var(--brand-soft);
+        border: 1px solid var(--line);
+      }
+
+      .account-meta { min-width: 0; flex: 1 1 auto; }
+      .account-meta strong { display: block; font-size: 16px; font-weight: 500; }
+      .account-meta small { display: block; font-size: 12px; color: var(--muted); }
+
+      .tag {
+        display: inline-block;
+        margin-top: 5px;
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      .metric-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+
+      .metric { background: var(--panel-quiet); border-radius: 14px; padding: 10px 8px; text-align: center; }
+      .metric span { display: block; font-size: 11px; color: var(--muted); }
+      .metric strong { display: block; font-size: 17px; font-weight: 500; margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+      .link-list { margin-top: 14px; border-top: 1px solid var(--line); }
+
+      .link-list button,
+      .link-list a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 11px 2px;
+        border: 0;
+        border-bottom: 1px solid var(--line);
+        background: transparent;
+        font: inherit;
+        font-size: 14px;
+        color: var(--ink);
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .link-list a:last-child, .link-list button:last-child { border-bottom: 0; }
+      .link-list span { color: var(--muted); font-size: 12px; }
+
+      /* ============ 录入比赛 ============ */
+      .seat { display: grid; gap: 6px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+      .seat:last-of-type { border-bottom: 0; padding-bottom: 3px; }
+
+      .seat-top { display: flex; align-items: center; gap: 8px; }
+
+      .seat-chip {
+        flex: none;
+        width: 22px;
+        height: 22px;
+        border-radius: 7px;
+        display: grid;
+        place-items: center;
+        font-size: 11px;
+        background: var(--panel-quiet);
+        color: var(--muted);
+        border: 1px solid var(--line);
+      }
+
+      .seat-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+
+      .place { flex: none; font-size: 11px; padding: 2px 7px; border-radius: 999px; background: var(--panel-quiet); color: var(--muted); }
+      .place.is-first { background: var(--accent-soft); color: var(--accent); }
+
+      .pts { flex: none; min-width: 62px; text-align: right; font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+      .pts.pos { color: var(--good); }
+      .pts.neg { color: var(--bad); }
+
+      .seat-inputs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+      .field { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+
+      .field input {
+        width: 86px;
+        padding: 6px 8px;
+        font: inherit;
+        font-size: 15px;
+        font-variant-numeric: tabular-nums;
+        color: var(--ink);
+        background: var(--panel-quiet);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+      }
+
+      .field.pen input { width: 60px; }
+
+      .chip-total {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 9px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: var(--panel-solid);
+        font-size: 11px;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+
+      .chip-total.good { border-color: transparent; background: var(--good-soft); color: var(--good); }
+      .chip-total.bad { border-color: transparent; background: var(--bad-soft); color: var(--bad); }
+
+      .card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .card-head strong { font-size: 14px; font-weight: 500; }
+      .card-head span { font-size: 11px; color: var(--muted); }
+
+      .ruleline { margin: 10px 0 0; font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+      .btn-block {
+        width: 100%;
+        margin-top: 14px;
+        padding: 12px;
+        border: 1px solid transparent;
+        border-radius: 14px;
+        background: var(--brand);
+        color: var(--brand-ink);
+        font: inherit;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      /* ============ 底部 Dock（iOS 26 风格） ============ */
+      .dock-wrap {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 30;
+        display: flex;
+        justify-content: center;
+        padding: 0 14px calc(14px + env(safe-area-inset-bottom));
+        pointer-events: none;
+      }
+
+      .dock {
+        pointer-events: auto;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        max-width: 100%;
+      }
+
+      /* 半透明玻璃：模糊 + 提饱和 + 高光边 + 内高光 + 落影 */
+      .glass {
+        position: relative;
+        isolation: isolate;
+        background: linear-gradient(180deg, var(--dock-fill), var(--dock-fill-2));
+        border: 1px solid var(--dock-edge);
+        backdrop-filter: blur(26px) saturate(190%);
+        -webkit-backdrop-filter: blur(26px) saturate(190%);
+        box-shadow: var(--dock-shadow), inset 0 1px 0 var(--dock-sheen);
+      }
+
+      .glass::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        z-index: -1;
+        background: radial-gradient(
+          140px 140px at var(--sheen-x, 50%) var(--sheen-y, 0%),
+          var(--dock-sheen),
+          transparent 72%
+        );
+        opacity: 0.6;
+      }
+
+      .dock-pill {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 7px;
+        border-radius: 34px;
+      }
+
+      .tab {
+        position: relative;
+        flex: none;
+        width: 74px;
+        padding: 7px 4px 6px;
+        border: 0;
+        border-radius: 22px;
+        background: transparent;
+        color: var(--dock-ink);
+        font: inherit;
+        display: grid;
+        justify-items: center;
+        gap: 4px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.16s ease, color 0.2s ease;
+      }
+
+      .tab svg { width: 25px; height: 25px; display: block; }
+      .tab span { font-size: 11.5px; letter-spacing: 0.01em; }
+      .tab:active { transform: scale(0.94); }
+
+      /* 选中态：浅色圆角底 + 品牌色，和参考图一致 */
+      .tab[aria-current="true"] {
+        background: var(--dock-thumb);
+        color: var(--brand);
+      }
+
+      .tab[aria-current="true"] svg { stroke: var(--brand); }
+
+      /* 独立圆形气泡：录入比赛 */
+      .add-bubble {
+        position: relative;
+        flex: none;
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        border: 1px solid var(--dock-edge);
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        gap: 1px;
+        color: var(--brand-ink);
+        font: inherit;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        background: linear-gradient(
+          165deg,
+          color-mix(in srgb, var(--brand) 86%, #ffffff) 0%,
+          var(--brand) 55%,
+          color-mix(in srgb, var(--brand) 82%, #000000) 100%
+        );
+        box-shadow:
+          0 14px 30px color-mix(in srgb, var(--brand) 40%, transparent),
+          inset 0 1px 0 rgba(255, 255, 255, 0.55),
+          inset 0 -3px 8px rgba(0, 0, 0, 0.16);
+        transition: transform 0.18s ease, background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+      }
+
+      .add-bubble svg { width: 27px; height: 27px; display: block; }
+      .add-bubble span { font-size: 10.5px; font-weight: 500; }
+      .add-bubble:active { transform: scale(0.94); }
+
+      /* 停留在录入页：给圆钮加一圈内描边，表示当前页 */
+      .add-bubble[aria-current="true"] {
+        box-shadow:
+          0 14px 30px color-mix(in srgb, var(--brand) 46%, transparent),
+          0 0 0 3px color-mix(in srgb, var(--brand) 26%, transparent),
+          inset 0 1px 0 rgba(255, 255, 255, 0.55);
+      }
+
+      /* 普通用户：灰色不可用 */
+      .add-bubble.is-locked {
+        background: linear-gradient(180deg, var(--dock-fill), var(--dock-fill-2));
+        color: color-mix(in srgb, var(--muted) 78%, var(--ink));
+        border-color: var(--dock-edge);
+        box-shadow: var(--dock-shadow), inset 0 1px 0 var(--dock-sheen);
+        cursor: not-allowed;
+      }
+
+      .add-bubble.is-locked:active { transform: none; }
+
+      .add-bubble.shake { animation: shake 0.4s ease; }
+
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-4px); }
+        50% { transform: translateX(4px); }
+        75% { transform: translateX(-2px); }
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: calc(126px + env(safe-area-inset-bottom));
+        z-index: 40;
+        transform: translate(-50%, 12px);
+        max-width: calc(100% - 40px);
+        padding: 10px 16px;
+        border-radius: 999px;
+        font-size: 13px;
+        color: var(--ink);
+        background: var(--dock-fill);
+        border: 1px solid var(--dock-edge);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        box-shadow: var(--dock-shadow);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.22s ease, transform 0.22s ease;
+        text-align: center;
+      }
+
+      .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+      /* ============ 主题切换：从触点铺满页面 ============ */
+      ::view-transition-old(root),
+      ::view-transition-new(root) {
+        animation: none;
+        mix-blend-mode: normal;
+      }
+
+      ::view-transition-old(root) { z-index: 0; }
+      ::view-transition-new(root) { z-index: 1; }
+
+      @media (prefers-reduced-motion: reduce) {
+        * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+      }
+
+      @media (max-width: 400px) {
+        .tab { width: 66px; }
+        .add-bubble { width: 70px; height: 70px; }
+        .hero-points strong { font-size: 34px; }
+        .dock { gap: 8px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark"><img src="../static/web_logo.jpg" alt=""></span>
+          <span class="brand-text">
+            <strong>Brisbane Riichi</strong>
+            <small>Mahjong League</small>
+          </span>
+        </div>
+        <button class="theme-toggle" type="button" id="themeToggle" aria-label="切换深浅主题" title="切换深浅主题">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2"></circle>
+            <path d="M12 2.6v2.2M12 19.2v2.2M4.4 12H2.2M21.8 12h-2.2M6.3 6.3 4.8 4.8M19.2 19.2l-1.5-1.5M17.7 6.3l1.5-1.5M4.8 19.2l1.5-1.5"></path>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.5 14.3A8.6 8.6 0 0 1 9.7 3.5a8.6 8.6 0 1 0 10.8 10.8Z"></path>
+          </svg>
+        </button>
+      </header>
+
+      <div class="preview-strip">
+        <span>预览身份</span>
+        <div class="seg" role="group" aria-label="预览身份切换">
+          <button type="button" data-role="user" aria-pressed="false">普通用户</button>
+          <button type="button" data-role="referee" aria-pressed="true">裁判</button>
+          <button type="button" data-role="super_admin" aria-pressed="false">超级管理员</button>
+        </div>
+      </div>
+
+      <main>
+        <!-- ============ 页面：排行榜 ============ -->
+        <section class="view is-active" id="view-leaderboard" data-view="leaderboard" aria-labelledby="lb-title">
+          <div class="page-head">
+            <h1 id="lb-title">排行榜</h1>
+            <p>S11 赛季 · 2026 春季 · 13 名成员</p>
+          </div>
+          <div class="stack">
+            <section class="card hero" aria-labelledby="hero-eyebrow">
+              <div class="hero-top">
+                <div>
+                  <p class="eyebrow" id="hero-eyebrow">我的位置</p>
+                  <p class="hero-points"><strong>42.0</strong><span>赛季积分</span></p>
+                </div>
+                <div class="rank-chip">
+                  <strong>7</strong>
+                  <small>当前排名</small>
+                </div>
+              </div>
+
+              <div class="finals">
+                <div class="finals-head">
+                  <strong>决赛资格 6 / 8 半庄</strong>
+                  <span>再打 2 个半庄达标</span>
+                </div>
+                <div class="meter" role="progressbar" aria-label="决赛资格进度" aria-valuenow="6" aria-valuemin="0" aria-valuemax="8">
+                  <span style="width: 75%"></span>
+                </div>
+              </div>
+
+              <div class="trend">
+                <b class="neg">4位 −38.0</b>
+                <b class="neg">3位 −15.0</b>
+                <b class="neg">3位 −5.0</b>
+                <b class="pos">2位 +23.0</b>
+                <b class="pos">1位 +45.0</b>
+              </div>
+            </section>
+
+            <section class="card" aria-label="赛季积分榜">
+              <div class="card-head"><strong>赛季积分榜</strong><span>积分 / 半庄</span></div>
+              <div class="row"><span class="rank-no">1</span><span class="row-name">Li X.<small>21 半庄 · 一位率 38%</small></span><span class="row-points">128.5</span></div>
+              <div class="row"><span class="rank-no">2</span><span class="row-name">Chen R.<small>18 半庄 · 一位率 33%</small></span><span class="row-points">96.0</span></div>
+              <div class="row"><span class="rank-no">3</span><span class="row-name">Ho K.<small>16 半庄 · 一位率 31%</small></span><span class="row-points">74.5</span></div>
+              <div class="row"><span class="rank-no">4</span><span class="row-name">Nguyen T.<small>14 半庄 · 一位率 29%</small></span><span class="row-points">63.0</span></div>
+              <div class="row"><span class="rank-no">5</span><span class="row-name">Zhang W.<small>12 半庄 · 一位率 25%</small></span><span class="row-points">55.5</span></div>
+              <div class="row"><span class="rank-no">6</span><span class="row-name">Sato A.<small>11 半庄 · 一位率 27%</small></span><span class="row-points">48.5</span></div>
+              <div class="row me"><span class="rank-no">7</span><span class="row-name">Wang C.<small>6 半庄 · 平均顺位 2.33</small></span><span class="row-points">42.0</span></div>
+              <div class="row"><span class="rank-no">8</span><span class="row-name">Park J.<small>10 半庄 · 一位率 20%</small></span><span class="row-points">37.5</span></div>
+            </section>
+
+            <p class="footnote">积分口径：（终局持点 − 返还点）/ 1,000 + UMA − 罚分，同点按平均顺位计算。</p>
+          </div>
+        </section>
+
+        <!-- ============ 页面：近期对局 ============ -->
+        <section class="view" id="view-matches" data-view="matches" aria-labelledby="match-title" hidden>
+          <div class="page-head">
+            <h1 id="match-title">近期对局</h1>
+            <p>S11 赛季 · 共 20 个半庄</p>
+          </div>
+          <div class="stack">
+            <section class="card meetup" aria-labelledby="meetup-title">
+              <span class="meetup-when"><strong>19</strong><small>9月</small></span>
+              <span class="meetup-info">
+                <strong id="meetup-title">周六 13:00 – 17:00 · Meetup</strong>
+                <small>upc 8 Gillingham street, QLD4102 · 12 人已报名</small>
+              </span>
+              <button class="btn" type="button" data-toast="已为你报名 9 月 19 日的 Meetup">报名</button>
+            </section>
+
+            <section class="card" aria-label="对局记录">
+              <div class="date-head"><span>9 月 6 日 · Meetup</span><span>2 个半庄</span></div>
+              <div class="row">
+                <span class="place-badge first">1位</span>
+                <span class="row-name">第 12 半庄 · 东起<small>42,000 点 · 对局 东 Wang C. / 南 Lin Y.</small></span>
+                <span class="delta pos">+45.0</span>
+              </div>
+              <div class="row">
+                <span class="place-badge">2位</span>
+                <span class="row-name">第 11 半庄 · 南起<small>43,000 点 · 对局 东 Ho K. / 南 Wang C.</small></span>
+                <span class="delta pos">+23.0</span>
+              </div>
+
+              <div class="date-head" style="padding-top: 14px"><span>8 月 30 日 · Meetup</span><span>2 个半庄</span></div>
+              <div class="row">
+                <span class="place-badge">3位</span>
+                <span class="row-name">第 10 半庄 · 西起<small>25,000 点 · 罚则 无</small></span>
+                <span class="delta neg">−15.0</span>
+              </div>
+              <div class="row">
+                <span class="place-badge">3位</span>
+                <span class="row-name">第 9 半庄 · 北起<small>35,000 点 · 罚则 无</small></span>
+                <span class="delta neg">−5.0</span>
+              </div>
+
+              <div class="date-head" style="padding-top: 14px"><span>8 月 23 日 · 休闲</span><span>1 个半庄</span></div>
+              <div class="row">
+                <span class="place-badge last">4位</span>
+                <span class="row-name">第 8 半庄 · 东起<small>12,000 点 · 罚则 无</small></span>
+                <span class="delta neg">−38.0</span>
+              </div>
+            </section>
+
+            <p class="footnote">同点的两个座位按平均顺位计分，例如并列第一记为 1.5 位，UMA 均分。</p>
+          </div>
+        </section>
+
+        <!-- ============ 页面：我的 ============ -->
+        <section class="view" id="view-me" data-view="me" aria-labelledby="me-title" hidden>
+          <div class="page-head">
+            <h1 id="me-title">我的</h1>
+            <p>S11 赛季 · 6 个半庄</p>
+          </div>
+          <div class="stack">
+            <section class="card">
+              <div class="account">
+                <span class="avatar" id="meAvatar">🀄</span>
+                <span class="account-meta">
+                  <strong id="meName">Wang C.</strong>
+                  <small id="meEmail">wangc@example.com</small>
+                  <span class="tag" id="meRole">裁判</span>
+                </span>
+              </div>
+              <div class="metric-grid">
+                <div class="metric"><span>赛季积分</span><strong>42.0</strong></div>
+                <div class="metric"><span>平均顺位</span><strong>2.33</strong></div>
+                <div class="metric"><span>一位率</span><strong>33%</strong></div>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="link-list">
+                <button type="button" data-toast="S11 赛季规则（预演）">赛事规则 <span>S11 赛季 →</span></button>
+                <button type="button" id="goMatches" >活动报名 <span>1 场待参加 →</span></button>
+                <button type="button" data-toast="战绩卡已生成，可分享到群里">分享战绩卡 <span>→</span></button>
+                <button type="button" data-toast="退出登录（预演）">退出登录 <span>→</span></button>
+              </div>
+            </section>
+
+            <p class="footnote" id="roleHint">当前身份为裁判，可以录入比赛。</p>
+          </div>
+        </section>
+
+        <!-- ============ 页面：录入比赛（裁判及以上） ============ -->
+        <section class="view" id="view-entry" data-view="entry" aria-labelledby="entry-title" hidden>
+          <div class="page-head">
+            <h1 id="entry-title">录入比赛</h1>
+            <p>第 13 半庄 · 东起 · 时间自动记录</p>
+          </div>
+          <div class="stack">
+            <section class="card" aria-label="终局持点">
+              <div class="card-head">
+                <strong>终局持点</strong>
+                <span class="chip-total" id="totalChip" aria-live="polite">合计 100,000 ✓</span>
+              </div>
+
+              <div class="seat" data-seat="0">
+                <div class="seat-top">
+                  <span class="seat-chip">东</span>
+                  <span class="seat-name">Wang C.</span>
+                  <span class="place" data-out="place">1位</span>
+                  <span class="pts pos" data-out="points">+32.0</span>
+                </div>
+                <div class="seat-inputs">
+                  <label class="field">终局<input type="number" inputmode="numeric" value="42000" data-in="score" data-seat="0" aria-label="东家终局持点"></label>
+                  <label class="field pen">罚<input type="number" inputmode="numeric" min="0" value="0" data-in="penalty" data-seat="0" aria-label="东家罚分"></label>
+                </div>
+              </div>
+
+              <div class="seat" data-seat="1">
+                <div class="seat-top">
+                  <span class="seat-chip">南</span>
+                  <span class="seat-name">Lin Y.</span>
+                  <span class="place" data-out="place">2位</span>
+                  <span class="pts pos" data-out="points">+11.0</span>
+                </div>
+                <div class="seat-inputs">
+                  <label class="field">终局<input type="number" inputmode="numeric" value="31000" data-in="score" data-seat="1" aria-label="南家终局持点"></label>
+                  <label class="field pen">罚<input type="number" inputmode="numeric" min="0" value="0" data-in="penalty" data-seat="1" aria-label="南家罚分"></label>
+                </div>
+              </div>
+
+              <div class="seat" data-seat="2">
+                <div class="seat-top">
+                  <span class="seat-chip">西</span>
+                  <span class="seat-name">Zhou M.</span>
+                  <span class="place" data-out="place">3位</span>
+                  <span class="pts neg" data-out="points">−32.0</span>
+                </div>
+                <div class="seat-inputs">
+                  <label class="field">终局<input type="number" inputmode="numeric" value="18000" data-in="score" data-seat="2" aria-label="西家终局持点"></label>
+                  <label class="field pen">罚<input type="number" inputmode="numeric" min="0" value="10" data-in="penalty" data-seat="2" aria-label="西家罚分"></label>
+                </div>
+              </div>
+
+              <div class="seat" data-seat="3">
+                <div class="seat-top">
+                  <span class="seat-chip">北</span>
+                  <span class="seat-name">Tanaka H.</span>
+                  <span class="place" data-out="place">4位</span>
+                  <span class="pts neg" data-out="points">−41.0</span>
+                </div>
+                <div class="seat-inputs">
+                  <label class="field">终局<input type="number" inputmode="numeric" value="9000" data-in="score" data-seat="3" aria-label="北家终局持点"></label>
+                  <label class="field pen">罚<input type="number" inputmode="numeric" min="0" value="0" data-in="penalty" data-seat="3" aria-label="北家罚分"></label>
+                </div>
+              </div>
+
+              <p class="ruleline">起分 25,000 · 返还 30,000 · UMA +20 / +10 / −10 / −20 · 罚分直接扣减。持点合计需等于 100,000。</p>
+            </section>
+
+            <button class="btn-block" type="button" data-toast="已提交第 13 半庄，排行榜已更新">提交本局</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- ============ 底部 Dock ============ -->
+    <div class="dock-wrap">
+      <nav class="dock" aria-label="主导航">
+        <div class="dock-pill glass" id="dockPill">
+          <button class="tab" type="button" data-route="leaderboard" aria-current="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M8 4h8v4.4a4 4 0 0 1-8 0Z"></path>
+              <path d="M8 5.2H5.4a2.4 2.4 0 0 0 2.4 4M16 5.2h2.6a2.4 2.4 0 0 1-2.4 4"></path>
+              <path d="M12 12.4V16M9 20h6M10 16h4l.6 4h-5.2Z"></path>
+            </svg>
+            <span>排行榜</span>
+          </button>
+          <button class="tab" type="button" data-route="matches" aria-current="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 6.6v5.1l3.2 1.9"></path>
+              <circle cx="12" cy="12" r="8.4"></circle>
+            </svg>
+            <span>近期对局</span>
+          </button>
+          <button class="tab" type="button" data-route="me" aria-current="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="8.6" r="3.7"></circle>
+              <path d="M4.7 19.6a7.3 7.3 0 0 1 14.6 0"></path>
+            </svg>
+            <span>我的</span>
+          </button>
+        </div>
+
+        <button class="add-bubble" type="button" id="addMatch" data-route="entry" aria-label="录入比赛">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M12 5.5v13M5.5 12h13"></path>
+          </svg>
+          <span>录入比赛</span>
+        </button>
+      </nav>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      (function () {
+        var root = document.documentElement;
+        var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var themeMeta = document.querySelector('meta[name="theme-color"]');
+
+        /* ================= 主题 ================= */
+        var THEME_KEY = "brml-theme";
+
+        function applyTheme(theme) {
+          root.dataset.theme = theme;
+          if (themeMeta) {
+            themeMeta.setAttribute("content", theme === "dark" ? "#080c11" : "#f5f7fb");
+          }
+        }
+
+        var savedTheme = null;
+        try {
+          savedTheme = window.localStorage.getItem(THEME_KEY);
+        } catch (error) {
+          savedTheme = null;
+        }
+        applyTheme(
+          savedTheme || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+        );
+
+        var themeButton = document.getElementById("themeToggle");
+
+        function toggleTheme(originX, originY) {
+          var next = root.dataset.theme === "dark" ? "light" : "dark";
+          try {
+            window.localStorage.setItem(THEME_KEY, next);
+          } catch (error) {
+            /* 忽略隐私模式下的写入失败 */
+          }
+          if (!document.startViewTransition || reduceMotion) {
+            applyTheme(next);
+            return;
+          }
+          var x = typeof originX === "number" ? originX : window.innerWidth - 40;
+          var y = typeof originY === "number" ? originY : 40;
+          var radius = Math.hypot(
+            Math.max(x, window.innerWidth - x),
+            Math.max(y, window.innerHeight - y)
+          );
+          var transition = document.startViewTransition(function () {
+            applyTheme(next);
+          });
+          transition.ready.then(function () {
+            // 只做圆形裁切：布局与字号完全不动
+            root.animate(
+              {
+                clipPath: [
+                  "circle(0px at " + x + "px " + y + "px)",
+                  "circle(" + radius + "px at " + x + "px " + y + "px)"
+                ]
+              },
+              {
+                duration: 640,
+                easing: "cubic-bezier(.22,.61,.36,1)",
+                pseudoElement: "::view-transition-new(root)"
+              }
+            );
+          });
+        }
+
+        themeButton.addEventListener("click", function (event) {
+          var rect = themeButton.getBoundingClientRect();
+          toggleTheme(
+            event.clientX || rect.left + rect.width / 2,
+            event.clientY || rect.top + rect.height / 2
+          );
+        });
+
+        /* ================= Dock 玻璃高光 ================= */
+        Array.prototype.forEach.call(document.querySelectorAll(".glass"), function (el) {
+          el.addEventListener("pointermove", function (event) {
+            var rect = el.getBoundingClientRect();
+            el.style.setProperty("--sheen-x", ((event.clientX - rect.left) / rect.width) * 100 + "%");
+            el.style.setProperty("--sheen-y", ((event.clientY - rect.top) / rect.height) * 100 + "%");
+          });
+          el.addEventListener("pointerleave", function () {
+            el.style.setProperty("--sheen-x", "50%");
+            el.style.setProperty("--sheen-y", "0%");
+          });
+        });
+
+        /* ================= 提示条 ================= */
+        var toast = document.getElementById("toast");
+        var toastTimer = null;
+
+        function showToast(message) {
+          toast.textContent = message;
+          toast.classList.add("show");
+          window.clearTimeout(toastTimer);
+          toastTimer = window.setTimeout(function () {
+            toast.classList.remove("show");
+          }, 2200);
+        }
+
+        Array.prototype.forEach.call(document.querySelectorAll("[data-toast]"), function (el) {
+          el.addEventListener("click", function () {
+            showToast(el.getAttribute("data-toast"));
+          });
+        });
+
+        /* ================= 身份与权限 ================= */
+        var ROLES = {
+          user: { label: "普通用户", canEnterMatch: false, icon: "👤", hint: "当前身份为普通用户，录入比赛入口已锁定。" },
+          referee: { label: "裁判", canEnterMatch: true, icon: "🀄", hint: "当前身份为裁判，可以录入比赛。" },
+          super_admin: { label: "超级管理员", canEnterMatch: true, icon: "👑", hint: "当前身份为超级管理员，可以录入比赛。" }
+        };
+
+        var ROUTES = {
+          leaderboard: { view: "view-leaderboard" },
+          matches: { view: "view-matches" },
+          me: { view: "view-me" },
+          entry: { view: "view-entry", requiresPermission: true }
+        };
+
+        var addMatch = document.getElementById("addMatch");
+        var meRole = document.getElementById("meRole");
+        var meAvatar = document.getElementById("meAvatar");
+        var roleHint = document.getElementById("roleHint");
+        var roleButtons = Array.prototype.slice.call(document.querySelectorAll(".preview-strip [data-role]"));
+        var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab[data-route]"));
+
+        var currentRole = "referee";
+
+        function roleConfig(role) {
+          return ROLES[role] || ROLES.user;
+        }
+
+        function canEnterMatch() {
+          return roleConfig(currentRole).canEnterMatch;
+        }
+
+        function setRole(role) {
+          currentRole = role;
+          var config = roleConfig(role);
+          roleButtons.forEach(function (button) {
+            button.setAttribute("aria-pressed", button.dataset.role === role ? "true" : "false");
+          });
+          meRole.textContent = config.label;
+          meAvatar.textContent = config.icon;
+          roleHint.textContent = config.hint;
+          addMatch.classList.toggle("is-locked", !config.canEnterMatch);
+          addMatch.setAttribute("aria-disabled", config.canEnterMatch ? "false" : "true");
+          addMatch.setAttribute("aria-label", config.canEnterMatch ? "录入比赛" : "录入比赛（需要裁判权限）");
+
+          // 失去权限时若正停留在录入页，退回排行榜
+          if (!config.canEnterMatch && currentView === "entry") {
+            navigate("leaderboard", { replace: true });
+          }
+        }
+
+        roleButtons.forEach(function (button) {
+          button.addEventListener("click", function () {
+            setRole(button.dataset.role);
+          });
+        });
+
+        /* ================= 路由：每个 Tab 独立页面 ================= */
+        var views = {};
+        Array.prototype.forEach.call(document.querySelectorAll(".view"), function (view) {
+          views[view.dataset.view] = view;
+        });
+
+        var currentView = null;
+        var scrollMemory = {};
+
+        function navigate(route, options) {
+          var target = ROUTES[route] ? route : "leaderboard";
+          var config = ROUTES[target];
+          if (config.requiresPermission && !canEnterMatch()) {
+            addMatch.classList.remove("shake");
+            void addMatch.offsetWidth;
+            addMatch.classList.add("shake");
+            showToast("录入比赛需要裁判及以上权限，请联系管理员开通");
+            return false;
+          }
+          if (options && options.replace) {
+            window.location.replace("#/" + target);
+          } else {
+            window.location.hash = "#/" + target;
+          }
+          return true;
+        }
+
+        function render(route) {
+          var target = ROUTES[route] ? route : "leaderboard";
+          var config = ROUTES[target];
+          if (config.requiresPermission && !canEnterMatch()) {
+            target = "leaderboard";
+          }
+
+          if (currentView === target) {
+            return;
+          }
+          if (currentView && views[currentView]) {
+            scrollMemory[currentView] = window.scrollY;
+            views[currentView].classList.remove("is-active");
+            views[currentView].hidden = true;
+          }
+
+          var view = views[target];
+          if (!view) {
+            return;
+          }
+          view.hidden = false;
+          view.classList.remove("is-active");
+          if (!reduceMotion) {
+            void view.offsetWidth; // 重新触发进场动画
+          }
+          view.classList.add("is-active");
+
+          tabs.forEach(function (tab) {
+            tab.setAttribute("aria-current", tab.dataset.route === target ? "true" : "false");
+          });
+          addMatch.setAttribute("aria-current", target === "entry" ? "true" : "false");
+
+          currentView = target;
+          window.scrollTo(0, scrollMemory[target] || 0);
+        }
+
+        function routeFromHash() {
+          var raw = window.location.hash.replace(/^#\/?/, "").trim();
+          return ROUTES[raw] ? raw : "leaderboard";
+        }
+
+        window.addEventListener("hashchange", function () {
+          render(routeFromHash());
+        });
+
+        tabs.forEach(function (tab) {
+          tab.addEventListener("click", function () {
+            navigate(tab.dataset.route);
+          });
+        });
+
+        addMatch.addEventListener("click", function () {
+          if (!canEnterMatch()) {
+            navigate("entry");
+            return;
+          }
+          navigate("entry");
+        });
+
+        var goMatches = document.getElementById("goMatches");
+        if (goMatches) {
+          goMatches.addEventListener("click", function () {
+            navigate("matches");
+          });
+        }
+
+        /* ================= 录入比赛：实时算分 ================= */
+        var UMA = [20, 10, -10, -20];
+        var RETURN_POINTS = 30000;
+        var START_TOTAL = 100000;
+
+        var seatEls = Array.prototype.slice.call(document.querySelectorAll("#view-entry .seat[data-seat]"));
+        var totalChip = document.getElementById("totalChip");
+
+        function placementsFor(scores) {
+          var sorted = scores.slice().sort(function (a, b) {
+            return b - a;
+          });
+          return scores.map(function (score) {
+            var hits = [];
+            sorted.forEach(function (value, index) {
+              if (value === score) {
+                hits.push(index + 1);
+              }
+            });
+            return hits.length ? hits.reduce(function (a, b) { return a + b; }, 0) / hits.length : 4;
+          });
+        }
+
+        function ranksFor(scores, index) {
+          var sorted = scores.slice().sort(function (a, b) {
+            return b - a;
+          });
+          var ranks = [];
+          sorted.forEach(function (value, position) {
+            if (value === scores[index]) {
+              ranks.push(position + 1);
+            }
+          });
+          return ranks.length ? ranks : [4];
+        }
+
+        function round1(value) {
+          return Math.round(value * 10) / 10;
+        }
+
+        function signed(value) {
+          return (value > 0 ? "+" : value < 0 ? "−" : "±") + Math.abs(value).toFixed(1);
+        }
+
+        function renderEntry() {
+          if (!seatEls.length) {
+            return;
+          }
+          var seats = seatEls.map(function (el) {
+            var score = el.querySelector('[data-in="score"]');
+            var penalty = el.querySelector('[data-in="penalty"]');
+            return {
+              el: el,
+              score: Number(score && score.value) || 0,
+              penalty: Number(penalty && penalty.value) || 0
+            };
+          });
+          var scores = seats.map(function (seat) { return seat.score; });
+          var places = placementsFor(scores);
+          var total = scores.reduce(function (sum, value) { return sum + value; }, 0);
+
+          seats.forEach(function (seat, index) {
+            var ranks = ranksFor(scores, index);
+            var uma = ranks.reduce(function (sum, rank) { return sum + UMA[rank - 1]; }, 0) / ranks.length;
+            var points = round1((seat.score - RETURN_POINTS) / 1000 + uma - seat.penalty);
+            var place = places[index];
+
+            var placeEl = seat.el.querySelector('[data-out="place"]');
+            var ptsEl = seat.el.querySelector('[data-out="points"]');
+
+            if (placeEl) {
+              placeEl.textContent = Number.isInteger(place) ? place + "位" : place + "位并列";
+              placeEl.classList.toggle("is-first", place === 1);
+            }
+            if (ptsEl) {
+              ptsEl.textContent = signed(points);
+              ptsEl.classList.toggle("pos", points > 0);
+              ptsEl.classList.toggle("neg", points < 0);
+            }
+          });
+
+          if (totalChip) {
+            var ok = total === START_TOTAL;
+            totalChip.textContent = "合计 " + total.toLocaleString("en-US") + (ok ? " ✓" : " ✗");
+            totalChip.classList.toggle("good", ok);
+            totalChip.classList.toggle("bad", !ok);
+          }
+        }
+
+        document.getElementById("view-entry").addEventListener("input", function (event) {
+          var target = event.target;
+          if (target && (target.matches('[data-in="score"]') || target.matches('[data-in="penalty"]'))) {
+            renderEntry();
+          }
+        });
+
+        /* ================= 启动 ================= */
+        setRole("referee");
+        renderEntry();
+        render(routeFromHash());
+      })();
+    </script>
+  </body>
+</html>

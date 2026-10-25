@@ -1,0 +1,1059 @@
+<div id="brml-pwa-concepts">
+  <style>
+    #brml-pwa-concepts {
+      color-scheme: light dark;
+      --brml-bg: light-dark(#eef1f7, #0c1116);
+      --brml-screen: light-dark(#f5f7fb, #0f151c);
+      --brml-surface: light-dark(#ffffff, #18202a);
+      --brml-surface-2: light-dark(#f2f5fa, #1d2733);
+      --brml-ink: light-dark(#172033, #e9eef6);
+      --brml-muted: light-dark(#667085, #9aa7b8);
+      --brml-line: light-dark(#dbe2ee, #2b3644);
+      --brml-brand: light-dark(#0f766e, #2dd4bf);
+      --brml-brand-soft: light-dark(rgba(15, 118, 110, 0.12), rgba(45, 212, 191, 0.16));
+      --brml-accent: light-dark(#c2410c, #fb923c);
+      --brml-accent-soft: light-dark(rgba(194, 65, 12, 0.12), rgba(251, 146, 60, 0.16));
+      --brml-good: light-dark(#15803d, #4ade80);
+      --brml-good-soft: light-dark(rgba(21, 128, 61, 0.12), rgba(74, 222, 128, 0.16));
+      --brml-bad: light-dark(#b91c1c, #f87171);
+      --brml-bad-soft: light-dark(rgba(185, 28, 28, 0.12), rgba(248, 113, 113, 0.16));
+      --brml-shadow: 0 18px 40px rgba(24, 34, 51, 0.14);
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--brml-ink);
+    }
+
+    #brml-pwa-concepts .stack {
+      display: grid;
+      gap: 26px;
+      justify-items: center;
+      width: 100%;
+    }
+
+    #brml-pwa-concepts .concept {
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    #brml-pwa-concepts .concept-label {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      text-align: center;
+      font-size: 12px;
+      color: var(--brml-muted);
+    }
+
+    #brml-pwa-concepts .concept-label b {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--brml-ink);
+    }
+
+    #brml-pwa-concepts .concept-label .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--brml-brand);
+    }
+
+    /* ---- device frames ---- */
+    #brml-pwa-concepts .device {
+      background: var(--brml-screen);
+      border: 1px solid var(--brml-line);
+      border-radius: 30px;
+      box-shadow: var(--brml-shadow);
+      overflow: hidden;
+      width: min(322px, 100%);
+    }
+
+    #brml-pwa-concepts .device--pad {
+      width: 100%;
+      max-width: 704px;
+      border-radius: 22px;
+    }
+
+    #brml-pwa-concepts .statusbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 16px 5px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--brml-ink);
+      background: var(--brml-screen);
+    }
+
+    #brml-pwa-concepts .statusbar .pill {
+      width: 44px;
+      height: 12px;
+      border-radius: 7px;
+      background: var(--brml-line);
+    }
+
+    #brml-pwa-concepts .statusbar .batt {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    #brml-pwa-concepts .statusbar .batt i {
+      display: block;
+      width: 16px;
+      height: 8px;
+      border: 1px solid var(--brml-muted);
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--brml-ink) 72%, transparent 72%);
+    }
+
+    /* ---- app shell ---- */
+    #brml-pwa-concepts .appbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 4px 14px 10px;
+      background: var(--brml-screen);
+    }
+
+    #brml-pwa-concepts .appbar h4 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+
+    #brml-pwa-concepts .appbar .sub {
+      display: block;
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--brml-muted);
+    }
+
+    #brml-pwa-concepts .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--brml-line);
+      background: var(--brml-surface);
+      font-size: 11px;
+      color: var(--brml-muted);
+      white-space: nowrap;
+    }
+
+    #brml-pwa-concepts .chip.brand {
+      border-color: transparent;
+      background: var(--brml-brand-soft);
+      color: var(--brml-brand);
+    }
+
+    #brml-pwa-concepts .chip.good {
+      border-color: transparent;
+      background: var(--brml-good-soft);
+      color: var(--brml-good);
+    }
+
+    #brml-pwa-concepts .chip.bad {
+      border-color: transparent;
+      background: var(--brml-bad-soft);
+      color: var(--brml-bad);
+    }
+
+    #brml-pwa-concepts .body {
+      display: grid;
+      gap: 10px;
+      padding: 0 14px 12px;
+      background: var(--brml-screen);
+    }
+
+    #brml-pwa-concepts .panel {
+      border: 1px solid var(--brml-line);
+      border-radius: 14px;
+      background: var(--brml-surface);
+      padding: 11px 12px;
+    }
+
+    #brml-pwa-concepts .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 11px;
+      color: var(--brml-muted);
+    }
+
+    #brml-pwa-concepts .panel-head strong {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--brml-ink);
+    }
+
+    #brml-pwa-concepts .ruleline {
+      font-size: 11px;
+      color: var(--brml-muted);
+      line-height: 1.45;
+    }
+
+    /* ---- score pad ---- */
+    #brml-pwa-concepts .seat {
+      display: grid;
+      gap: 5px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--brml-line);
+    }
+
+    #brml-pwa-concepts .seat:last-of-type {
+      border-bottom: 0;
+      padding-bottom: 3px;
+    }
+
+    #brml-pwa-concepts .seat-top {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    #brml-pwa-concepts .seat-chip {
+      flex: none;
+      width: 21px;
+      height: 21px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      background: var(--brml-surface-2);
+      color: var(--brml-muted);
+      border: 1px solid var(--brml-line);
+    }
+
+    #brml-pwa-concepts .seat-name {
+      font-size: 13px;
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #brml-pwa-concepts .place {
+      flex: none;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: var(--brml-surface-2);
+      color: var(--brml-muted);
+    }
+
+    #brml-pwa-concepts .place.is-first {
+      background: var(--brml-accent-soft);
+      color: var(--brml-accent);
+    }
+
+    #brml-pwa-concepts .pts {
+      flex: none;
+      min-width: 58px;
+      text-align: right;
+      font-size: 15px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #brml-pwa-concepts .pts.pos {
+      color: var(--brml-good);
+    }
+
+    #brml-pwa-concepts .pts.neg {
+      color: var(--brml-bad);
+    }
+
+    #brml-pwa-concepts .seat-inputs {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    #brml-pwa-concepts .field {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--brml-muted);
+    }
+
+    #brml-pwa-concepts .field input {
+      width: 84px;
+      padding: 5px 7px;
+      font: inherit;
+      font-size: 14px;
+      font-variant-numeric: tabular-nums;
+      color: var(--brml-ink);
+      background: var(--brml-surface-2);
+      border: 1px solid var(--brml-line);
+      border-radius: 8px;
+    }
+
+    #brml-pwa-concepts .field.pen input {
+      width: 58px;
+    }
+
+    #brml-pwa-concepts .calc {
+      flex: 1 1 100%;
+      font-size: 11px;
+      color: var(--brml-muted);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.4;
+    }
+
+    #brml-pwa-concepts .calc[hidden] {
+      display: none;
+    }
+
+    #brml-pwa-concepts .save {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      background: var(--brml-brand);
+      color: light-dark(#ffffff, #06131a);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    /* ---- leaderboard / profile ---- */
+    #brml-pwa-concepts .rank-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--brml-line);
+      font-size: 13px;
+    }
+
+    #brml-pwa-concepts .rank-row:last-child {
+      border-bottom: 0;
+    }
+
+    #brml-pwa-concepts .rank-row.me {
+      background: var(--brml-brand-soft);
+      border-radius: 10px;
+      border-bottom-color: transparent;
+      padding: 6px 8px;
+      margin: 2px -8px;
+    }
+
+    #brml-pwa-concepts .rank-no {
+      width: 18px;
+      flex: none;
+      text-align: right;
+      color: var(--brml-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    #brml-pwa-concepts .rank-name {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #brml-pwa-concepts .rank-pts {
+      flex: none;
+      font-variant-numeric: tabular-nums;
+      font-weight: 500;
+    }
+
+    #brml-pwa-concepts .rank-meta {
+      flex: none;
+      width: 46px;
+      text-align: right;
+      font-size: 11px;
+      color: var(--brml-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    #brml-pwa-concepts .meter {
+      height: 6px;
+      border-radius: 999px;
+      background: var(--brml-surface-2);
+      overflow: hidden;
+    }
+
+    #brml-pwa-concepts .meter span {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+      background: var(--brml-brand);
+    }
+
+    #brml-pwa-concepts .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    #brml-pwa-concepts .metric {
+      border: 1px solid var(--brml-line);
+      border-radius: 11px;
+      background: var(--brml-surface);
+      padding: 8px 7px;
+      text-align: center;
+    }
+
+    #brml-pwa-concepts .metric span {
+      display: block;
+      font-size: 11px;
+      color: var(--brml-muted);
+      white-space: nowrap;
+    }
+
+    #brml-pwa-concepts .metric strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 15px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #brml-pwa-concepts .dist {
+      display: flex;
+      gap: 3px;
+      margin: 2px 0 7px;
+    }
+
+    #brml-pwa-concepts .dist span {
+      height: 10px;
+      border-radius: 3px;
+      background: var(--brml-muted);
+      opacity: 0.45;
+    }
+
+    #brml-pwa-concepts .dist span.p1 {
+      background: var(--brml-accent);
+      opacity: 0.85;
+    }
+
+    #brml-pwa-concepts .dist span.p4 {
+      background: var(--brml-bad);
+      opacity: 0.55;
+    }
+
+    #brml-pwa-concepts .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 11px;
+      color: var(--brml-muted);
+    }
+
+    #brml-pwa-concepts .legend i {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      margin-right: 4px;
+      background: var(--brml-muted);
+      opacity: 0.45;
+    }
+
+    #brml-pwa-concepts .legend i.l1 {
+      background: var(--brml-accent);
+      opacity: 0.85;
+    }
+
+    #brml-pwa-concepts .legend i.l4 {
+      background: var(--brml-bad);
+      opacity: 0.55;
+    }
+
+    #brml-pwa-concepts .trend {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    #brml-pwa-concepts .trend b {
+      font-weight: 500;
+      font-size: 11px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      font-variant-numeric: tabular-nums;
+      background: var(--brml-surface-2);
+      color: var(--brml-muted);
+    }
+
+    #brml-pwa-concepts .trend b.pos {
+      background: var(--brml-good-soft);
+      color: var(--brml-good);
+    }
+
+    #brml-pwa-concepts .trend b.neg {
+      background: var(--brml-bad-soft);
+      color: var(--brml-bad);
+    }
+
+    #brml-pwa-concepts .ghost {
+      width: 100%;
+      padding: 9px;
+      font: inherit;
+      font-size: 13px;
+      color: var(--brml-ink);
+      background: var(--brml-surface);
+      border: 1px solid var(--brml-line);
+      border-radius: 11px;
+      cursor: pointer;
+    }
+
+    /* ---- tab bar ---- */
+    #brml-pwa-concepts .tabbar {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 2px;
+      padding: 7px 6px 9px;
+      border-top: 1px solid var(--brml-line);
+      background: var(--brml-surface);
+    }
+
+    #brml-pwa-concepts .tab {
+      display: grid;
+      justify-items: center;
+      gap: 3px;
+      font-size: 11px;
+      color: var(--brml-muted);
+    }
+
+    #brml-pwa-concepts .tab.on {
+      color: var(--brml-brand);
+    }
+
+    #brml-pwa-concepts .tab i {
+      display: block;
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ---- tablet layout ---- */
+    #brml-pwa-concepts .pad-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+      gap: 10px;
+      padding: 0 14px 14px;
+      background: var(--brml-screen);
+    }
+
+    #brml-pwa-concepts .pad-col {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      min-width: 0;
+    }
+
+    #brml-pwa-concepts .detail-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 2px 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--brml-line);
+      font-size: 12px;
+    }
+
+    #brml-pwa-concepts .detail-row:last-of-type {
+      border-bottom: 0;
+    }
+
+    #brml-pwa-concepts .detail-row .who {
+      font-size: 13px;
+    }
+
+    #brml-pwa-concepts .detail-row .total {
+      font-size: 14px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #brml-pwa-concepts .detail-row .formula {
+      grid-column: 1 / -1;
+      font-size: 11px;
+      color: var(--brml-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    #brml-pwa-concepts .pos-text {
+      color: var(--brml-good);
+    }
+
+    #brml-pwa-concepts .neg-text {
+      color: var(--brml-bad);
+    }
+
+    @media (max-width: 560px) {
+      #brml-pwa-concepts .pad-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+  </style>
+
+  <div class="stack">
+    <!-- 方案 A：记分台优先 -->
+    <section class="concept">
+      <p class="concept-label"><span class="dot"></span><b>方案 A · 记分台优先</b><span>打开即录分，实时看见每一分怎么来</span></p>
+      <div class="device" id="brml-entry-device" role="group" aria-label="方案 A 记分台界面">
+        <div class="statusbar"><span>9:41</span><span class="pill"></span><span class="batt"><i></i></span></div>
+        <div class="appbar">
+          <h4>记分台<span class="sub">S11 赛季 · 第 12 半庄 · 东起</span></h4>
+          <span class="chip" id="brml-season-chip">Meetup</span>
+        </div>
+        <div class="body">
+          <div class="panel">
+            <div class="panel-head">
+              <strong>终局持点</strong>
+              <span class="chip" id="brml-total-chip" aria-live="polite">合计 100,000 ✓</span>
+            </div>
+
+            <div class="seat" data-seat="0">
+              <div class="seat-top">
+                <span class="seat-chip">东</span>
+                <span class="seat-name">Wang C.</span>
+                <span class="place" data-out="place">1位</span>
+                <span class="pts pos" data-out="points">+32.0</span>
+              </div>
+              <div class="seat-inputs">
+                <label class="field">终局<input type="number" inputmode="numeric" step="1" value="42000" data-in="score" data-seat="0" aria-label="东家终局持点"></label>
+                <label class="field pen">罚<input type="number" inputmode="numeric" step="5" min="0" value="0" data-in="penalty" data-seat="0" aria-label="东家罚分"></label>
+                <span class="calc" data-out="calc" hidden></span>
+              </div>
+            </div>
+
+            <div class="seat" data-seat="1">
+              <div class="seat-top">
+                <span class="seat-chip">南</span>
+                <span class="seat-name">Lin Y.</span>
+                <span class="place" data-out="place">2位</span>
+                <span class="pts pos" data-out="points">+11.0</span>
+              </div>
+              <div class="seat-inputs">
+                <label class="field">终局<input type="number" inputmode="numeric" step="1" value="31000" data-in="score" data-seat="1" aria-label="南家终局持点"></label>
+                <label class="field pen">罚<input type="number" inputmode="numeric" step="5" min="0" value="0" data-in="penalty" data-seat="1" aria-label="南家罚分"></label>
+                <span class="calc" data-out="calc" hidden></span>
+              </div>
+            </div>
+
+            <div class="seat" data-seat="2">
+              <div class="seat-top">
+                <span class="seat-chip">西</span>
+                <span class="seat-name">Zhou M.</span>
+                <span class="place" data-out="place">3位</span>
+                <span class="pts neg" data-out="points">-32.0</span>
+              </div>
+              <div class="seat-inputs">
+                <label class="field">终局<input type="number" inputmode="numeric" step="1" value="18000" data-in="score" data-seat="2" aria-label="西家终局持点"></label>
+                <label class="field pen">罚<input type="number" inputmode="numeric" step="5" min="0" value="10" data-in="penalty" data-seat="2" aria-label="西家罚分"></label>
+                <span class="calc" data-out="calc" hidden></span>
+              </div>
+            </div>
+
+            <div class="seat" data-seat="3">
+              <div class="seat-top">
+                <span class="seat-chip">北</span>
+                <span class="seat-name">Tanaka H.</span>
+                <span class="place" data-out="place">4位</span>
+                <span class="pts neg" data-out="points">-41.0</span>
+              </div>
+              <div class="seat-inputs">
+                <label class="field">终局<input type="number" inputmode="numeric" step="1" value="9000" data-in="score" data-seat="3" aria-label="北家终局持点"></label>
+                <label class="field pen">罚<input type="number" inputmode="numeric" step="5" min="0" value="0" data-in="penalty" data-seat="3" aria-label="北家罚分"></label>
+                <span class="calc" data-out="calc" hidden></span>
+              </div>
+            </div>
+
+            <p class="ruleline" id="brml-ruleline">起分 25,000 · 返还 30,000 · UMA +20 / +10 / −10 / −20 · 罚分直接扣减</p>
+          </div>
+          <button class="save" type="button">提交本局</button>
+        </div>
+        <nav class="tabbar" aria-label="方案 A 主导航">
+          <span class="tab on"><i data-lucide="plus" aria-hidden="true"></i>记分</span>
+          <span class="tab"><i data-lucide="trophy" aria-hidden="true"></i>排行</span>
+          <span class="tab"><i data-lucide="list" aria-hidden="true"></i>对局</span>
+          <span class="tab"><i data-lucide="user" aria-hidden="true"></i>我的</span>
+        </nav>
+      </div>
+    </section>
+
+    <!-- 方案 B：赛季积分榜优先 -->
+    <section class="concept">
+      <p class="concept-label"><span class="dot"></span><b>方案 B · 积分榜优先</b><span>首页就是榜单，自己那一行永远置顶</span></p>
+      <div class="device" role="group" aria-label="方案 B 赛季积分榜界面">
+        <div class="statusbar"><span>9:41</span><span class="pill"></span><span class="batt"><i></i></span></div>
+        <div class="appbar">
+          <h4>赛季积分榜<span class="sub">S11 · 2026 春季</span></h4>
+          <span class="chip">第 7 位</span>
+        </div>
+        <div class="body">
+          <div class="panel">
+            <div class="panel-head">
+              <strong>我的位置</strong>
+              <span>6 / 8 半庄</span>
+            </div>
+            <div class="rank-row me">
+              <span class="rank-no">7</span>
+              <span class="rank-name">Wang C.</span>
+              <span class="rank-pts">42.0</span>
+              <span class="rank-meta">2.33 位</span>
+            </div>
+            <div class="meter" role="progressbar" aria-label="决赛资格进度" aria-valuenow="6" aria-valuemin="0" aria-valuemax="8">
+              <span style="width: 75%"></span>
+            </div>
+            <p class="ruleline" style="margin-top: 7px">再打 2 个半庄即可获得决赛资格</p>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><strong>排名</strong><span>积分 / 半庄</span></div>
+            <div class="rank-row"><span class="rank-no">1</span><span class="rank-name">Li X.</span><span class="rank-pts">128.5</span><span class="rank-meta">21</span></div>
+            <div class="rank-row"><span class="rank-no">2</span><span class="rank-name">Chen R.</span><span class="rank-pts">96.0</span><span class="rank-meta">18</span></div>
+            <div class="rank-row"><span class="rank-no">3</span><span class="rank-name">Ho K.</span><span class="rank-pts">74.5</span><span class="rank-meta">16</span></div>
+            <div class="rank-row"><span class="rank-no">4</span><span class="rank-name">Nguyen T.</span><span class="rank-pts">63.0</span><span class="rank-meta">14</span></div>
+            <div class="rank-row"><span class="rank-no">5</span><span class="rank-name">Zhang W.</span><span class="rank-pts">55.5</span><span class="rank-meta">12</span></div>
+            <div class="rank-row"><span class="rank-no">6</span><span class="rank-name">Sato A.</span><span class="rank-pts">48.5</span><span class="rank-meta">11</span></div>
+          </div>
+        </div>
+        <nav class="tabbar" aria-label="方案 B 主导航">
+          <span class="tab"><i data-lucide="plus" aria-hidden="true"></i>记分</span>
+          <span class="tab on"><i data-lucide="trophy" aria-hidden="true"></i>排行</span>
+          <span class="tab"><i data-lucide="list" aria-hidden="true"></i>对局</span>
+          <span class="tab"><i data-lucide="user" aria-hidden="true"></i>我的</span>
+        </nav>
+      </div>
+    </section>
+
+    <!-- 方案 C：我的积分卡 -->
+    <section class="concept">
+      <p class="concept-label"><span class="dot"></span><b>方案 C · 我的积分卡</b><span>个人赛季卡，可直接分享到群里</span></p>
+      <div class="device" role="group" aria-label="方案 C 个人积分卡界面">
+        <div class="statusbar"><span>9:41</span><span class="pill"></span><span class="batt"><i></i></span></div>
+        <div class="appbar">
+          <h4>我的战绩<span class="sub">S11 赛季 · Wang C.</span></h4>
+          <span class="chip brand">东家偏好 38%</span>
+        </div>
+        <div class="body">
+          <div class="metrics">
+            <div class="metric"><span>积分</span><strong>42.0</strong></div>
+            <div class="metric"><span>半庄</span><strong>6</strong></div>
+            <div class="metric"><span>平均顺位</span><strong>2.33</strong></div>
+            <div class="metric"><span>一位率</span><strong>33%</strong></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><strong>顺位分布</strong><span>6 半庄</span></div>
+            <div class="dist">
+              <span class="p1" style="flex: 2"></span>
+              <span style="flex: 1"></span>
+              <span style="flex: 2"></span>
+              <span class="p4" style="flex: 1"></span>
+            </div>
+            <div class="legend">
+              <span><i class="l1"></i>一位 2</span>
+              <span><i></i>二位 1</span>
+              <span><i></i>三位 2</span>
+              <span><i class="l4"></i>四位 1</span>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><strong>最近 5 场</strong><span>最新在右</span></div>
+            <div class="trend">
+              <b class="neg">4位 −38.0</b>
+              <b class="neg">3位 −15.0</b>
+              <b class="neg">3位 −5.0</b>
+              <b class="pos">2位 +23.0</b>
+              <b class="pos">1位 +45.0</b>
+            </div>
+          </div>
+          <button class="ghost" type="button">分享战绩卡</button>
+        </div>
+        <nav class="tabbar" aria-label="方案 C 主导航">
+          <span class="tab"><i data-lucide="plus" aria-hidden="true"></i>记分</span>
+          <span class="tab"><i data-lucide="trophy" aria-hidden="true"></i>排行</span>
+          <span class="tab"><i data-lucide="list" aria-hidden="true"></i>对局</span>
+          <span class="tab on"><i data-lucide="user" aria-hidden="true"></i>我的</span>
+        </nav>
+      </div>
+    </section>
+
+    <!-- 方案 D：iPad 牌桌模式 -->
+    <section class="concept">
+      <p class="concept-label"><span class="dot"></span><b>方案 D · iPad 牌桌模式</b><span>一台 iPad 放在桌上：记分、拆解、实时榜同时可见</span></p>
+      <div class="device device--pad" role="group" aria-label="方案 D iPad 牌桌模式界面">
+        <div class="statusbar"><span>9:41</span><span class="pill"></span><span class="batt"><i></i></span></div>
+        <div class="appbar">
+          <h4>牌桌 · 第 12 半庄<span class="sub">S11 赛季 · Meetup · 东起</span></h4>
+          <span class="chip good">合计 100,000 ✓</span>
+        </div>
+        <div class="pad-grid">
+          <div class="pad-col">
+            <div class="panel">
+              <div class="panel-head"><strong>终局持点</strong><span>点选座位可改罚则</span></div>
+              <div class="seat">
+                <div class="seat-top">
+                  <span class="seat-chip">东</span><span class="seat-name">Wang C.</span>
+                  <span class="place is-first">1位</span><span class="pts pos">+32.0</span>
+                </div>
+              </div>
+              <div class="seat">
+                <div class="seat-top">
+                  <span class="seat-chip">南</span><span class="seat-name">Lin Y.</span>
+                  <span class="place">2位</span><span class="pts pos">+11.0</span>
+                </div>
+              </div>
+              <div class="seat">
+                <div class="seat-top">
+                  <span class="seat-chip">西</span><span class="seat-name">Zhou M.</span>
+                  <span class="place">3位</span><span class="pts neg">−32.0</span>
+                </div>
+              </div>
+              <div class="seat">
+                <div class="seat-top">
+                  <span class="seat-chip">北</span><span class="seat-name">Tanaka H.</span>
+                  <span class="place">4位</span><span class="pts neg">−41.0</span>
+                </div>
+              </div>
+              <p class="ruleline" style="margin-top: 8px">起分 25,000 · 返还 30,000 · UMA +20 / +10 / −10 / −20</p>
+            </div>
+            <button class="save" type="button">提交本局</button>
+          </div>
+          <div class="pad-col">
+            <div class="panel">
+              <div class="panel-head"><strong>本局拆解</strong><span>（点数−返还）/1000 + UMA − 罚</span></div>
+              <div class="detail-row">
+                <span class="who">Wang C.</span>
+                <span class="total pos-text">+32.0</span>
+                <span class="formula">42,000 → 点数 +12.0 · UMA +20.0 · 罚 0</span>
+              </div>
+              <div class="detail-row">
+                <span class="who">Lin Y.</span>
+                <span class="total pos-text">+11.0</span>
+                <span class="formula">31,000 → 点数 +1.0 · UMA +10.0 · 罚 0</span>
+              </div>
+              <div class="detail-row">
+                <span class="who">Zhou M.</span>
+                <span class="total neg-text">−32.0</span>
+                <span class="formula">18,000 → 点数 −12.0 · UMA −10.0 · 罚 −10</span>
+              </div>
+              <div class="detail-row">
+                <span class="who">Tanaka H.</span>
+                <span class="total neg-text">−41.0</span>
+                <span class="formula">9,000 → 点数 −21.0 · UMA −20.0 · 罚 0</span>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><strong>实时榜</strong><span>本局后</span></div>
+              <div class="rank-row"><span class="rank-no">1</span><span class="rank-name">Li X.</span><span class="rank-pts">128.5</span></div>
+              <div class="rank-row"><span class="rank-no">2</span><span class="rank-name">Chen R.</span><span class="rank-pts">96.0</span></div>
+              <div class="rank-row"><span class="rank-no">3</span><span class="rank-name">Ho K.</span><span class="rank-pts">74.5</span></div>
+              <div class="rank-row me"><span class="rank-no">7</span><span class="rank-name">Wang C.</span><span class="rank-pts">42.0</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      var root = document.getElementById("brml-pwa-concepts");
+      if (!root) {
+        return;
+      }
+
+      var UMA_PRESETS = {
+        std: { label: "标准 20/10/−10/−20", values: [20, 10, -10, -20] },
+        mild: { label: "温和 15/5/−5/−15", values: [15, 5, -5, -15] },
+        none: { label: "无 UMA", values: [0, 0, 0, 0] }
+      };
+
+      var state = {
+        returnPoints: 30000,
+        umaKey: "std",
+        showBreakdown: false
+      };
+
+      var seatEls = Array.prototype.slice.call(root.querySelectorAll(".seat[data-seat]"));
+      if (!seatEls.length) {
+        return;
+      }
+
+      var totalChip = root.querySelector("#brml-total-chip");
+      var ruleLine = root.querySelector("#brml-ruleline");
+
+      function readSeats() {
+        return seatEls.map(function (el) {
+          var scoreInput = el.querySelector('[data-in="score"]');
+          var penaltyInput = el.querySelector('[data-in="penalty"]');
+          return {
+            el: el,
+            score: Number(scoreInput ? scoreInput.value : 0) || 0,
+            penalty: Number(penaltyInput ? penaltyInput.value : 0) || 0
+          };
+        });
+      }
+
+      function placements(scores) {
+        var sorted = scores.slice().sort(function (a, b) {
+          return b - a;
+        });
+        return scores.map(function (score) {
+          var hits = [];
+          sorted.forEach(function (value, index) {
+            if (value === score) {
+              hits.push(index + 1);
+            }
+          });
+          if (!hits.length) {
+            return 4;
+          }
+          return hits.reduce(function (a, b) {
+            return a + b;
+          }, 0) / hits.length;
+        });
+      }
+
+      function ranksForScore(scores, index) {
+        var sorted = scores.slice().sort(function (a, b) {
+          return b - a;
+        });
+        var ranks = [];
+        sorted.forEach(function (value, position) {
+          if (value === scores[index]) {
+            ranks.push(position + 1);
+          }
+        });
+        return ranks.length ? ranks : [4];
+      }
+
+      function averageUma(ranks, uma) {
+        var total = ranks.reduce(function (sum, rank) {
+          return sum + uma[rank - 1];
+        }, 0);
+        return total / ranks.length;
+      }
+
+      function round1(value) {
+        return Math.round(value * 10) / 10;
+      }
+
+      function signed(value) {
+        var fixed = Math.abs(value).toFixed(1);
+        return (value > 0 ? "+" : value < 0 ? "−" : "±") + fixed;
+      }
+
+      function placeLabel(place) {
+        return Number.isInteger(place) ? place + "位" : place + "位并列";
+      }
+
+      function render() {
+        var seats = readSeats();
+        var scores = seats.map(function (item) {
+          return item.score;
+        });
+        var places = placements(scores);
+        var uma = UMA_PRESETS[state.umaKey].values;
+        var total = scores.reduce(function (sum, value) {
+          return sum + value;
+        }, 0);
+        var expected = 100000;
+
+        seats.forEach(function (item, index) {
+          var place = places[index];
+          var ranks = ranksForScore(scores, index);
+          var umaValue = averageUma(ranks, uma);
+          var base = (item.score - state.returnPoints) / 1000;
+          var points = round1(base + umaValue - item.penalty);
+
+          var placeEl = item.el.querySelector('[data-out="place"]');
+          var ptsEl = item.el.querySelector('[data-out="points"]');
+          var calcEl = item.el.querySelector('[data-out="calc"]');
+
+          if (placeEl) {
+            placeEl.textContent = placeLabel(place);
+            placeEl.classList.toggle("is-first", place === 1);
+          }
+          if (ptsEl) {
+            ptsEl.textContent = signed(points);
+            ptsEl.classList.toggle("pos", points > 0);
+            ptsEl.classList.toggle("neg", points < 0);
+          }
+          if (calcEl) {
+            calcEl.hidden = !state.showBreakdown;
+            if (state.showBreakdown) {
+              var umaText = umaValue > 0 ? "+" + umaValue.toFixed(1) : "−" + Math.abs(umaValue).toFixed(1);
+              var penaltyText = item.penalty > 0 ? " · 罚 −" + item.penalty : "";
+              var tieText = ranks.length > 1 ? "（同点均分 UMA，" + ranks.length + " 人）" : "";
+              calcEl.textContent =
+                "(" + item.score.toLocaleString("en-US") + " − " + state.returnPoints.toLocaleString("en-US") + ") / 1,000 = " +
+                signed(round1(base)) + " · UMA " + umaText + penaltyText + " → " + signed(points) + tieText;
+            }
+          }
+        });
+
+        if (totalChip) {
+          var ok = total === expected;
+          totalChip.textContent = "合计 " + total.toLocaleString("en-US") + (ok ? " ✓" : " ✗");
+          totalChip.classList.toggle("good", ok);
+          totalChip.classList.toggle("bad", !ok);
+        }
+        if (ruleLine) {
+          ruleLine.textContent =
+            "起分 25,000 · 返还 " + state.returnPoints.toLocaleString("en-US") +
+            " · UMA " + UMA_PRESETS[state.umaKey].label.replace("标准 ", "").replace("温和 ", "").replace("无 UMA", "0") +
+            " · 罚分直接扣减";
+        }
+      }
+
+      root.addEventListener("input", function (event) {
+        var target = event.target;
+        if (target && (target.matches('[data-in="score"]') || target.matches('[data-in="penalty"]'))) {
+          render();
+        }
+      });
+
+      render();
+
+      if (globalThis.Tweak) {
+        var device = root.querySelector("#brml-entry-device");
+        if (device) {
+          var tweak = new Tweak({
+            container: device,
+            onChange: render
+          });
+          tweak.addSelect(state, "umaKey", {
+            label: "UMA 档位",
+            options: [
+              { label: UMA_PRESETS.std.label, value: "std" },
+              { label: UMA_PRESETS.mild.label, value: "mild" },
+              { label: UMA_PRESETS.none.label, value: "none" }
+            ]
+          });
+          tweak.addSlider(state, "returnPoints", {
+            label: "返还点",
+            min: 25000,
+            max: 35000,
+            step: 1000,
+            unit: "点"
+          });
+          tweak.addToggle(state, "showBreakdown", {
+            label: "展开计算过程"
+          });
+        }
+      }
+    })();
+  </script>
+</div>
