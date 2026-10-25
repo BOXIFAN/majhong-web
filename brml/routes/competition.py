@@ -17,15 +17,16 @@ from brml.analytics import (
 )
 from brml.auth import role_required
 from brml.db import get_db, query_all, query_one
-from brml.i18n import translate
+from brml.i18n import get_locale, translate
 from brml.match_service import (
     create_match_from_form,
     current_season,
+    match_type_label,
     parse_match_result_form,
     update_match_from_result,
 )
 from brml.rules import normalize_rules
-from brml.timeutils import current_match_time
+from brml.timeutils import current_match_time, weekday_label
 
 
 def register_routes(app) -> None:
@@ -65,8 +66,7 @@ def register_routes(app) -> None:
             (match_id,),
         )
         if not match:
-            flash(translate("flash.match_missing"), "error")
-            return redirect(url_for("index"))
+            return render_template("404.html", not_found_kind="match"), 404
         entries = query_all(
             """
             select me.*, u.display_name
@@ -85,7 +85,37 @@ def register_routes(app) -> None:
             """,
             (match_id,),
         )
-        return render_template("match_detail.html", match=match, entries=entries, penalties=penalties)
+        # 详情页需要身份与上下文：前一/后一场、桌型、所属赛季（调研报告可用性 4）。
+        neighbours = query_all(
+            """
+            select id, played_at, table_name from matches
+            where played_at < ? or (played_at = ? and id < ?)
+            order by played_at desc, id desc limit 1
+            """,
+            (match["played_at"], match["played_at"], match_id),
+        )
+        following = query_all(
+            """
+            select id, played_at, table_name from matches
+            where played_at > ? or (played_at = ? and id > ?)
+            order by played_at asc, id asc limit 1
+            """,
+            (match["played_at"], match["played_at"], match_id),
+        )
+        date_label = match["played_at"][:10]
+        date_weekday = weekday_label(date_label, get_locale())
+        return render_template(
+            "match_detail.html",
+            match=match,
+            entries=entries,
+            penalties=penalties,
+            prev_match=neighbours[0] if neighbours else None,
+            next_match=following[0] if following else None,
+            date_label=date_label,
+            weekday_label=date_weekday,
+            table_label=match_type_label(match["table_name"]),
+            entry_count=len(entries),
+        )
 
     @app.route("/matches/<int:match_id>/edit", methods=("GET", "POST"))
     @role_required("super_admin")
@@ -179,20 +209,33 @@ def register_routes(app) -> None:
         season = query_one("select * from seasons where id = ?", (season_id,)) if season_id else current_season()
         rows = get_leaderboard(season["id"]) if season else []
         finals_status = build_finals_status(season, rows, g.user) if season else None
+        # 图例与切线的语义来源：与 build_finals_status 保持一致（前 4 = 决赛席位，
+        # 末 4 = 烧鸟区）。行数不足 4 时整行色带没有意义，直接停用。
+        top_count = 4 if len(rows) >= 4 else 0
+        bottom_count = 4 if len(rows) >= 4 else 0
+        legend = {
+            "enabled": top_count > 0,
+            "top_count": top_count,
+            "bottom_count": bottom_count,
+            "has_cut_line": len(rows) > 8,
+            "is_historical": bool(season and season["status"] != "active"),
+            "is_test_season": bool(season and "tester" in season["name"].lower()),
+            "row_count": len(rows),
+        }
         return render_template(
             "leaderboard.html",
             seasons=seasons_data,
             selected_season=season,
             rows=rows,
             finals_status=finals_status,
+            legend=legend,
         )
 
     @app.route("/players/<int:user_id>")
     def player_profile(user_id: int):
-        user = query_one("select * from users where id = ?", (user_id,))
+        user = query_one("select * from users where id = ? and is_deleted = 0", (user_id,))
         if not user:
-            flash(translate("flash.player_missing"), "error")
-            return redirect(url_for("leaderboard"))
+            return render_template("404.html", not_found_kind="player"), 404
         season = current_season()
         leaderboard = get_leaderboard(season["id"]) if season else []
         player_stats = next((row for row in leaderboard if row["user_id"] == user_id), None)
@@ -244,9 +287,22 @@ def register_routes(app) -> None:
             "prev_page": page - 1,
             "next_page": page + 1,
         }
+        # 从留言板进来的玩家页，返回按钮应该回留言板而不是排行榜（评审 P1-4）。
+        referrer = request.referrer or ""
+        if "/board" in referrer:
+            back_href = url_for("board")
+            back_label = translate("board.back")
+        elif "/matches" in referrer:
+            back_href = url_for("matches")
+            back_label = translate("nav.matches")
+        else:
+            back_href = url_for("leaderboard")
+            back_label = translate("player2.back")
         return render_template(
             "player.html",
             user=user,
+            back_href=back_href,
+            back_label=back_label,
             stats=player_stats,
             history=history,
             trend=trend,

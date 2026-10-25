@@ -1,236 +1,259 @@
 {% extends "base.html" %}
 {% block title %}{{ t('nav.about') }} · Brisbane Riichi{% endblock %}
+{% block report_css %}<link rel="stylesheet" href="{{ url_for('static', filename='report/60-about.css') }}">{% endblock %}
 {% block content %}
-{% if locale == 'zh' %}
-<section class="page-head about-page-head">
-  <p class="eyebrow">About Brisbane Riichi Mahjong League</p>
-  <h1>关于我们</h1>
-  <p>一个由社群共同运营、致力于推动布里斯班日本立直麻将发展的联赛。</p>
-</section>
+{# 关于我们长页：开放画布 + 01–09 编号 + 色块/图片断点，不再把 9 个分区塞进同一张玻璃卡。
+   依据 review-report.md P0-5、A-2、P1 提升 2、移动端专项 3。 #}
+{% set team = [
+  {'name': 'Wang C', 'initial': 'W', 'role': 'about2.team.wang_role'},
+  {'name': 'YL Pan', 'initial': 'Y', 'role': 'about2.team.pan_role'},
+  {'name': 'Xuwei (Ark) Xu', 'initial': 'X', 'role': 'about2.team.xu_role'},
+  {'name': 'Leaf', 'initial': 'L', 'role': 'about2.team.leaf_role'},
+  {'name': 'MKBK', 'initial': 'M', 'role': 'about2.team.mkbk_role'},
+  {'name': 'Rua (BX Fan)', 'initial': 'R', 'role': 'about2.team.rua_role'}
+] %}
+<div class="about-page">
+  <header class="about-hero">
+    <h1>{{ t('nav.about') }}</h1>
+    <p class="about-hero-lead">{{ t('about2.hero.lead') }}</p>
+    <p class="about-hero-meta">{{ t('about2.hero.meta') }}</p>
+    <div class="about-hero-links">
+      <a class="about-hero-primary" href="{{ url_for('meetups') }}">{{ t('about2.hero.meetups') }}<span aria-hidden="true"> →</span></a>
+      <a class="about-hero-secondary" href="{{ url_for('seasons') }}">{{ t('about2.hero.rules') }}</a>
+    </div>
+  </header>
 
-<section class="about-layout">
-  <article class="about-document">
-    <section class="about-section about-intro">
-      <p class="eyebrow">Who We Are</p>
-      <h2>我们是谁</h2>
-      <p>Brisbane Riichi Mahjong League（BRML）是一个由社群成员共同运营、致力于推动日本立直麻将在布里斯班成长与发展的俱乐部。</p>
-      <p>我们希望为本地玩家提供一个稳定、有组织且友好的立直麻将环境。随着社群不断发展，BRML 已从轻松的玩家聚会逐步成长为结构完善的赛季制联赛，定期举办比赛、记录成绩、发布排名，并表彰每个赛季取得的成就。</p>
-      <p>我们的成员拥有不同的文化背景和麻将经验。有些人把立直麻将视为社交爱好，有些人则专注于竞技和提升表现。BRML 以大家对这项游戏策略、纪律与乐趣的共同热爱，将不同玩家联系在一起。</p>
-    </section>
-
-    <section class="about-section">
-      <p class="eyebrow">What We Do</p>
-      <h2>我们做什么</h2>
-      <p>BRML 为布里斯班立直麻将社群组织常规联赛和赛季制比赛。每个赛季中，玩家依照统一规则参加正式记录的对局，成绩计入赛季排名，让成员能够持续了解自己的进步并争取赛季荣誉。最终排名和赛季奖项不仅表彰优秀成绩，也认可推动社群成长所需的投入与参与。</p>
-      <p>除了联赛竞争，我们也希望为玩家创造以下机会：</p>
-      <ul>
-        <li>认识布里斯班其他立直麻将爱好者</li>
-        <li>积累结构化及竞技对局经验</li>
-        <li>提升战略理解与牌桌礼仪</li>
-        <li>熟悉正式规则、计分与比赛流程</li>
-        <li>为更大型赛事及竞技活动做好准备</li>
-        <li>共同建设友好且可持续发展的本地麻将社群</li>
-      </ul>
-    </section>
-
-    <section class="about-section">
-      <p class="eyebrow">Member Benefits</p>
-      <h2>会员权益</h2>
-      <ul>
-        <li>参加 BRML 每周聚会，与不同水平的雀士进行交流和对局</li>
-        <li>参加赛季联赛，获得官方成绩记录与赛季排名</li>
-        <li>每月参加免费教学课程，学习规则、战术与牌局礼仪</li>
-        <li>参加实战练习工作坊，提升点数计算、防守与牌局分析能力</li>
-        <li>参加不同形式的主题竞赛及会员活动</li>
-      </ul>
-    </section>
-
-    <section class="about-section">
-      <p class="eyebrow">Different Levels of Players</p>
-      <h2>适合不同水平的玩家</h2>
-      <p>BRML 欢迎经验丰富的玩家，也欢迎仍在提升技术的玩家。我们理解，加入正式联赛可能会让主要在线上或家庭休闲环境中打牌的玩家感到紧张。因此，我们会在保持比赛竞技性的同时，确保新玩家和成长中的玩家得到耐心与尊重。</p>
-      <p>参加正式联赛前，成员应具备立直麻将的基础知识，但不需要拥有丰富的赛事经验。通过规律对局、明确裁定以及与资深成员交流，参与者可以逐步建立信心，更自在地适应结构化竞技环境。</p>
-    </section>
-
-    <section class="about-section">
-      <p class="eyebrow">Fair and Responsible Competition</p>
-      <h2>公平且负责任的竞技</h2>
-      <p>BRML 将立直麻将视为策略游戏和竞技智力运动。我们的活动不涉及赌博或投注，玩家不会因单场比赛结果赢得或损失金钱。联赛表现通过排名、头衔、奖杯及其他非现金形式予以认可。</p>
-      <p>为维护比赛公正性，BRML 致力于：</p>
-      <ul>
-        <li>一致地执行联赛规则</li>
-        <li>准确记录并公布比赛结果</li>
-        <li>为裁定和争议提供清晰流程</li>
-        <li>倡导良好牌桌礼仪和相互尊重</li>
-        <li>保持联赛管理透明</li>
-        <li>营造不受骚扰、歧视和违反体育精神行为影响的环境</li>
-      </ul>
-      <p>我们期待玩家认真比赛，同时记住每一场对局也是四位社群成员共同参与的体验。</p>
-    </section>
-
-    <section class="about-section">
-      <p class="eyebrow">Our Community Values</p>
-      <h2>我们的社群价值观</h2>
-      <div class="values-grid">
-        <div><h3>尊重</h3><p>无论经验、实力、背景或比赛结果如何，每位玩家都应受到礼貌对待。竞技中的分歧应始终以冷静且建设性的方式处理。</p></div>
-        <div><h3>公平</h3><p>规则与计分流程应一致适用于所有参与者。决定应基于既定规则和对局实际情况，而不是私人关系或联赛排名。</p></div>
-        <div><h3>包容</h3><p>BRML 希望成为所有立直麻将爱好者都感到受欢迎的社群，并珍视成员带来的不同经历与观点。</p></div>
-        <div><h3>进步</h3><p>立直麻将具有深厚的战略空间。我们鼓励玩家从胜利与失误中学习、交流知识并持续提高理解。</p></div>
-        <div><h3>社群</h3><p>成功的联赛不只依靠个人成绩，也依靠准时参与、爱护器材、支持活动组织，以及大家共同营造愉快氛围。</p></div>
+  <article class="about-doc">
+    <section class="about-chapter" aria-labelledby="about-who">
+      <div class="about-chapter-head">
+        <span class="about-chapter-num" aria-hidden="true">01</span>
+        <h2 id="about-who">{{ t('about2.who.title') }}</h2>
+      </div>
+      <div class="about-chapter-body">
+        <p>{{ t('about2.who.p1') }}</p>
+        <p>{{ t('about2.who.p2') }}</p>
+        <p>{{ t('about2.who.p3') }}</p>
       </div>
     </section>
 
-    <section class="about-section">
-      <p class="eyebrow">Volunteer-Led</p>
-      <h2>社群运营与志愿者管理</h2>
-      <p>BRML 由社群成员以志愿形式运营。委员会协调赛程、规则与裁判、成绩管理、对外沟通、器材、网站运营及赛季奖项，技术支持成员则维护信息发布和联赛管理所需的系统。</p>
-      <p>这种志愿者结构让 BRML 能够与成员保持紧密联系。重要运营决定由团队共同审议，并以联赛和社群的长期利益为出发点。</p>
-    </section>
-
-    <section class="about-section">
-      <p class="eyebrow">Fees and Transparency</p>
-      <h2>会员费与财务透明</h2>
-      <p>随着 BRML 不断成长，可靠运营联赛的成本也随之增加。赛季会员费将用于支付俱乐部实际运营开支，包括：</p>
-      <ul>
-        <li>麻将器材及替换配件</li>
-        <li>记分表及其他消耗用品</li>
-        <li>网站托管与技术运营</li>
-        <li>赛季奖杯与奖项</li>
-        <li>场地或活动相关费用</li>
-        <li>其他与联赛活动直接相关的必要开支</li>
-      </ul>
-      <p>BRML 不以组织者个人获利为目的。会员费用于支持俱乐部活动和联赛持续运营。所有支出均由现任 BRML 委员会审核批准，并保留收支记录，以促进对俱乐部资金负责任且透明的使用。</p>
-    </section>
-
-    <section class="about-section about-vision">
-      <p class="eyebrow">Our Vision</p>
-      <h2>我们的愿景</h2>
-      <p>我们的愿景是在布里斯班建立一个强大、可持续且组织完善的立直麻将社群。我们希望 BRML 能让玩家享受稳定且高质量的对局、建立长久友谊，并追求自己的目标——无论是发现新的爱好、提高联赛成绩，还是为更高级别的竞技做好准备。</p>
-      <p>随着俱乐部成长，我们希望创造更多有组织的比赛机会，加强与其他麻将社群的联系，并推动立直麻将作为竞技策略游戏在澳大利亚获得更广泛的认可。</p>
-      <p><strong>最重要的是，BRML 因玩家而存在。每一场对局、每一次牌桌组织，以及每一位为社群付出的成员，都在共同塑造联赛的未来。</strong></p>
-    </section>
-  </article>
-
-  <aside class="about-sidebar">
-    <section class="leadership-card">
-      <p class="eyebrow">BRML Leadership Team</p>
-      <h2>管理团队</h2>
-      <dl class="leadership-list">
-        <div><dt>主席</dt><dd>Wang C</dd></div>
-        <div><dt>副主席</dt><dd>YL Pan</dd></div>
-        <div><dt>教学与裁判</dt><dd>Xuwei (Ark) Xu · Leaf · MKBK</dd></div>
-        <div><dt>财务与社交媒体</dt><dd>Wang C</dd></div>
-        <div><dt>技术支持</dt><dd>Rua (BX Fan)</dd></div>
-      </dl>
-    </section>
-    {% set contact_compact = false %}
-    {% include "_contact_links.html" %}
-  </aside>
-</section>
-{% else %}
-<section class="page-head about-page-head">
-  <p class="eyebrow">Brisbane Riichi Mahjong League</p>
-  <h1>About Us</h1>
-  <p>A community-run league dedicated to the growth and development of Japanese riichi mahjong in Brisbane.</p>
-</section>
-
-<section class="about-layout">
-  <article class="about-document">
-    <section class="about-section about-intro">
-      <p class="eyebrow">Who We Are</p>
-      <h2>Who We Are</h2>
-      <p>Brisbane Riichi Mahjong League (BRML) is a community-run club dedicated to the growth and development of Japanese riichi mahjong in Brisbane.</p>
-      <p>We provide local players with a consistent, organised and welcoming place to enjoy riichi mahjong. As our community has grown, BRML has developed from a casual group into a structured seasonal league with regular games, recorded results, published standings and recognised seasonal achievements.</p>
-      <p>Our members come from a wide range of cultural backgrounds and levels of experience. Some enjoy riichi mahjong as a social hobby, while others focus on competitive play and improving their performance. BRML brings these players together through a shared appreciation of the strategy, discipline and excitement of the game.</p>
-    </section>
-
-    <section class="about-section">
-      <p class="eyebrow">What We Do</p>
-      <h2>What We Do</h2>
-      <p>BRML organises regular league games and seasonal competitions for Brisbane’s riichi mahjong community. During each season, players participate in officially recorded games under consistent rules. Results contribute to seasonal standings, allowing members to follow their progress and compete for recognition. Final rankings and awards celebrate both strong results and the participation that helps our community grow.</p>
-      <p>In addition to league competition, BRML creates opportunities to:</p>
-      <ul><li>Meet other riichi mahjong enthusiasts in Brisbane</li><li>Gain experience in structured and competitive games</li><li>Develop strategic understanding and table etiquette</li><li>Learn formal rules, scoring and match procedures</li><li>Prepare for larger tournaments and competitive events</li><li>Contribute to a friendly and sustainable local community</li></ul>
-    </section>
-
-    <section class="about-section">
-      <p class="eyebrow">Member Benefits</p>
-      <h2>Member Benefits</h2>
-      <ul>
-        <li>Join BRML weekly meetups and play with members of different skill levels</li>
-        <li>Compete in seasonal leagues with official match records and rankings</li>
-        <li>Attend free monthly teaching sessions covering rules, strategy, and table etiquette</li>
-        <li>Join practical workshops focused on scoring, defence, and game analysis</li>
-        <li>Take part in themed competitions and other member activities</li>
-      </ul>
-    </section>
-
-    <section class="about-section">
-      <p class="eyebrow">Different Levels of Players</p>
-      <h2>A Club for Different Levels of Players</h2>
-      <p>BRML welcomes experienced players and those still developing their skills. We understand that joining an organised league can feel intimidating, particularly for players whose experience is mainly online or in casual home games. Our goal is to maintain meaningful competition while treating new and developing players with patience and respect.</p>
-      <p>Members should have a basic understanding of riichi mahjong before joining official league games, but they do not need to be tournament veterans. Regular play, clear rulings and interaction with experienced members help participants build confidence in a structured competitive environment.</p>
-    </section>
-
-    <section class="about-section">
-      <p class="eyebrow">Fair and Responsible Competition</p>
-      <h2>Fair and Responsible Competition</h2>
-      <p>BRML treats riichi mahjong as a strategy game and competitive mind sport. Our activities do not involve gambling or betting, and no money is won or lost through individual game results. Performance is recognised through standings, titles, trophies and other non-cash forms of recognition.</p>
-      <p>To maintain the integrity of competition, BRML is committed to:</p>
-      <ul><li>Applying league rules consistently</li><li>Recording and publishing results accurately</li><li>Providing clear procedures for rulings and disputes</li><li>Encouraging proper table manners and respectful conduct</li><li>Maintaining transparency in league administration</li><li>Providing an environment free from harassment, discrimination and unsporting behaviour</li></ul>
-      <p>Players are expected to compete seriously while remembering that every match is also a shared experience involving four members of the community.</p>
-    </section>
-
-    <section class="about-section">
-      <p class="eyebrow">Our Community Values</p>
-      <h2>Our Community Values</h2>
-      <div class="values-grid">
-        <div><h3>Respect</h3><p>Every player deserves courtesy regardless of experience, strength, background or result. Disagreements should be handled calmly and constructively.</p></div>
-        <div><h3>Fairness</h3><p>Rules and scoring procedures apply consistently to everyone. Decisions are based on established rules and the circumstances of the game.</p></div>
-        <div><h3>Inclusion</h3><p>BRML welcomes people who share an interest in riichi mahjong and values the different experiences and perspectives they bring.</p></div>
-        <div><h3>Improvement</h3><p>We encourage players to learn from victories and mistakes, exchange knowledge and deepen their understanding of the game.</p></div>
-        <div><h3>Community</h3><p>A successful league depends on punctuality, care for equipment, support for event organisation and an enjoyable atmosphere for everyone.</p></div>
+    <section class="about-chapter" aria-labelledby="about-what">
+      <div class="about-chapter-head">
+        <span class="about-chapter-num" aria-hidden="true">02</span>
+        <h2 id="about-what">{{ t('about2.what.title') }}</h2>
+      </div>
+      <div class="about-chapter-body">
+        <p>{{ t('about2.what.p1') }}</p>
+        <p>{{ t('about2.what.p2') }}</p>
+        <ul class="about-plain-list">
+          <li>{{ t('about2.what.item1') }}</li>
+          <li>{{ t('about2.what.item2') }}</li>
+          <li>{{ t('about2.what.item3') }}</li>
+          <li>{{ t('about2.what.item4') }}</li>
+          <li>{{ t('about2.what.item5') }}</li>
+          <li>{{ t('about2.what.item6') }}</li>
+        </ul>
       </div>
     </section>
 
-    <section class="about-section">
-      <p class="eyebrow">Volunteer-Led</p>
-      <h2>Community-Run and Volunteer-Led</h2>
-      <p>BRML is operated by community members on a volunteer basis. The committee coordinates scheduling, rules and refereeing, score administration, communications, equipment, website operation and seasonal awards. Technical support maintains the systems used to publish information and manage league activities.</p>
-      <p>This structure keeps BRML closely connected to its members. Important operational decisions are reviewed collectively with the long-term interests of the league and community in mind.</p>
+    <section class="about-chapter" aria-labelledby="about-benefits">
+      <div class="about-chapter-head">
+        <span class="about-chapter-num" aria-hidden="true">03</span>
+        <h2 id="about-benefits">{{ t('about2.benefits.title') }}</h2>
+      </div>
+      <div class="about-chapter-body">
+        <ul class="about-plain-list">
+          <li>{{ t('about2.benefits.item1') }}</li>
+          <li>{{ t('about2.benefits.item2') }}</li>
+          <li>{{ t('about2.benefits.item3') }}</li>
+          <li>{{ t('about2.benefits.item4') }}</li>
+          <li>{{ t('about2.benefits.item5') }}</li>
+        </ul>
+      </div>
     </section>
 
-    <section class="about-section">
-      <p class="eyebrow">Fees and Transparency</p>
-      <h2>Membership Fees and Transparency</h2>
-      <p>As BRML grows, a seasonal membership fee helps cover the practical expenses required to operate the club reliably, including:</p>
-      <ul><li>Mahjong equipment and replacement parts</li><li>Score sheets and consumable supplies</li><li>Website hosting and technical operation</li><li>Seasonal trophies and awards</li><li>Venue or event-related expenses</li><li>Other necessary costs directly connected with league activities</li></ul>
-      <p>BRML does not operate for the personal financial benefit of its organisers. Fees support club activities and continued league operation. All expenditure is reviewed and approved by the current committee, with income and expense records maintained to promote responsible and transparent use of club funds.</p>
+    <aside class="about-facts" aria-label="{{ t('about2.hero.meta') }}">
+      <div class="about-fact">
+        <strong>{{ t('about2.facts.meetup_value') }}</strong>
+        <span>{{ t('about2.facts.meetup_label') }}</span>
+      </div>
+      <div class="about-fact">
+        <strong>{{ t('about2.facts.fee_value') }}</strong>
+        <span>{{ t('about2.facts.fee_label') }}</span>
+      </div>
+      <div class="about-fact">
+        <strong>{{ t('about2.facts.teaching_value') }}</strong>
+        <span>{{ t('about2.facts.teaching_label') }}</span>
+      </div>
+    </aside>
+
+    <section class="about-feature" aria-labelledby="about-first">
+      <figure class="about-figure">
+        <img src="{{ url_for('static', filename='report/about-mahjong-setup.jpg') }}" alt="{{ t('about2.first.figure_alt') }}" width="1920" height="1440">
+        <figcaption>{{ t('about2.first.figure_caption') }}</figcaption>
+      </figure>
+      <div class="about-feature-copy">
+        <span class="about-chapter-num" aria-hidden="true">04</span>
+        <h2 id="about-first">{{ t('about2.first.title') }}</h2>
+        <p>{{ t('about2.first.p1') }}</p>
+        <a class="about-inline-link" href="{{ url_for('meetups') }}">{{ t('about2.first.link') }}<span aria-hidden="true"> →</span></a>
+      </div>
     </section>
 
-    <section class="about-section about-vision">
-      <p class="eyebrow">Our Vision</p>
-      <h2>Our Vision</h2>
-      <p>Our vision is to establish a strong, sustainable and well-organised riichi mahjong community in Brisbane—a place where players enjoy regular high-quality games, form lasting friendships and pursue their own goals, whether discovering a new hobby, improving league results or preparing for higher-level competition.</p>
-      <p>As the club grows, we hope to create more opportunities for organised play, strengthen connections with other mahjong communities and contribute to wider recognition of riichi mahjong as a competitive strategy game in Australia.</p>
-      <p><strong>Above all, BRML exists because of its players. Every game played, every table organised and every member who contributes helps shape the future of the league.</strong></p>
+    <section class="about-feature is-reversed" aria-labelledby="about-fair">
+      <figure class="about-figure">
+        <img src="{{ url_for('static', filename='report/about-riichi-table.jpg') }}" alt="{{ t('about2.fair.figure_alt') }}" width="1280" height="963">
+        <figcaption>{{ t('about2.fair.figure_caption') }}</figcaption>
+      </figure>
+      <div class="about-feature-copy">
+        <span class="about-chapter-num" aria-hidden="true">05</span>
+        <h2 id="about-fair">{{ t('about2.fair.title') }}</h2>
+        <p>{{ t('about2.fair.p1') }}</p>
+        <p class="about-mini-head">{{ t('about2.fair.commit_title') }}</p>
+        <ul class="about-check-list">
+          <li>{{ t('about2.fair.item1') }}</li>
+          <li>{{ t('about2.fair.item2') }}</li>
+          <li>{{ t('about2.fair.item3') }}</li>
+          <li>{{ t('about2.fair.item4') }}</li>
+          <li>{{ t('about2.fair.item5') }}</li>
+          <li>{{ t('about2.fair.item6') }}</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="about-chapter about-chapter--values" aria-labelledby="about-values">
+      <div class="about-chapter-head">
+        <span class="about-chapter-num" aria-hidden="true">06</span>
+        <h2 id="about-values">{{ t('about2.values.title') }}</h2>
+      </div>
+      <div class="about-chapter-body">
+        <ul class="about-values">
+          <li class="about-value">
+            <h3>{{ t('about2.values.respect_title') }}</h3>
+            <p>{{ t('about2.values.respect_body') }}</p>
+          </li>
+          <li class="about-value">
+            <h3>{{ t('about2.values.fairness_title') }}</h3>
+            <p>{{ t('about2.values.fairness_body') }}</p>
+          </li>
+          <li class="about-value">
+            <h3>{{ t('about2.values.inclusion_title') }}</h3>
+            <p>{{ t('about2.values.inclusion_body') }}</p>
+          </li>
+          <li class="about-value">
+            <h3>{{ t('about2.values.improvement_title') }}</h3>
+            <p>{{ t('about2.values.improvement_body') }}</p>
+          </li>
+          <li class="about-value">
+            <h3>{{ t('about2.values.community_title') }}</h3>
+            <p>{{ t('about2.values.community_body') }}</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="about-chapter" aria-labelledby="about-volunteer">
+      <div class="about-chapter-head">
+        <span class="about-chapter-num" aria-hidden="true">07</span>
+        <h2 id="about-volunteer">{{ t('about2.volunteer.title') }}</h2>
+      </div>
+      <div class="about-chapter-body">
+        <p>{{ t('about2.volunteer.p1') }}</p>
+        <p>{{ t('about2.volunteer.p2') }}</p>
+      </div>
+    </section>
+
+    <section class="about-chapter" aria-labelledby="about-fees">
+      <div class="about-chapter-head">
+        <span class="about-chapter-num" aria-hidden="true">08</span>
+        <h2 id="about-fees">{{ t('about2.fees.title') }}</h2>
+      </div>
+      <div class="about-chapter-body">
+        <p class="about-fee">
+          <strong>{{ t('about2.fees.price') }}</strong>
+          <span>{{ t('about2.fees.price_note') }}</span>
+        </p>
+        <p>{{ t('about2.fees.p1') }}</p>
+        <ul class="about-uses">
+          <li>{{ t('about2.fees.item1') }}</li>
+          <li>{{ t('about2.fees.item2') }}</li>
+          <li>{{ t('about2.fees.item3') }}</li>
+          <li>{{ t('about2.fees.item4') }}</li>
+          <li>{{ t('about2.fees.item5') }}</li>
+          <li>{{ t('about2.fees.item6') }}</li>
+        </ul>
+        <p>{{ t('about2.fees.p2') }}</p>
+      </div>
+    </section>
+
+    <section class="about-join" aria-labelledby="about-join-title">
+      <p class="about-kicker">{{ t('about2.join.label') }}</p>
+      <h2 id="about-join-title">{{ t('about2.join.title') }}</h2>
+      <ol class="about-steps">
+        <li class="about-step">
+          <span class="about-step-num" aria-hidden="true">1</span>
+          <h3>{{ t('about2.join.step1_title') }}</h3>
+          <p>{{ t('about2.join.step1_body') }}</p>
+        </li>
+        <li class="about-step">
+          <span class="about-step-num" aria-hidden="true">2</span>
+          <h3>{{ t('about2.join.step2_title') }}</h3>
+          <p>{{ t('about2.join.step2_body') }}</p>
+        </li>
+        <li class="about-step">
+          <span class="about-step-num" aria-hidden="true">3</span>
+          <h3>{{ t('about2.join.step3_title') }}</h3>
+          <p>{{ t('about2.join.step3_body') }}</p>
+        </li>
+      </ol>
+      <p class="about-join-account">{{ t('about2.join.account') }}</p>
+    </section>
+
+    <section class="about-chapter" aria-labelledby="about-vision">
+      <div class="about-chapter-head">
+        <span class="about-chapter-num" aria-hidden="true">09</span>
+        <h2 id="about-vision">{{ t('about2.vision.title') }}</h2>
+      </div>
+      <div class="about-chapter-body">
+        <p>{{ t('about2.vision.p1') }}</p>
+        <p>{{ t('about2.vision.p2') }}</p>
+        <p class="about-closing">{{ t('about2.vision.closing') }}</p>
+      </div>
     </section>
   </article>
 
-  <aside class="about-sidebar">
-    <section class="leadership-card">
-      <p class="eyebrow">BRML Leadership Team</p>
-      <h2>Leadership Team</h2>
-      <dl class="leadership-list">
-        <div><dt>President</dt><dd>Wang C</dd></div>
-        <div><dt>Vice President</dt><dd>YL Pan</dd></div>
-        <div><dt>Teaching & Refereeing</dt><dd>Xuwei (Ark) Xu · Leaf · MKBK</dd></div>
-        <div><dt>Treasurer & Social Media</dt><dd>Wang C</dd></div>
-        <div><dt>Technical Support</dt><dd>Rua (BX Fan)</dd></div>
-      </dl>
-    </section>
-    {% set contact_compact = false %}
-    {% include "_contact_links.html" %}
-  </aside>
-</section>
-{% endif %}
+  <section class="about-people" aria-labelledby="about-team-title">
+    <div class="about-team">
+      <p class="eyebrow">Leadership</p>
+      <h2 id="about-team-title">{{ t('about2.team.title') }}</h2>
+      <p class="about-team-hint">{{ t('about2.team.hint') }}</p>
+      <ul class="about-team-list">
+        {% for person in team %}
+        <li class="about-person">
+          <span class="about-avatar about-avatar--{{ loop.index }}" aria-hidden="true">{{ person.initial }}</span>
+          <span class="about-person-text">
+            <strong>{{ person.name }}</strong>
+            <small>{{ t(person.role) }}</small>
+          </span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="about-contact">
+      {% set contact_compact = false %}
+      {% include "_contact_links.html" %}
+    </div>
+  </section>
+
+  <section class="about-cta" aria-labelledby="about-cta-title">
+    <div class="about-cta-copy">
+      <h2 id="about-cta-title">{{ t('about2.cta.title') }}</h2>
+      <p>{{ t('about2.cta.body') }}</p>
+      <p class="about-cta-note">{{ t('about2.cta.note') }}</p>
+    </div>
+    <div class="about-cta-actions">
+      <a class="button about-cta-primary" href="mailto:contact@bneriichi.com">{{ t('about2.cta.primary') }}</a>
+      <a class="about-cta-secondary" href="{{ url_for('meetups') }}">{{ t('about2.cta.secondary') }}<span aria-hidden="true"> →</span></a>
+    </div>
+  </section>
+</div>
 {% endblock %}

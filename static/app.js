@@ -38,27 +38,66 @@ document.querySelectorAll(".flash").forEach((flash) => {
   }, 4200);
 });
 
-// 移动端导航的视觉状态与 aria-expanded 必须同步更新。
+// 移动端导航：全高抽屉需要同步视觉状态、aria-expanded、背景滚动锁与焦点顺序。
+// 调研报告 · 移动端专项 1 / P1-10：「打开不锁滚动」「关闭时 9 个链接仍在 Tab 顺序里」。
 const menuToggle = document.querySelector(".menu-toggle");
 const mobileMenu = document.querySelector(".mobile-menu");
+const menuClose = document.querySelector(".menu-close");
+const pageShell = document.querySelector(".site-shell");
+const shellBackground = document.querySelectorAll(".main, .sidebar");
+const mqMobileNav = window.matchMedia("(max-width: 960px)");
+let lastFocused = null;
 
-function setMobileMenu(open) {
+function setMobileMenu(open, { restoreFocus = false } = {}) {
   if (!menuToggle || !mobileMenu) return;
-  menuToggle.classList.toggle("is-open", open);
-  mobileMenu.classList.toggle("is-open", open);
-  menuToggle.setAttribute("aria-expanded", String(open));
+  const shouldOpen = Boolean(open) && mqMobileNav.matches;
+  menuToggle.classList.toggle("is-open", shouldOpen);
+  mobileMenu.classList.toggle("is-open", shouldOpen);
+  menuToggle.setAttribute("aria-expanded", String(shouldOpen));
+  // 抽屉打开时锁住背景滚动，并把背景内容移出焦点顺序（inert）。
+  document.body.classList.toggle("menu-open", shouldOpen);
+  mobileMenu.inert = !shouldOpen;
+  shellBackground.forEach((node) => {
+    node.inert = shouldOpen;
+  });
+  if (shouldOpen) {
+    lastFocused = document.activeElement;
+    mobileMenu.querySelector("a, button")?.focus({ preventScroll: true });
+  } else if (restoreFocus && lastFocused instanceof HTMLElement) {
+    lastFocused.focus({ preventScroll: true });
+    lastFocused = null;
+  }
 }
+
+// 初始状态：抽屉不参与交互，也不占据 Tab 顺序（仅 CSS opacity:0 时仍可聚焦）。
+if (mobileMenu) mobileMenu.inert = !mobileMenu.classList.contains("is-open");
 
 menuToggle?.addEventListener("click", () => {
   setMobileMenu(!mobileMenu.classList.contains("is-open"));
 });
 
+menuClose?.addEventListener("click", () => setMobileMenu(false, { restoreFocus: true }));
+
 mobileMenu?.querySelectorAll("a").forEach((link) => {
   link.addEventListener("click", () => setMobileMenu(false));
 });
 
+// 点击抽屉外的区域也能关闭。
+pageShell?.addEventListener("click", (event) => {
+  if (!document.body.classList.contains("menu-open")) return;
+  if (mobileMenu?.contains(event.target)) return;
+  setMobileMenu(false);
+}, true);
+
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") setMobileMenu(false);
+  if (event.key === "Escape" && document.body.classList.contains("menu-open")) {
+    setMobileMenu(false, { restoreFocus: true });
+  }
+});
+
+// 视口跨过移动断点时复位，避免桌面端残留 body 锁定。
+mqMobileNav.addEventListener("change", (event) => {
+  if (!event.matches) setMobileMenu(false);
 });
 
 // 顶部统计卡片在桌面完整展示；移动端首次进入时收起，减少纵向占用。
@@ -448,4 +487,85 @@ document.querySelectorAll("[data-expand-target]").forEach((button) => {
   );
 
   countUpTargets.forEach((el) => observer.observe(el));
+})();
+
+// ---------------------------------------------------------------------------
+// 评审修复（P1-4）：保住用户在页面里的位置
+// 1) 点赞改为局部更新：不整页刷新、不跳回顶部，失败时回滚并提示。
+// 2) 页内「返回…」链接优先走 history.back()，复用浏览器滚动恢复。
+// ---------------------------------------------------------------------------
+
+document.querySelectorAll("form[data-like-form]").forEach((form) => {
+  form.addEventListener("submit", async (event) => {
+    const button = form.querySelector(".board-like");
+    const counter = form.querySelector(".board-like-count");
+    if (!button || !counter) return;
+    event.preventDefault();
+    const previousLiked = button.classList.contains("is-liked");
+    const previousCount = Number(counter.textContent || "0");
+    // 先做乐观更新，失败再回滚。
+    const optimisticLiked = !previousLiked;
+    const optimisticCount = Math.max(previousCount + (optimisticLiked ? 1 : -1), 0);
+    button.classList.toggle("is-liked", optimisticLiked);
+    button.setAttribute("aria-pressed", String(optimisticLiked));
+    counter.textContent = String(optimisticCount);
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: { "X-Requested-With": "fetch" },
+        credentials: "same-origin",
+      });
+      if (!response.ok) throw new Error("request failed");
+      const data = await response.json();
+      button.classList.toggle("is-liked", Boolean(data.liked));
+      button.setAttribute("aria-pressed", String(Boolean(data.liked)));
+      counter.textContent = String(data.count);
+    } catch (error) {
+      button.classList.toggle("is-liked", previousLiked);
+      button.setAttribute("aria-pressed", String(previousLiked));
+      counter.textContent = String(previousCount);
+      button.animate(
+        [{ transform: "translateX(0)" }, { transform: "translateX(-3px)" }, { transform: "translateX(3px)" }, { transform: "translateX(0)" }],
+        { duration: 220, easing: "ease-in-out" },
+      );
+    }
+  });
+});
+
+// 页内返回：有来源页时用 history.back()，能恢复原来的滚动位置；否则走 href。
+document.querySelectorAll("[data-back]").forEach((link) => {
+  link.addEventListener("click", (event) => {
+    if (window.history.length > 1 && document.referrer) {
+      event.preventDefault();
+      window.history.back();
+    }
+  });
+});
+
+
+// 规则页：移动端「英文术语」开关（默认收起，展开后记住本次会话的选择）。
+(() => {
+  const toggle = document.querySelector("[data-terms-toggle]");
+  if (!toggle) return;
+  const STORAGE_KEY = "brml-rules-en-terms";
+  const apply = (on) => {
+    document.body.classList.toggle("show-en-terms", on);
+    toggle.setAttribute("aria-pressed", String(on));
+  };
+  let stored = false;
+  try {
+    stored = sessionStorage.getItem(STORAGE_KEY) === "1";
+  } catch (error) {
+    stored = false;
+  }
+  apply(stored);
+  toggle.addEventListener("click", () => {
+    const next = !document.body.classList.contains("show-en-terms");
+    apply(next);
+    try {
+      sessionStorage.setItem(STORAGE_KEY, next ? "1" : "0");
+    } catch (error) {
+      /* 隐私模式忽略 */
+    }
+  });
 })();

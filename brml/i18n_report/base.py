@@ -1,0 +1,51 @@
+"""全站基础文案：页脚、站点描述、404 与通用状态。
+
+命名空间约定：``footer.*`` / ``meta.*`` / ``status.*`` / ``common.*``。
+"""
+
+T = {
+    "zh": {
+        "meta.description": "布里斯班立直麻将联赛（BRML）官方站点：赛季排名、最近对局、活动报名与赛季规则。",
+        "footer.brand_line": "布里斯班立直麻将联赛（BRML）",
+        "footer.tagline": "以固定周期对局、赛季排名与社群活动，把布里斯班的立直麻将玩家聚在一起。",
+        "footer.nav": "快速入口",
+        "footer.contact": "联系我们",
+        "footer.version": "版本 {version}",
+        "nav.close_menu": "关闭导航菜单",
+        "status.404.title": "这张牌不在桌上",
+        "status.404.body": "链接可能已经过期，或者这里从来就没有牌局。回到牌桌继续吧。",
+        "status.404.home": "返回首页",
+        "status.404.leaderboard": "去看排行榜",
+        "status.404.matches": "最近对局",
+        "status.404.board": "留言板",
+        "status.not_found.title": "没有找到这条记录",
+        "status.not_found.body": "它可能已经被删除，或者链接不完整。下面这几个入口通常能找到你要的内容。",
+        "account.how_to_join": "如何加入",
+        "common.no_data": "暂无数据",
+        "common.learn_more": "查看详情",
+        "common.back": "返回",
+        "common.view_all": "查看全部",
+    },
+    "en": {
+        "meta.description": "Official site of the Brisbane Riichi Mahjong League (BRML): season standings, recent matches, meetup sign-ups and season rules.",
+        "footer.brand_line": "Brisbane Riichi Mahjong League",
+        "footer.tagline": "A home for riichi mahjong players in Brisbane through regular games, season standings and community events.",
+        "footer.nav": "Explore",
+        "footer.contact": "Contact",
+        "footer.version": "Version {version}",
+        "nav.close_menu": "Close navigation menu",
+        "status.404.title": "That tile is not on the table",
+        "status.404.body": "This link may have expired, or there was never a table here. Head back and keep playing.",
+        "status.404.home": "Back home",
+        "status.404.leaderboard": "View leaderboard",
+        "status.404.matches": "Recent matches",
+        "status.404.board": "Community board",
+        "status.not_found.title": "We could not find that record",
+        "status.not_found.body": "It may have been removed, or the link is incomplete. These entry points usually get you where you need to go.",
+        "account.how_to_join": "How to join",
+        "common.no_data": "No data yet",
+        "common.learn_more": "View details",
+        "common.back": "Back",
+        "common.view_all": "View all",
+    },
+}

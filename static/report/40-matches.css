@@ -1,0 +1,990 @@
+/* ==========================================================================
+   BRML UI/UX 调研改造 · WP4 最近对局（P1-7 / 可用性 4 / P1 提升 2）
+   --------------------------------------------------------------------------
+   作用域：.match-page（对局列表：单列时间线、按天分组、牌手与得分摘要）
+           .match-detail-page（对局详情：身份信息、上一场/下一场、赛果与罚则口径）
+   依赖 static/report/00-base.css 的 --r-* token；不改动其他页面与共享样式。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 列表页头：标题 + 场次数 + 赛季筛选
+   -------------------------------------------------------------------------- */
+
+.match-page {
+  display: block;
+  min-width: 0;
+}
+
+.match-page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-3) var(--sp-5);
+  margin-bottom: var(--sp-5);
+}
+
+.match-page-heading {
+  min-width: 0;
+}
+
+.match-page-head h1 {
+  margin: 0;
+  color: var(--r-ink);
+  font-size: clamp(30px, 4vw, var(--fs-2xl));
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.match-page-sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35em;
+  margin: var(--sp-2) 0 0;
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+.match-page-scope {
+  color: var(--r-ink-2);
+  font-weight: 700;
+}
+
+.match-page-sub-sep {
+  color: var(--r-muted-soft);
+}
+
+.match-season-form {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-left: auto;
+}
+
+.match-season-form label {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.match-season-form select {
+  width: auto;
+  min-width: 190px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius-sm);
+  background: var(--r-surface);
+  color: var(--r-ink);
+  font: inherit;
+  font-size: var(--fs-sm);
+  transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.match-season-form select:hover {
+  border-color: var(--r-brand-line);
+}
+
+.match-season-form select:focus-visible {
+  border-color: var(--r-brand);
+}
+
+/* --------------------------------------------------------------------------
+   2. 单列时间线：按天分组的日期标题（13px + 24px 上间距）
+   -------------------------------------------------------------------------- */
+
+.match-timeline {
+  display: block;
+  min-width: 0;
+}
+
+.match-day + .match-day {
+  margin-top: var(--sp-5);
+}
+
+.match-day-label {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-1);
+  color: var(--r-muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+
+.match-day-label::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--r-brand);
+}
+
+.match-day-label::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--r-line-soft);
+}
+
+.match-day-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.match-day-rows li + li {
+  border-top: 1px solid var(--r-line-soft);
+}
+
+/* --------------------------------------------------------------------------
+   3. 对局行：15px 时间 → 12px 类型 chip → 牌手与得分摘要 → 12px 裁判 → chevron
+      整行是链接；牌手摘要不做嵌套链接。
+   -------------------------------------------------------------------------- */
+
+.match-row {
+  display: grid;
+  grid-template-columns: 64px 112px minmax(0, 1fr) auto 20px;
+  align-items: center;
+  gap: var(--sp-4);
+  min-height: 68px;
+  padding: 0 var(--sp-3) 0 var(--sp-2);
+  border-radius: var(--r-radius-sm);
+  color: var(--r-ink);
+  transition: background var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .match-row:hover {
+    background: rgba(15, 118, 110, 0.06);
+  }
+}
+
+.match-row-time {
+  color: var(--r-ink-2);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.match-row:hover .match-row-time {
+  color: var(--r-brand-dark);
+}
+
+.match-row-type {
+  justify-self: start;
+  max-width: 100%;
+  padding: 3px 9px;
+  overflow: hidden;
+  border: 1px solid var(--r-line);
+  border-radius: 999px;
+  background: var(--r-surface-sunken);
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.match-row-type.is-meetup {
+  border-color: var(--r-brand-line);
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+}
+
+.match-row-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.match-row-winner {
+  flex: none;
+  color: var(--r-ink);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.match-row-points {
+  flex: none;
+  color: var(--r-ink-2);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.match-row-points.is-positive {
+  color: var(--r-brand-dark);
+}
+
+.match-row-points.is-negative {
+  color: var(--r-danger);
+}
+
+.match-row-sep {
+  flex: none;
+  color: var(--r-muted-soft);
+  font-size: var(--fs-sm);
+}
+
+.match-row-others {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.match-row-nodata {
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+}
+
+.match-row-referee {
+  justify-self: end;
+  max-width: 170px;
+  overflow: hidden;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.match-row-arrow {
+  justify-self: end;
+  color: var(--r-muted-soft);
+  font-size: var(--fs-base);
+  line-height: 1;
+  transition: transform var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.match-row:hover .match-row-arrow {
+  color: var(--r-brand);
+  transform: translateX(2px);
+}
+
+/* --------------------------------------------------------------------------
+   4. 空态 / 分页
+   -------------------------------------------------------------------------- */
+
+.match-empty {
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius);
+  background: var(--r-surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), var(--r-shadow-soft);
+}
+
+.match-empty .r-empty img {
+  width: 52px;
+}
+
+.match-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--r-line);
+}
+
+.match-page-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 var(--sp-3);
+  border: 1px solid transparent;
+  border-radius: var(--r-radius-sm);
+  color: var(--r-brand-dark);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.match-page-step:hover {
+  background: var(--r-brand-soft);
+}
+
+.match-page-step.is-disabled,
+.match-page-step.is-disabled:hover {
+  background: transparent;
+  color: var(--r-muted-soft);
+  cursor: default;
+}
+
+.match-page-step-dir {
+  font-size: var(--fs-sm);
+}
+
+.match-page-numbers {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.match-page-number {
+  display: inline-grid;
+  place-items: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius-sm);
+  background: var(--r-surface);
+  color: var(--r-ink-2);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+a.match-page-number:hover {
+  border-color: var(--r-brand-line);
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+}
+
+.match-page-number.is-current {
+  border-color: var(--r-brand);
+  background: var(--r-brand);
+  color: #fff;
+}
+
+/* --------------------------------------------------------------------------
+   5. 列表响应式：<1100px 不再挤压多列；移动端两行一行不超过 110px
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1040px) {
+  .match-row {
+    grid-template-columns: auto minmax(0, 1fr) auto 18px;
+    grid-template-areas:
+      "time type referee arrow"
+      "summary summary summary summary";
+    column-gap: var(--sp-3);
+    row-gap: 2px;
+    min-height: 72px;
+    padding-top: var(--sp-3);
+    padding-bottom: var(--sp-3);
+  }
+
+  .match-row-time {
+    grid-area: time;
+  }
+
+  .match-row-type {
+    grid-area: type;
+    justify-self: start;
+  }
+
+  .match-row-summary {
+    grid-area: summary;
+  }
+
+  .match-row-referee {
+    grid-area: referee;
+    max-width: 140px;
+  }
+
+  .match-row-arrow {
+    grid-area: arrow;
+  }
+}
+
+@media (max-width: 760px) {
+  .match-page-head {
+    align-items: flex-start;
+  }
+
+  .match-season-form {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .match-season-form select {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .match-row-referee {
+    max-width: 130px;
+  }
+
+  .match-pagination {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-3) var(--sp-2);
+  }
+
+  .match-page-numbers {
+    grid-row: 1;
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+
+  .match-page-step {
+    justify-content: center;
+    border-color: var(--r-line);
+    background: var(--r-surface);
+  }
+
+  .match-page-step.is-disabled,
+  .match-page-step.is-disabled:hover {
+    border-color: var(--r-line-soft);
+    background: var(--r-surface-sunken);
+  }
+}
+
+@media (max-width: 420px) {
+  .match-row {
+    padding-right: var(--sp-2);
+    column-gap: var(--sp-2);
+  }
+
+  .match-row-winner,
+  .match-row-points {
+    font-size: var(--fs-sm);
+  }
+
+  .match-row-others,
+  .match-row-sep {
+    font-size: var(--fs-xs);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. 详情页：返回 + 上一场/下一场 + 有意义标题 + 身份信息
+   -------------------------------------------------------------------------- */
+
+.match-detail-page {
+  display: grid;
+  gap: var(--sp-5);
+  min-width: 0;
+}
+
+.match-detail-page > * {
+  min-width: 0;
+}
+
+.match-detail-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-4);
+}
+
+.match-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  color: var(--r-brand-dark);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.match-back:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.match-step-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-left: auto;
+}
+
+.match-step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 44px;
+  padding: 6px var(--sp-3);
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius-sm);
+  background: var(--r-surface);
+  color: var(--r-ink-2);
+  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.match-step:hover {
+  border-color: var(--r-brand-line);
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+}
+
+.match-step.is-disabled,
+.match-step.is-disabled:hover {
+  border-color: var(--r-line-soft);
+  background: var(--r-surface-sunken);
+  color: var(--r-muted-soft);
+  cursor: default;
+}
+
+.match-step-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.match-step-label {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.match-step-time {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+}
+
+.match-step-dir {
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+  line-height: 1;
+}
+
+.match-step:hover .match-step-dir {
+  color: var(--r-brand-dark);
+}
+
+.match-detail-head h1 {
+  margin: 0;
+  color: var(--r-ink);
+  font-size: clamp(30px, 4vw, var(--fs-2xl));
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+
+.match-detail-sub {
+  margin: var(--sp-1) 0 0;
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.match-facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius);
+  background: var(--r-surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), var(--r-shadow-soft);
+}
+
+.match-fact {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: var(--sp-3) var(--sp-4);
+}
+
+.match-fact + .match-fact {
+  border-left: 1px solid var(--r-line-soft);
+}
+
+.match-fact dt {
+  margin: 0;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.match-fact dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--r-ink);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   7. 详情页：赛果表 + 半庄口径 + 罚则摘要
+   -------------------------------------------------------------------------- */
+
+.match-score-card,
+.match-penalty-card {
+  min-width: 0;
+  padding: var(--sp-4) var(--sp-5) var(--sp-5);
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius);
+  background: var(--r-surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), var(--r-shadow-soft);
+}
+
+.match-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+
+.match-card-head h2 {
+  margin: 0;
+  color: var(--r-ink);
+  font-size: var(--fs-lg);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.match-unit-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.match-unit-chip.is-warning {
+  background: var(--r-warning-soft);
+  color: var(--r-warning);
+}
+
+.match-score-table th {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--r-line);
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.match-score-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--r-line-soft);
+  color: var(--r-ink-2);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+
+.match-score-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.match-score-table tbody tr.is-winner {
+  background: rgba(15, 118, 110, 0.055);
+}
+
+.match-score-table tbody tr.is-winner:hover {
+  background: rgba(15, 118, 110, 0.09);
+}
+
+/* 数字列右对齐：终局点数 / 结算积分 / 已计入罚分 在同一锚线上比较。 */
+.match-score-table th:nth-child(n + 3),
+.match-score-table td:nth-child(n + 3) {
+  text-align: right;
+}
+
+.match-placement {
+  width: 56px;
+  color: var(--r-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.match-placement-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--r-brand);
+  color: #fff;
+  font-size: var(--fs-xs);
+  font-weight: 800;
+}
+
+.match-player {
+  color: var(--r-ink);
+  font-weight: 600;
+}
+
+.match-player:hover {
+  color: var(--r-brand-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.match-final-score {
+  font-variant-numeric: tabular-nums;
+}
+
+.match-points {
+  color: var(--r-ink-2);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.match-points.is-positive {
+  color: var(--r-brand-dark);
+}
+
+.match-points.is-negative {
+  color: var(--r-body);
+}
+
+.match-penalty-cell {
+  font-variant-numeric: tabular-nums;
+}
+
+.match-penalty-amount {
+  color: var(--r-danger);
+  font-weight: 700;
+}
+
+.match-none {
+  color: var(--r-muted-soft);
+}
+
+.match-score-note {
+  max-width: 68ch;
+  margin: var(--sp-3) 0 0;
+  color: var(--r-body);
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+}
+
+.match-penalty-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.match-penalty-item {
+  display: grid;
+  grid-template-columns: minmax(0, 220px) minmax(0, 1fr) auto;
+  gap: var(--sp-2) var(--sp-5);
+  align-items: center;
+  padding: var(--sp-3) 0;
+  border-top: 1px solid var(--r-line-soft);
+}
+
+.match-penalty-item:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.match-penalty-who {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.match-penalty-who strong {
+  color: var(--r-ink);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.match-penalty-who span {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+}
+
+.match-penalty-reason {
+  color: var(--r-body);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.match-penalty-item .match-penalty-amount {
+  justify-self: end;
+  font-size: var(--fs-sm);
+}
+
+.match-penalty-empty {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-1) 0 0;
+}
+
+.match-penalty-empty-icon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--r-brand);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.match-penalty-empty strong {
+  display: block;
+  color: var(--r-ink);
+  font-size: var(--fs-sm);
+}
+
+.match-penalty-empty p {
+  margin: 2px 0 0;
+  color: var(--r-ink-2);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+}
+
+.match-detail-admin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+}
+
+.match-detail-admin form {
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   8. 详情页响应式
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  .match-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .match-fact + .match-fact {
+    border-left: 0;
+  }
+
+  .match-fact:nth-child(even) {
+    border-left: 1px solid var(--r-line-soft);
+  }
+
+  .match-fact:nth-child(n + 3) {
+    border-top: 1px solid var(--r-line-soft);
+  }
+
+  .match-score-card,
+  .match-penalty-card {
+    padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  }
+}
+
+@media (max-width: 640px) {
+  .match-detail-page {
+    gap: var(--sp-4);
+  }
+
+  .match-detail-nav {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .match-step-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-left: 0;
+  }
+
+  .match-step {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .match-step-text {
+    justify-items: center;
+  }
+
+  .match-back {
+    min-height: 44px;
+  }
+
+  .match-score-table th {
+    padding: 6px 4px;
+  }
+
+  .match-score-table td {
+    padding: 10px 4px;
+  }
+
+  .match-placement {
+    width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .match-penalty-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--sp-1) var(--sp-3);
+  }
+
+  .match-penalty-reason {
+    grid-column: 1 / -1;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   评审修复（P1-7）：≤380px 时赛果表 5 列放不下，
+   隐藏「已计入罚点」列（有罚分时下方「罚则摘要」仍会列出明细）。
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 380px) {
+  .match-score-table th:nth-child(5),
+  .match-score-table td:nth-child(5) {
+    display: none;
+  }
+
+  .match-score-table th,
+  .match-score-table td {
+    padding-inline: 6px;
+    font-size: var(--fs-xs);
+  }
+
+  .match-score-table .match-player,
+  .match-score-table .match-final-score {
+    font-size: var(--fs-xs);
+  }
+}
+
+/* 评审修复（P1-6/P1-4）：返回链接点击区 + 赛季筛选 44px */
+.match-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.match-page .page-head .inline-form select {
+  min-height: 44px;
+}

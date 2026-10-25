@@ -1,86 +1,285 @@
 {% extends "base.html" %}
 {% block title %}{{ t('season.rules') }} · Brisbane Riichi{% endblock %}
+{% block report_css %}<link rel="stylesheet" href="{{ url_for('static', filename='report/50-seasons.css') }}">{% endblock %}
 {% block content %}
-<section class="page-head row">
-  <div>
-    <p class="eyebrow">Rules</p>
-    <h1>{{ t('season.rules') }}</h1>
-  </div>
-  {% if current_user and current_user.role == 'super_admin' %}
-    <a class="button" href="{{ url_for('season_new') }}">{{ t('season.new') }}</a>
-  {% endif %}
-</section>
-
-{% if active_season %}
-  <section class="rules-layout">
-    <article class="rules-document">
-      <div class="rules-document-head">
-        <span class="badge {{ active_season.status }}">{{ active_season.status }}</span>
-        <h2>{{ active_season.name }}</h2>
-        <p>{{ t('season.start_version', date=active_season.start_date, version=active_season.version) }}</p>
+<div class="rules-page">
+  <header class="rules-hero">
+    <div class="rules-hero__top">
+      <div class="rules-hero__intro">
+        <h1 class="rules-hero__title">{{ t('rules.page_title') }}</h1>
+        <p class="rules-hero__lead">{{ t('rules.page_lead') }}</p>
+        {% if active_season %}
+          <p class="rules-hero__meta">
+            <span class="r-status {{ 'is-open' if active_season.status == 'active' else 'is-archived' }}">{{ t('rules.current_status') if active_season.status == 'active' else t('rules.archived_status') }}</span>
+            <strong>{{ active_season.name }}</strong>
+            <span class="rules-hero__sep" aria-hidden="true">·</span>
+            <span>{{ t('rules.meta', version=active_season.version, date=active_season.start_date) }}</span>
+          </p>
+        {% endif %}
       </div>
+      {% if current_user and current_user.role == 'super_admin' %}
+        <div class="rules-hero__actions">
+          <a class="button" href="{{ url_for('season_new') }}">{{ t('rules.new_season') }}</a>
+        </div>
+      {% endif %}
+    </div>
 
-      {% for group, fields in active_rules.items() %}
-        <section class="rules-prose-section">
-          <h3>{{ rule_labels[group] }}</h3>
-          {% if group == 'penalties' %}
-            <div class="penalty-policy">
-              {% for key, value in fields.items() %}
-                <div class="multiline-rule">{{ t('status.enabled') if value is sameas true else t('status.disabled') if value is sameas false else value }}</div>
-              {% endfor %}
-            </div>
-          {% else %}
-          <dl class="rules-param-list">
-            {% for key, value in fields.items() %}
-              {% set is_normal_uma = key in ['uma_1st', 'uma_2nd', 'uma_3rd', 'uma_4th'] %}
-              {% set is_a_uma = key.startswith('a_uma_') %}
-              {% if not (group == 'points' and ((fields.use_a_rules and is_normal_uma) or (not fields.use_a_rules and is_a_uma))) %}
-              <div>
-                <dt>{{ field_labels[key] }}</dt>
-                <dd class="{{ 'multiline-rule' if group == 'penalties' else '' }}">{{ t('status.enabled') if value is sameas true else t('status.disabled') if value is sameas false else value }}</dd>
-              </div>
-              {% endif %}
+    {% if active_season and key_facts %}
+      <dl class="rules-keyfacts" aria-label="{{ t('rules.keyfacts_label') }}">
+        <div>
+          <dt>{{ t('rules.keyfacts_starting') }}</dt>
+          <dd>{{ key_facts.starting }}</dd>
+        </div>
+        <div>
+          <dt>{{ t('rules.keyfacts_return') }}</dt>
+          <dd>{{ key_facts.return_points }}</dd>
+        </div>
+        <div>
+          <dt>{{ t('rules.keyfacts_final') }}</dt>
+          <dd>{{ t('rules.keyfacts_final_value', count=key_facts.final) }}</dd>
+        </div>
+        <div>
+          <dt>{{ t('rules.keyfacts_negative') }}</dt>
+          <dd>{{ t('rules.keyfacts_yes') if key_facts.negative else t('rules.keyfacts_no') }}</dd>
+        </div>
+      </dl>
+      <p class="rules-hero__unit">{{ t('rules.unit_note') }}</p>
+    {% endif %}
+  </header>
+
+  {% if active_season and rule_sections %}
+    <div class="rules-layout">
+      <aside class="rules-side">
+        <nav class="rules-toc" aria-label="{{ t('rules.toc_label') }}">
+          <p class="rules-toc__title">{{ t('rules.toc_title') }}</p>
+          <ol class="rules-toc__items">
+            {% for section in rule_sections %}
+              {% set section_title = section.title_en if locale == 'en' else section.title_zh %}
+              <li>
+                <a href="#{{ section.anchor }}" aria-label="{{ t('rules.toc_jump', section=section_title) }}">
+                  <span class="rules-toc__num" aria-hidden="true">{{ section.number }}</span>
+                  <span>{{ section_title }}</span>
+                </a>
+              </li>
             {% endfor %}
-          </dl>
+          </ol>
+        </nav>
+        {# 移动端英文术语默认收起，需要时一键展开（评审 P1-10：51 项双语双行过长）。 #}
+        <button class="rules-terms-toggle" type="button" data-terms-toggle aria-pressed="false">
+          <span aria-hidden="true">EN</span>{{ t('rules.terms_toggle') }}
+        </button>
+
+        <section class="rules-archive" aria-labelledby="rules-archive-title">
+          <div class="rules-archive__head">
+            <h2 id="rules-archive-title">{{ t('rules.archive_title') }}</h2>
+            <span class="rules-archive__count">{{ t('rules.archive_count', count=past_seasons|length) }}</span>
+          </div>
+          {% if past_seasons %}
+            <ul class="rules-archive__list">
+              {% for past in past_seasons %}
+                <li>
+                  <a class="rules-archive__item" href="{{ url_for('season_detail', season_id=past.id) }}">
+                    <span class="rules-archive__name">{{ past.name }}</span>
+                    <span class="rules-archive__meta">{{ t('rules.archived_status') }} · {{ t('rules.archive_meta', version=past.version, date=past.start_date) }}</span>
+                    {% if past.is_test %}<span class="rules-archive__test">{{ t('rules.test_season') }}</span>{% endif %}
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="rules-archive__empty">{{ t('rules.archive_empty') }}</p>
           {% endif %}
         </section>
-      {% endfor %}
+      </aside>
 
-      {% if current_user and current_user.role == 'super_admin' %}
-        <div class="document-actions">
-          <a class="button secondary" href="{{ url_for('season_edit', season_id=active_season.id) }}">{{ t('season.edit_current') }}</a>
-          <a class="ghost-link" href="{{ url_for('season_new', copy=active_season.id) }}">{{ t('season.copy') }}</a>
-          <a class="ghost-link" href="{{ url_for('export_season', season_id=active_season.id) }}">{{ t('season.export_csv') }}</a>
-        </div>
-        {% with season=active_season %}
-          {% include "_season_delete_form.html" %}
-        {% endwith %}
-      {% endif %}
-    </article>
+      <article class="rules-document">
+        {% for section in rule_sections %}
+          {% set section_title = section.title_en if locale == 'en' else section.title_zh %}
+          <section class="rules-section" id="{{ section.anchor }}" aria-labelledby="{{ section.anchor }}-title">
+            <header class="rules-section__head">
+              <span class="rules-section__num" aria-hidden="true">{{ section.number }}</span>
+              <h2 class="rules-section__title" id="{{ section.anchor }}-title">{{ section_title }}</h2>
+              <span class="rules-section__count">{{ t('rules.section_count', count=section.count) }}</span>
+            </header>
 
-    <aside class="season-archive panel">
-      <div class="section-head">
-        <h2>{{ t('season.archive') }}</h2>
-        <span class="muted">{{ t('season.archive_count', count=past_seasons|length) }}</span>
+            {% if section.group == 'penalties' %}
+              <div class="rules-penalties">
+                {% for item in section.penalties %}
+                  {% if item.is_value %}
+                    <div class="rules-penalty">
+                      <span class="rules-penalty__label">{{ item.label }}</span>
+                      <span class="rules-penalty__value">{{ item.detail }}</span>
+                    </div>
+                  {% else %}
+                    <div class="rules-penalty rules-penalty--note">
+                      <span class="rules-penalty__label">{{ item.label }}</span>
+                      <p class="rules-penalty__detail">{{ item.detail }}</p>
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+              <p class="rules-penalty__hint">{{ t('rules.penalty_note') }}</p>
+            {% else %}
+              <dl class="rules-params{{ ' rules-params--two' if section.two_column else ' rules-params--single' }}">
+                {% for field in section.fields %}
+                  {% set primary = field.en if locale == 'en' else field.zh %}
+                  {% set secondary = field.zh if locale == 'en' else field.en %}
+                  <div class="rules-param">
+                    <dt class="rules-param__label">
+                      <span class="rules-param__primary">{{ primary }}</span>
+                      {% if secondary %}<span class="rules-param__secondary">{{ secondary }}</span>{% endif %}
+                    </dt>
+                    {% if field.kind == 'bool' %}
+                      <dd class="rules-param__value {{ 'is-on' if field.value else 'is-off' }}">{{ t('rules.bool_on') if field.value else t('rules.bool_off') }}</dd>
+                    {% else %}
+                      <dd class="rules-param__value">{{ field.display }}</dd>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              </dl>
+            {% endif %}
+          </section>
+        {% endfor %}
+
+        <p class="rules-terms">{{ t('rules.terms_note') }}</p>
+
+        {% if current_user and current_user.role == 'super_admin' %}
+          <div class="document-actions">
+            <a class="button secondary" href="{{ url_for('season_edit', season_id=active_season.id) }}">{{ t('season.edit_current') }}</a>
+            <a class="ghost-link" href="{{ url_for('season_new', copy=active_season.id) }}">{{ t('season.copy') }}</a>
+            <a class="ghost-link" href="{{ url_for('export_season', season_id=active_season.id) }}">{{ t('season.export_csv') }}</a>
+          </div>
+          {% with season=active_season %}
+            {% include "_season_delete_form.html" %}
+          {% endwith %}
+        {% endif %}
+      </article>
+    </div>
+  {% else %}
+    <section class="panel r-empty">
+      <strong>{{ t('season.no_rules') }}</strong>
+      <p>{{ t('rules.empty_hint') }}</p>
+      <div class="rules-hero__actions">
+        <a class="button" href="{{ url_for('about') }}">{{ t('nav.about') }}</a>
+        {% if current_user and current_user.role == 'super_admin' %}
+          <a class="button secondary" href="{{ url_for('season_new') }}">{{ t('season.new') }}</a>
+        {% endif %}
       </div>
-      {% if past_seasons %}
-        <div class="archive-list">
-          {% for season in past_seasons %}
-            <a class="archive-item" href="{{ url_for('season_detail', season_id=season.id) }}">
-              <span class="badge {{ season.status }}">{{ season.status }}</span>
-              <strong>{{ season.name }}</strong>
-              <small>{{ season.start_date }} · v{{ season.version }}</small>
-            </a>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="empty">{{ t('season.no_archive') }}</div>
-      {% endif %}
-    </aside>
-  </section>
-{% else %}
-  <section class="panel">
-    <div class="empty">{{ t('season.no_rules') }}</div>
-  </section>
-{% endif %}
+    </section>
+  {% endif %}
+
+  <button class="rules-backtop" type="button" data-rules-backtop aria-label="{{ t('rules.back_to_top') }}">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M8 13V3M3.8 7.2 8 3l4.2 4.2"/>
+    </svg>
+    <span>{{ t('rules.back_to_top') }}</span>
+  </button>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  function init() {
+    var page = document.querySelector(".rules-page");
+    if (!page) return;
+    var toc = page.querySelector(".rules-toc");
+    var tocTrack = page.querySelector(".rules-toc__items");
+    var links = Array.prototype.slice.call(page.querySelectorAll('.rules-toc a[href^="#rule-"]'));
+    var sections = links.map(function (link) {
+      return document.getElementById(link.getAttribute("href").slice(1));
+    }).filter(Boolean);
+    var backtop = page.querySelector("[data-rules-backtop]");
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var activeId = null;
+    var ticking = false;
+
+    function isCompact() {
+      return window.matchMedia("(max-width: 960px)").matches;
+    }
+
+    function setActive(id) {
+      if (!id || id === activeId) return;
+      activeId = id;
+      links.forEach(function (link) {
+        var on = link.getAttribute("href") === "#" + id;
+        link.classList.toggle("is-active", on);
+        if (on) {
+          link.setAttribute("aria-current", "true");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      });
+      if (isCompact() && tocTrack) {
+        var current = tocTrack.querySelector("a.is-active");
+        if (current) {
+          var trackBox = tocTrack.getBoundingClientRect();
+          var currentBox = current.getBoundingClientRect();
+          var left = tocTrack.scrollLeft + (currentBox.left - trackBox.left)
+            - (tocTrack.clientWidth - currentBox.width) / 2;
+          tocTrack.scrollTo({ left: Math.max(0, left), behavior: reduce ? "auto" : "smooth" });
+        }
+      }
+    }
+
+    function updateActive() {
+      if (!sections.length) return;
+      var threshold = isCompact()
+        ? Math.max(toc ? toc.getBoundingClientRect().bottom + 16 : 0, window.innerHeight * 0.33)
+        : Math.min(window.innerHeight * 0.3, 280);
+      var current = sections[0].id;
+      for (var i = 0; i < sections.length; i += 1) {
+        if (sections[i].getBoundingClientRect().top <= threshold) {
+          current = sections[i].id;
+        } else {
+          break;
+        }
+      }
+      setActive(current);
+    }
+
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(function () {
+        ticking = false;
+        updateActive();
+        if (backtop) {
+          backtop.classList.toggle("is-visible", window.scrollY > 720);
+        }
+      });
+    }
+
+    links.forEach(function (link) {
+      link.addEventListener("click", function (event) {
+        var target = document.getElementById(link.getAttribute("href").slice(1));
+        if (!target) return;
+        event.preventDefault();
+        target.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(null, "", link.getAttribute("href"));
+        }
+        setActive(target.id);
+      });
+    });
+
+    if (backtop) {
+      backtop.addEventListener("click", function () {
+        window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+        if (links[0]) links[0].focus({ preventScroll: true });
+      });
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    updateActive();
+    onScroll();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
 {% endblock %}

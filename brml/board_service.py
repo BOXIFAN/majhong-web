@@ -83,8 +83,8 @@ def storage_is_full() -> bool:
     return board_storage_bytes() >= storage_budget_bytes()
 
 
-def save_board_image(uploaded) -> tuple[str | None, str]:
-    """校验并保存上传图片，返回 ``(文件名, 错误码)``；成功时错误码为空串。
+def save_board_image(uploaded) -> tuple[str | None, int | None, int | None, str]:
+    """校验并保存上传图片，返回 ``(文件名, 宽, 高, 错误码)``；成功时错误码为空串。
 
     错误码：``missing`` / ``type_invalid`` / ``too_large`` / ``too_small`` / ``invalid``。
     体积在 6MB–25MB 之间的原图会走自动压缩，不需要用户自己处理。
@@ -92,32 +92,32 @@ def save_board_image(uploaded) -> tuple[str | None, str]:
     from PIL import Image
 
     if not uploaded or not uploaded.filename:
-        return None, "missing"
+        return None, None, None, "missing"
     filename = uploaded.filename
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     if ext not in ALLOWED_EXTENSIONS:
-        return None, "type_invalid"
+        return None, None, None, "type_invalid"
     # 先按流长度做一次快速拒绝，避免把超大文件整体读入内存。
     uploaded.stream.seek(0, 2)
     size = uploaded.stream.tell()
     uploaded.stream.seek(0)
     if size > MAX_UPLOAD_BYTES:
-        return None, "too_large"
+        return None, None, None, "too_large"
     try:
         image = Image.open(uploaded.stream)
         image.load()  # 强制解码，截断或伪造的图片会在这里抛错
     except Exception:
-        return None, "invalid"
+        return None, None, None, "invalid"
     if min(image.size) < MIN_IMAGE_SIDE:
-        return None, "too_small"
+        return None, None, None, "too_small"
     try:
-        stored = _write_compressed_jpeg(image)
+        stored, width, height = _write_compressed_jpeg(image)
     except Exception:
-        return None, "invalid"
-    return stored.name, ""
+        return None, None, None, "invalid"
+    return stored.name, width, height, ""
 
 
-def _write_compressed_jpeg(image) -> Path:
+def _write_compressed_jpeg(image) -> tuple[Path, int, int]:
     """把图片压到落盘上限以内并返回文件路径。
 
     先按最大边缩放，再逐步降低 JPEG 质量；仍超标就继续缩小尺寸，
@@ -147,7 +147,7 @@ def _write_compressed_jpeg(image) -> Path:
         if stored.stat().st_size <= MAX_STORED_BYTES or max_side <= MIN_IMAGE_SIDE_AFTER_RESIZE:
             break
         max_side = max(int(max_side * 0.75), MIN_IMAGE_SIDE_AFTER_RESIZE)
-    return stored
+    return stored, working.size[0], working.size[1]
 
 
 def delete_board_image(filename: str | None) -> None:

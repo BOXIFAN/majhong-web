@@ -1,61 +1,196 @@
 {% extends "base.html" %}
-{% block title %}{{ t('meetup.title') }} · Brisbane Riichi{% endblock %}
+{% block title %}{{ t('meetup2.title') }} · Brisbane Riichi{% endblock %}
+{% block report_css %}<link rel="stylesheet" href="{{ url_for('static', filename='report/30-meetups.css') }}">{% endblock %}
+
+{#-
+  用 Sakamoto 算法在模板里算星期，避免把「周六」写死：
+  数据库里存的是 "YYYY-MM-DD HH:MM:SS" 文本，后端未下发星期字段。
+  返回值：h=0 周六，1 周日，2 周一 …… 6 周五。
+-#}
+{% macro weekday_label(value) -%}
+  {%- set y = value[0:4]|int -%}
+  {%- set m = value[5:7]|int -%}
+  {%- set d = value[8:10]|int -%}
+  {%- if m < 3 -%}{%- set m = m + 12 -%}{%- set y = y - 1 -%}{%- endif -%}
+  {%- set h = (d + ((13 * (m + 1)) // 5) + (y % 100) + ((y % 100) // 4) + ((y // 100) // 4) + (5 * (y // 100))) % 7 -%}
+  {%- if locale == 'en' -%}{{ ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'][h] }}{%- else -%}{{ ['周六', '周日', '周一', '周二', '周三', '周四', '周五'][h] }}{%- endif -%}
+{%- endmacro %}
+
 {% block content %}
-<section class="page-head row meetup-page-head">
-  <div>
-    <p class="eyebrow">BRML Meetup</p>
-    <h1>{{ t('meetup.title') }}</h1>
-    <p>{{ t('meetup.subtitle') }}</p>
-  </div>
-</section>
+<div class="meetup-page">
+  <header class="meetup-page-head">
+    <p class="eyebrow">{{ t('meetup2.eyebrow') }}</p>
+    <h1>{{ t('meetup2.title') }}</h1>
+    <p class="meetup-page-lead">{{ t('meetup2.lead') }}</p>
+    <p class="meetup-rhythm">{{ t('meetup2.rhythm') }}</p>
+  </header>
 
-{% if current_user and current_user.role == 'super_admin' %}
-  <form class="panel meetup-create-form" method="post" action="{{ url_for('meetup_new') }}">
-    <div>
-      <strong>{{ t('meetup.create') }}</strong>
-      <small>{{ t('meetup.timezone') }}</small>
-    </div>
-    <label>{{ t('meetup.time') }}
-      <input name="meetup_at" type="datetime-local" required>
-    </label>
-    <label>{{ t('meetup.deadline') }}
-      <input name="signup_deadline" type="datetime-local" required>
-    </label>
-    <label>{{ t('meetup.venue') }}
-      <input name="venue" type="text" value="{{ default_meetup_venue }}" required>
-    </label>
-    <button class="button" type="submit">{{ t('meetup.create') }}</button>
-  </form>
-{% endif %}
-
-{% if meetups %}
-  <section class="meetup-timeline" aria-label="{{ t('meetup.title') }}">
-    {% for meetup in meetups %}
-      <a class="meetup-card meetup-card-link status-{{ meetup.status }}" href="{{ url_for('meetup_detail', meetup_id=meetup.id) }}">
-        <div class="meetup-time-column">
-          <time datetime="{{ meetup.meetup_at.replace(' ', 'T') }}">{{ meetup.meetup_at[:16] }}</time>
-          <small>{{ t('meetup.timezone') }}</small>
-        </div>
-        <div class="meetup-list-summary">
-          <span class="meetup-status-badge status-{{ meetup.status }}">{{ t('meetup.' ~ meetup.status) }}</span>
-          <dl>
-            <div><dt>{{ t('meetup.deadline') }}</dt><dd>{{ meetup.signup_deadline[:16] }}</dd></div>
-            <div><dt>{{ t('meetup.attendees') }}</dt><dd>{{ t('meetup.attendee_count', count=meetup.attendee_count) }}</dd></div>
-            <div class="meetup-venue-item"><dt>{{ t('meetup.venue') }}</dt><dd>{{ meetup.venue }}</dd></div>
-          </dl>
-          <strong class="meetup-view-link">{{ t('meetup.view_signup') }} →</strong>
-        </div>
-      </a>
-    {% endfor %}
-  </section>
-  {% if pagination.pages > 1 %}
-    <nav class="pagination" aria-label="{{ t('pagination.meetups') }}">
-      {% if pagination.has_prev %}<a href="{{ url_for('meetups', page=pagination.prev_page) }}">{{ t('pagination.prev') }}</a>{% else %}<span class="disabled">{{ t('pagination.prev') }}</span>{% endif %}
-      <strong>{{ pagination.page }} / {{ pagination.pages }}</strong>
-      {% if pagination.has_next %}<a href="{{ url_for('meetups', page=pagination.next_page) }}">{{ t('pagination.next') }}</a>{% else %}<span class="disabled">{{ t('pagination.next') }}</span>{% endif %}
-    </nav>
+  {% if current_user and current_user.role == 'super_admin' %}
+    <form class="meetup-admin-create" method="post" action="{{ url_for('meetup_new') }}">
+      <div class="meetup-admin-create-head">
+        <strong>{{ t('meetup2.create') }}</strong>
+        <small>{{ t('meetup2.create_hint') }}</small>
+      </div>
+      <label>{{ t('meetup.time') }}
+        <input name="meetup_at" type="datetime-local" required>
+      </label>
+      <label>{{ t('meetup.deadline') }}
+        <input name="signup_deadline" type="datetime-local" required>
+      </label>
+      <label>{{ t('meetup.venue') }}
+        <input name="venue" type="text" value="{{ default_meetup_venue }}" required>
+      </label>
+      <label>{{ t('meetup2.field_title') }}
+        <input name="title" type="text" placeholder="{{ t('meetup2.field_title_hint') }}">
+      </label>
+      <label>{{ t('meetup2.field_capacity') }}
+        <input name="capacity" type="number" min="1" step="1" inputmode="numeric" placeholder="{{ t('meetup2.field_capacity_hint') }}">
+      </label>
+      <label>{{ t('meetup2.field_note') }}
+        <input name="note" type="text" placeholder="{{ t('meetup2.field_note_hint') }}">
+      </label>
+      <button class="button" type="submit">{{ t('meetup2.create') }}</button>
+    </form>
   {% endif %}
-{% else %}
-  <section class="panel"><div class="empty">{{ t('meetup.none') }}</div></section>
-{% endif %}
+
+  <section class="meetup-section" aria-labelledby="meetup-upcoming-title">
+    <div class="r-section-head">
+      <h2 id="meetup-upcoming-title">{{ t('meetup2.upcoming_title') }}</h2>
+      <p>{{ t('meetup2.count', count=upcoming_meetups|length) }}</p>
+    </div>
+
+    {% if upcoming_meetups %}
+      <ul class="meetup-list">
+        {% for meetup in upcoming_meetups %}
+          <li>
+            <article class="meetup-row is-{{ meetup.status }}">
+              <div class="meetup-row-top">
+                <a class="meetup-row-date" href="{{ url_for('meetup_detail', meetup_id=meetup.id) }}">
+                  <time datetime="{{ meetup.meetup_at.replace(' ', 'T') }}">{{ meetup.meetup_at[:10] }}</time>
+                  <small>{{ weekday_label(meetup.meetup_at) }} · {{ meetup.meetup_at[11:16] }}</small>
+                </a>
+                {% if meetup.status == 'open' and meetup.signed_up %}
+                  <span class="r-status is-signed">✓ {{ t('meetup2.badge_signed') }}</span>
+                {% elif meetup.status == 'open' %}
+                  <span class="r-status is-open">{{ t('meetup2.badge_open') }}</span>
+                {% else %}
+                  <span class="r-status is-closed">{{ t('meetup2.badge_closed') }}</span>
+                {% endif %}
+              </div>
+              {% if meetup.title %}
+                <a class="meetup-row-title" href="{{ url_for('meetup_detail', meetup_id=meetup.id) }}">{{ meetup.title }}</a>
+              {% endif %}
+              <div class="meetup-row-bottom">
+                <p class="meetup-row-meta">
+                  <span>{{ t('meetup2.deadline', date=meetup.signup_deadline[5:16]) }}</span>
+                  {% if meetup.capacity %}
+                    <span>{{ t('meetup2.people_capacity', count=meetup.attendee_count, capacity=meetup.capacity) }}</span>
+                  {% else %}
+                    <span>{{ t('meetup2.people', count=meetup.attendee_count) }}</span>
+                  {% endif %}
+                  <span class="meetup-row-venue"><span class="meetup-row-venue-full">{{ meetup.venue }}</span><span class="meetup-row-venue-short">{{ meetup.venue.split(' · ')[0] }}</span></span>
+                </p>
+                <div class="meetup-row-actions">
+                  {% if meetup.status == 'open' %}
+                    {% if current_user and meetup.signed_up %}
+                      <a class="meetup-cta is-quiet" href="{{ url_for('meetup_detail', meetup_id=meetup.id) }}">{{ t('meetup2.cta_view') }}</a>
+                      <form method="post" action="{{ url_for('meetup_signup_cancel', meetup_id=meetup.id) }}"
+                            onsubmit="return confirm({{ t('meetup2.cancel_confirm')|tojson }});">
+                        <button class="meetup-cancel" type="submit">{{ t('meetup2.cancel_action') }}</button>
+                      </form>
+                    {% elif current_user %}
+                      <form method="post" action="{{ url_for('meetup_signup', meetup_id=meetup.id) }}">
+                        <button class="meetup-cta" type="submit">{{ t('meetup2.cta_signup') }}</button>
+                      </form>
+                    {% else %}
+                      <a class="meetup-cta" href="{{ url_for('login', next=url_for('meetup_detail', meetup_id=meetup.id)) }}">{{ t('meetup2.cta_signup') }}</a>
+                    {% endif %}
+                  {% else %}
+                    <a class="meetup-cta is-quiet" href="{{ url_for('meetup_detail', meetup_id=meetup.id) }}">{{ t('meetup2.cta_detail') }}</a>
+                  {% endif %}
+                </div>
+              </div>
+            </article>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="r-empty meetup-empty">
+        <img src="{{ url_for('static', filename='que/que-yuji-syuku.svg') }}" alt="">
+        <strong>{{ t('meetup2.empty_title') }}</strong>
+        <p>{{ t('meetup2.empty_body') }}</p>
+        <p class="meetup-empty-contact">{{ t('meetup2.empty_contact') }}</p>
+        <div class="meetup-empty-actions">
+          <a class="button" href="mailto:contact@bneriichi.com">{{ t('meetup2.contact_email') }}</a>
+          <a class="secondary-button" href="https://x.com/bneriichi?s=11&amp;t=ly2K-sDBckYzqe3m941ycA" target="_blank" rel="noopener noreferrer">{{ t('meetup2.contact_x') }}</a>
+          <a class="secondary-button" href="https://xhslink.cn/o/1YX4phhFyRu" target="_blank" rel="noopener noreferrer">{{ t('meetup2.contact_xhs') }}</a>
+        </div>
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="meetup-section meetup-archive" id="meetup-archive" aria-labelledby="meetup-archive-title">
+    <div class="r-section-head">
+      <h2 id="meetup-archive-title">{{ t('meetup2.archive_title') }}</h2>
+      <p>{{ t('meetup2.count', count=pagination.total) }}</p>
+    </div>
+
+    {% if past_meetups %}
+      <ul class="meetup-list">
+        {% for meetup in past_meetups %}
+          <li>
+            <article class="meetup-row is-archived">
+              <div class="meetup-row-top">
+                <a class="meetup-row-date" href="{{ url_for('meetup_detail', meetup_id=meetup.id) }}">
+                  <time datetime="{{ meetup.meetup_at.replace(' ', 'T') }}">{{ meetup.meetup_at[:10] }}</time>
+                  <small>{{ weekday_label(meetup.meetup_at) }} · {{ meetup.meetup_at[11:16] }}</small>
+                </a>
+                <span class="r-status is-archived">{{ t('meetup2.badge_archived') }}</span>
+              </div>
+              {% if meetup.title %}
+                <a class="meetup-row-title is-quiet" href="{{ url_for('meetup_detail', meetup_id=meetup.id) }}">{{ meetup.title }}</a>
+              {% endif %}
+              <div class="meetup-row-bottom">
+                <p class="meetup-row-meta">
+                  <span>{{ t('meetup2.people', count=meetup.attendee_count) }}</span>
+                  <span class="meetup-row-venue"><span class="meetup-row-venue-full">{{ meetup.venue }}</span><span class="meetup-row-venue-short">{{ meetup.venue.split(' · ')[0] }}</span></span>
+                </p>
+                <div class="meetup-row-actions">
+                  <a class="meetup-cta is-quiet" href="{{ url_for('meetup_detail', meetup_id=meetup.id) }}">{{ t('meetup2.cta_review') }}</a>
+                </div>
+              </div>
+            </article>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="meetup-archive-empty r-meta">{{ t('meetup2.archive_empty') }}</p>
+    {% endif %}
+
+    {% if pagination.pages > 1 %}
+      <nav class="pagination meetup-pagination" aria-label="{{ t('meetup2.pagination') }}">
+        {% if pagination.has_prev %}
+          <a href="{{ url_for('meetups', page=pagination.prev_page) }}#meetup-archive">{{ t('pagination.prev') }}</a>
+        {% else %}
+          <span class="disabled">{{ t('pagination.prev') }}</span>
+        {% endif %}
+        <span class="meetup-pagination-pages">
+          {% for num in pagination.page_numbers %}
+            {% if num == pagination.page %}
+              <strong aria-current="page">{{ num }}</strong>
+            {% else %}
+              <a href="{{ url_for('meetups', page=num) }}#meetup-archive">{{ num }}</a>
+            {% endif %}
+          {% endfor %}
+          <span class="meetup-pagination-label">{{ t('meetup2.page', page=pagination.page, pages=pagination.pages) }}</span>
+        </span>
+        {% if pagination.has_next %}
+          <a href="{{ url_for('meetups', page=pagination.next_page) }}#meetup-archive">{{ t('pagination.next') }}</a>
+        {% else %}
+          <span class="disabled">{{ t('pagination.next') }}</span>
+        {% endif %}
+      </nav>
+    {% endif %}
+  </section>
+</div>
 {% endblock %}

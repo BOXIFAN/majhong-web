@@ -1,84 +1,157 @@
 {% extends "base.html" %}
 {% block title %}{{ t('nav.leaderboard') }} · Brisbane Riichi{% endblock %}
+{% block report_css %}<link rel="stylesheet" href="{{ url_for('static', filename='report/20-leaderboard.css') }}">{% endblock %}
 {% block content %}
-<section class="page-head row season-filter-page">
-  <div>
-    <p class="eyebrow">Leaderboard</p>
-    <h1>{{ t('nav.leaderboard') }}</h1>
-  </div>
-  <div class="page-head-actions">
-    <form class="inline-form" method="get">
-      <select name="season_id" onchange="this.form.submit()">
-        {% for season in seasons %}
-          <option value="{{ season.id }}" {% if selected_season and season.id == selected_season.id %}selected{% endif %}>{{ season.name }}</option>
-        {% endfor %}
-      </select>
-    </form>
-  </div>
-</section>
-<section class="panel vt-board-panel">
-  {% if rows %}
-    <div class="table-wrap">
-      <table class="board-table">
-        <thead><tr><th>#</th><th>{{ t('table.player') }}</th><th>{{ t('table.points') }}</th><th>{{ t('table.matches') }}</th><th>{{ t('table.avg_place') }}</th><th>{{ t('table.first_rate') }}</th><th>{{ t('table.fourth_rate') }}</th></tr></thead>
-        <tbody>
-          {% for row in rows %}
-            <tr class="{% if loop.index <= 4 %}top-rank{% elif loop.revindex <= 4 %}low-rank{% endif %}" style="--i: {{ [loop.index0, 12]|min }}">
-              <td>{% if loop.index <= 4 %}<span class="rank-no-badge">{{ loop.index }}</span>{% else %}{{ loop.index }}{% endif %}</td>
-              <td>
-                <a class="rank-player" href="{{ url_for('player_profile', user_id=row.user_id) }}">
-                  {% set av = avatar_meta(row) %}
-                  <span class="rank-avatar{% if av.kind == 'initial' %} is-initial{% endif %}" data-vt="avatar-{{ row.user_id }}"{% if av.kind == 'preset' %} style="background: {{ av.bg }}"{% endif %}>
-                    {%- if av.kind == 'upload' %}<img src="{{ url_for('avatar_file', filename=av.src) }}" alt="" loading="lazy">{%- elif av.kind == 'preset' %}{{ av.emoji }}{%- else %}{{ av.letter }}{%- endif %}
-                  </span>
-                  <span class="rank-name">{{ row.display_name }}</span>
-                </a>
-              </td>
-              <td class="strong">{{ row.total_points }}</td>
-              <td>{{ row.matches }}</td>
-              <td>{{ row.avg_place }}</td>
-              <td>{{ row.first_rate }}%</td>
-              <td>{{ row.fourth_rate }}%</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+<div class="lb-page">
+  <section class="page-head row season-filter-page lb-head">
+    <div class="lb-head-copy">
+      <h1>{{ t('nav.leaderboard') }}</h1>
+      {% if selected_season %}
+        <p class="lb-head-meta">
+          <span class="lb-season-current">{{ selected_season.name }}</span>
+          {% if legend.is_historical %}
+            <span class="r-status is-archived">{{ t('leaderboard.season_historical') }}</span>
+          {% elif selected_season %}
+            <span class="r-status is-open">{{ t('leaderboard.season_active') }}</span>
+          {% endif %}
+          {% if legend.is_test_season %}
+            <span class="r-status is-warning">{{ t('leaderboard.season_test') }}</span>
+          {% endif %}
+          {% if legend.enabled %}
+            <span class="r-meta">{{ t('leaderboard.players_count', count=legend.row_count) }}</span>
+          {% endif %}
+        </p>
+      {% endif %}
     </div>
-  {% else %}
-    <div class="empty">{{ t('leaderboard.empty') }}</div>
-  {% endif %}
-</section>
+    {% if seasons %}
+      <form class="lb-season-form" method="get" action="{{ url_for('leaderboard') }}">
+        <label class="lb-season-label" for="lb-season-select">{{ t('leaderboard.season_label') }}</label>
+        <span class="lb-season-control">
+          <select id="lb-season-select" name="season_id" onchange="this.form.submit()">
+            {% for season in seasons %}
+              {% set season_is_test = 'tester' in season.name|lower %}
+              {% if not season_is_test or (selected_season and selected_season.id == season.id) %}
+                <option value="{{ season.id }}"{% if selected_season and selected_season.id == season.id %} selected{% endif %}>{% if season_is_test %}{{ season.name }} · {{ t('leaderboard.season_test') }}{% else %}{{ season.name }}{% endif %}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </span>
+      </form>
+    {% endif %}
+  </section>
 
-<section class="panel finals-status-card">
-  <div class="section-head">
-    <h2>{{ t('finals.title') }}</h2>
-  </div>
-  {% if finals_status %}
-    <div class="finals-status-grid">
-      <div class="finals-status-item">
-        <span>{{ t('finals.distance') }}</span>
-        {% if finals_status.matches_met %}
-          <strong>{{ t('finals.matches_met') }}</strong>
-          <small>{{ t('finals.matches_done', matches=finals_status.matches, required=finals_status.required_matches) }}</small>
+  {% if selected_season and finals_status %}
+    <section class="lb-finals-bar" aria-labelledby="lb-finals-title">
+      <div class="lb-finals-copy">
+        <h2 class="lb-finals-title" id="lb-finals-title">{{ t('leaderboard.finals_kicker') }}</h2>
+        {% if finals_status.logged_in %}
+          <p class="lb-finals-main">
+            {%- if finals_status.matches_met -%}
+              {{ t('leaderboard.finals_remaining_met') }}
+            {%- else -%}
+              {{ t('leaderboard.finals_remaining', count=finals_status.remaining_matches) }}
+            {%- endif -%}
+            <span class="lb-finals-sep" aria-hidden="true">·</span>
+            {{ t('leaderboard.finals_progress', matches=finals_status.matches, required=finals_status.required_matches) }}
+          </p>
         {% else %}
-          <strong>{{ t('finals.matches_remaining', count=finals_status.remaining_matches) }}</strong>
-          <small>{{ t('finals.matches_progress', required=finals_status.required_matches, matches=finals_status.matches) }}</small>
+          <p class="lb-finals-main">{{ t('leaderboard.finals_rule', required=finals_status.required_matches) }}</p>
         {% endif %}
       </div>
-      <div class="finals-status-item">
-        <span>{{ t('finals.status') }}</span>
-        <strong>{{ finals_status.cup_status }}</strong>
-        {% if finals_status.championship_gap is not none and finals_status.yakitori_gap is not none and finals_status.championship_gap > 0 %}
-          <small>{{ t('finals.gap_both', championship=finals_status.championship_gap, yakitori=finals_status.yakitori_gap) }}</small>
-        {% elif finals_status.championship_gap is not none and finals_status.yakitori_gap is not none and finals_status.yakitori_gap > 0 %}
-          <small>{{ t('finals.gap_yakitori', championship=finals_status.championship_gap, yakitori=finals_status.yakitori_gap) }}</small>
-        {% elif finals_status.rank %}
-          <small>{{ t('finals.rank_points', rank=finals_status.rank, points=finals_status.points) }}</small>
-        {% endif %}
-      </div>
-    </div>
-  {% else %}
-    <div class="empty">{{ t('finals.select_season') }}</div>
+      {% if finals_status.logged_in %}
+        <div class="lb-finals-state">
+          <p class="lb-finals-cup">{{ finals_status.cup_status }}</p>
+          {% if finals_status.championship_gap is not none and finals_status.yakitori_gap is not none and finals_status.championship_gap > 0 %}
+            <p class="lb-finals-note">{{ t('finals.gap_both', championship=finals_status.championship_gap, yakitori=finals_status.yakitori_gap) }}</p>
+          {% elif finals_status.championship_gap is not none and finals_status.yakitori_gap is not none and finals_status.yakitori_gap > 0 %}
+            <p class="lb-finals-note">{{ t('finals.gap_yakitori', championship=finals_status.championship_gap, yakitori=finals_status.yakitori_gap) }}</p>
+          {% elif finals_status.rank %}
+            <p class="lb-finals-note">{{ t('finals.rank_points', rank=finals_status.rank, points=finals_status.points) }}</p>
+          {% endif %}
+        </div>
+      {% else %}
+        <a class="lb-finals-cta" href="{{ url_for('login', next='/leaderboard') }}">{{ t('leaderboard.finals_login') }}</a>
+      {% endif %}
+    </section>
   {% endif %}
-</section>
+
+  <section class="panel vt-board-panel lb-board-panel">
+    {% if rows %}
+      <div class="lb-board-tools">
+        {% if legend.enabled %}
+          <ul class="r-legend lb-legend">
+            <li><i class="is-finals" aria-hidden="true"></i>{{ t('leaderboard.legend_finals') }}</li>
+            {% if legend.row_count > legend.top_count %}
+              <li><i class="is-bottom" aria-hidden="true"></i>{{ t('leaderboard.legend_bottom') }}</li>
+            {% endif %}
+            <li class="lb-legend-note">{{ t('leaderboard.legend_avg_note') }}</li>
+          </ul>
+        {% endif %}
+        <p class="lb-board-note">{{ t('leaderboard.sort_note') }}</p>
+      </div>
+      <div class="table-wrap lb-table-wrap">
+        <table class="board-table lb-table" role="table">
+          <thead role="rowgroup">
+            <tr role="row">
+              <th role="columnheader" scope="col" class="lb-col-rank">#</th>
+              <th role="columnheader" scope="col" class="lb-col-player">{{ t('table.player') }}</th>
+              <th role="columnheader" scope="col" class="lb-col-points"><span class="lb-th-long">{{ t('leaderboard.col_points') }}</span><span class="lb-th-short">{{ t('leaderboard.col_points_short') }}</span></th>
+              <th role="columnheader" scope="col" class="lb-col-matches">{{ t('leaderboard.col_matches') }}</th>
+              <th role="columnheader" scope="col" class="lb-col-avg"><span class="lb-th-long">{{ t('leaderboard.col_avg') }}</span><span class="lb-th-short">{{ t('leaderboard.col_avg_short') }}</span><small class="lb-th-note">{{ t('leaderboard.col_avg_note') }}</small></th>
+              <th role="columnheader" scope="col" class="lb-col-first">{{ t('leaderboard.col_first') }}</th>
+              <th role="columnheader" scope="col" class="lb-col-fourth">{{ t('leaderboard.col_fourth') }}</th>
+            </tr>
+          </thead>
+          <tbody role="rowgroup">
+            {% for row in rows %}
+              {% if legend.enabled and loop.index == legend.top_count + 1 %}
+                <tr class="lb-cut-row" role="row">
+                  <td role="cell" colspan="7">
+                    <div class="lb-cut-inner">
+                      <span class="lb-cut-line" aria-hidden="true"></span>
+                      <span class="lb-cut-label">{{ t('leaderboard.cut_finals') }}</span>
+                    </div>
+                  </td>
+                </tr>
+              {% endif %}
+              {% if legend.enabled and legend.has_cut_line and loop.index == legend.row_count - legend.bottom_count + 1 %}
+                <tr class="lb-cut-row" role="row">
+                  <td role="cell" colspan="7">
+                    <div class="lb-cut-inner">
+                      <span class="lb-cut-line" aria-hidden="true"></span>
+                      <span class="lb-cut-label">{{ t('leaderboard.cut_yakitori') }}</span>
+                    </div>
+                  </td>
+                </tr>
+              {% endif %}
+              <tr role="row" class="{% if legend.enabled and loop.index <= legend.top_count %}top-rank{% elif legend.enabled and loop.revindex <= legend.bottom_count %}low-rank{% endif %}" style="--i: {{ [loop.index0, 12]|min }}">
+                <td role="cell" class="lb-rank">{% if legend.enabled and loop.index <= legend.top_count %}<span class="rank-no-badge">{{ loop.index }}</span>{% else %}{{ loop.index }}{% endif %}</td>
+                <td role="cell" class="lb-player">
+                  <a class="rank-player" href="{{ url_for('player_profile', user_id=row.user_id) }}">
+                    {% set av = avatar_meta(row) %}
+                    <span class="rank-avatar{% if av.kind == 'initial' %} is-initial{% endif %}" data-vt="avatar-{{ row.user_id }}"{% if av.kind == 'preset' %} style="background: {{ av.bg }}"{% endif %}>
+                      {%- if av.kind == 'upload' %}<img src="{{ url_for('avatar_file', filename=av.src) }}" alt="" loading="lazy">{%- elif av.kind == 'preset' %}{{ av.emoji }}{%- else %}{{ av.letter }}{%- endif %}
+                    </span>
+                    <span class="rank-name">{{ row.display_name }}</span>
+                  </a>
+                </td>
+                <td role="cell" class="lb-points">{{ row.total_points }}</td>
+                <td role="cell" class="lb-matches">{{ row.matches }}</td>
+                <td role="cell" class="lb-avg">{{ row.avg_place }}</td>
+                <td role="cell" class="lb-rate lb-rate-first"><span class="lb-rate-label">{{ t('leaderboard.rate_first') }}</span>{{ row.first_rate }}%</td>
+                <td role="cell" class="lb-rate lb-rate-fourth"><span class="lb-rate-label">{{ t('leaderboard.rate_fourth') }}</span>{{ row.fourth_rate }}%</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="r-empty">
+        <strong>{{ t('leaderboard.empty_title') }}</strong>
+        <p>{{ t('leaderboard.empty_body') }}</p>
+        <a class="r-link" href="{{ url_for('seasons') }}">{{ t('leaderboard.empty_action') }}</a>
+      </div>
+    {% endif %}
+  </section>
+</div>
 {% endblock %}

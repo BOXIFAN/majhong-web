@@ -50,7 +50,10 @@ class PublicPageSmokeTests(unittest.TestCase):
     def test_protected_page_redirects_to_login(self) -> None:
         response = self.client.get("/finance")
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.headers["Location"].endswith("/login"))
+        location = response.headers["Location"]
+        # 调研报告 A-3：登录跳转必须带回跳地址，登录后回到原页面。
+        self.assertTrue(location.startswith("/login"))
+        self.assertIn("next=/finance", location)
 
     def test_guest_can_view_meetups_and_is_redirected_to_login_on_signup(self) -> None:
         application.app.config["SEED_DEMO_DATA"] = True
@@ -92,7 +95,8 @@ class PublicPageSmokeTests(unittest.TestCase):
 
         signup = anonymous.post(f"/meetups/{meetup_id}/signup")
         self.assertEqual(signup.status_code, 302)
-        self.assertTrue(signup.headers["Location"].endswith("/login"))
+        self.assertTrue(signup.headers["Location"].startswith("/login"))
+        self.assertIn("next=", signup.headers["Location"])
 
     def test_finance_page_shows_summary_and_exports_ledger(self) -> None:
         application.app.config["SEED_DEMO_DATA"] = True
@@ -230,7 +234,7 @@ class PublicPageSmokeTests(unittest.TestCase):
 
         body = self.client.get(f"/matches?season_id={season_id}").get_data(as_text=True)
         self.assertIn("selected", body)
-        self.assertEqual(body.count('class="match-card"'), expected)
+        self.assertEqual(body.count('class="match-row"'), expected)
 
         with sqlite3.connect(self.database) as db:
             active_row = db.execute(
@@ -243,7 +247,7 @@ class PublicPageSmokeTests(unittest.TestCase):
                     "select count(*) from matches where season_id = ?", (active_id,)
                 ).fetchone()[0]
             default_body = self.client.get("/matches").get_data(as_text=True)
-            self.assertEqual(default_body.count('class="match-card"'), min(expected_default, 20))
+            self.assertEqual(default_body.count('class="match-row"'), min(expected_default, 20))
 
     def test_language_switch_is_stored_in_session(self) -> None:
         response = self.client.get("/language/en")
@@ -395,11 +399,18 @@ class PublicPageSmokeTests(unittest.TestCase):
         third_rate = round(sum(row[0] == 3 for row in placements) / total * 100, 1)
         html = self.client.get(f"/players/{user_id}").get_data(as_text=True)
 
-        self.assertIn("二位 / 三位", html)
-        self.assertIn(f"{second_rate}% / {third_rate}%", html)
+        # 调研报告 P1-11：指标卡改成「标签在上、值 24px、细竖线分隔」的结构，
+        # 移动端默认只露 3 个核心数字，其余收在「赛季数据」details 里。
+        self.assertIn('class="player-metrics"', html)
+        self.assertIn("一位率 / 四位率", html)
+        self.assertIn("二位率 / 三位率", html)
+        self.assertIn(f"{second_rate}%", html)
+        self.assertIn(f"{third_rate}%", html)
+        self.assertIn("返回排行榜", html)
+        self.assertIn("赛季数据", html)
         self.assertNotIn("牌风匹配", html)
-        self.assertIn('class="player-metrics-details" data-mobile-collapsible open', html)
-        self.assertIn("详细参数", html)
+        # 雷达下方的重复 3×2 数值表已删除（P1-11），保留 details 容器与雷达说明
+        self.assertIn('class="player-more"', html)
         self.assertNotIn('class="radar-details"', html)
 
     def test_existing_database_is_not_overwritten_without_force(self) -> None:
@@ -434,7 +445,7 @@ class PublicPageSmokeTests(unittest.TestCase):
                 response = self.client.get(path)
                 html = response.get_data(as_text=True)
                 self.assertEqual(response.status_code, 200)
-                self.assertIn('class="penalty-policy"', html)
+                self.assertIn('class="rules-penalties"', html)
                 self.assertIn(long_policy, html)
                 self.assertNotIn("罚则内容 / Penalty Policy", html)
 

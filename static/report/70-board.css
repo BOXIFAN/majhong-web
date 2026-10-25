@@ -1,0 +1,997 @@
+/* ==========================================================================
+   BRML UI/UX 改造 · 页面分片 70：留言板（WP7）
+   --------------------------------------------------------------------------
+   对应 review-report.md：P1-12（重复登录提示 / 两种控件语法 / FAB 压卡 /
+   绿色剩余天数）、C-16（保留期没说清是图片）、A-3（登录不回原处）、
+   文案与术语表（「剩余 3 天」→「图片保留剩余 3 天（至 10-27）」）。
+   作用域：.board-page / .board-page--detail，覆盖 style.css 里的旧 .board-* 规则。
+   ========================================================================== */
+
+.board-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-4);
+  color: var(--r-ink);
+}
+
+/* --------------------------------------------------------------------------
+   1. 页头：标题 + 折叠「发帖规则」+ 发布入口
+   -------------------------------------------------------------------------- */
+
+.board-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-3) var(--sp-5);
+}
+
+.board-head-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.board-head h1,
+.board-detail-head h1 {
+  margin: 0;
+  font-size: var(--fs-2xl);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+
+.board-lede {
+  margin: 0;
+  max-width: 48ch;
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+
+.board-head-actions {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+}
+
+/* 规则收进 <details>：首屏只占一个 40px 按钮，展开时是右对齐的小面板。 */
+.board-rules-details {
+  order: -1;
+}
+
+.board-rules-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--r-line);
+  border-radius: 999px;
+  background: var(--r-surface);
+  color: var(--r-ink-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1;
+  list-style: none;
+  cursor: pointer;
+  transition: background var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+
+.board-rules-summary::-webkit-details-marker {
+  display: none;
+}
+
+.board-rules-summary::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg) translate(-1px, -1px);
+  transition: transform var(--dur-fast) ease;
+}
+
+.board-rules-details[open] .board-rules-summary {
+  border-color: var(--r-brand-line);
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+}
+
+.board-rules-details[open] .board-rules-summary::after {
+  transform: rotate(225deg) translate(-1px, -1px);
+}
+
+.board-rules-summary:hover {
+  border-color: var(--r-brand-line);
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+}
+
+.board-rules-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  gap: 6px;
+  width: min(340px, calc(100vw - 40px));
+  margin: 0;
+  padding: 14px 16px;
+  list-style: none;
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius-sm);
+  background: var(--r-surface);
+  box-shadow: var(--r-shadow);
+  color: var(--r-body);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+}
+
+.board-rules-list li {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  align-items: start;
+}
+
+.board-rules-list li::before {
+  content: "·";
+  color: var(--r-brand);
+  font-weight: 900;
+}
+
+.board-rules-list li.is-full {
+  color: var(--r-danger);
+}
+
+.board-publish {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 var(--sp-4);
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--r-brand), var(--r-brand-dark));
+  color: #fff;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 10px 22px rgba(15, 118, 110, 0.24);
+  transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+
+.board-publish:hover {
+  transform: translateY(-1px);
+  color: #fff;
+  box-shadow: 0 14px 26px rgba(15, 118, 110, 0.3);
+}
+
+.board-publish:active {
+  transform: translateY(0);
+}
+
+/* --------------------------------------------------------------------------
+   2. 登录提示：全页只出现一次，40px 横条，里面的「登录」是链接（A-3）
+   -------------------------------------------------------------------------- */
+
+.board-login-bar {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 4px var(--sp-4);
+  border: 1px solid var(--r-brand-line);
+  border-radius: var(--r-radius-sm);
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+
+.board-login-bar p {
+  margin: 0;
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.board-login-bar-link,
+.board-inline-login-link {
+  color: var(--r-brand-dark);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.board-login-bar-link:hover,
+.board-inline-login-link:hover {
+  color: var(--r-brand);
+}
+
+/* --------------------------------------------------------------------------
+   3. 卡片：图片板 + 13px 统一 meta 行
+   -------------------------------------------------------------------------- */
+
+.board-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  align-items: stretch;
+  gap: var(--sp-4);
+  margin-top: 0;
+}
+
+.board-card {
+  display: grid;
+  align-content: start;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius-lg);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.72), transparent 46%),
+    var(--r-surface);
+  box-shadow: var(--r-shadow-soft);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transition: transform var(--dur-page) var(--ease-out), box-shadow var(--dur-page) var(--ease-out);
+}
+
+.board-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--r-shadow);
+}
+
+.board-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.board-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.board-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.16), rgba(194, 65, 12, 0.12));
+  color: var(--r-brand-dark);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.board-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.board-author-meta {
+  display: grid;
+  min-width: 0;
+}
+
+.board-author-meta strong {
+  overflow: hidden;
+  color: var(--r-ink);
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-author-meta small {
+  color: var(--r-muted);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.board-card-tools {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.board-card-tools form {
+  margin: 0;
+}
+
+.board-tool {
+  min-height: 30px;
+  padding: 4px 9px;
+  border: 1px solid var(--r-line);
+  border-radius: 8px;
+  background: var(--r-surface-sunken);
+  color: var(--r-ink-2);
+  font: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+
+.board-tool:hover {
+  border-color: var(--r-brand-line);
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+  transform: none;
+}
+
+.board-tool.is-edit {
+  border-color: var(--r-brand-line);
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+  box-shadow: none;
+}
+
+.board-tool.is-edit:hover {
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+}
+
+.board-tool.is-danger {
+  border-color: rgba(180, 35, 24, 0.18);
+  background: var(--r-danger-soft);
+  color: var(--r-danger);
+  box-shadow: none;
+}
+
+.board-tool.is-danger:hover {
+  border-color: rgba(180, 35, 24, 0.32);
+  background: #fde7e4;
+  color: var(--r-danger);
+}
+
+/* 图片按原始比例显示：后端记录宽高后由模板写入 --ar，横拍/竖拍的大牌照片
+   不再被 4:3 容器裁掉牌面；极端长图由 max-height 兜底裁切。 */
+.board-photo {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: var(--ar, 4 / 3);
+  max-height: 460px;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--r-radius-sm);
+  background: var(--r-surface-sunken);
+  box-shadow: none;
+}
+
+.board-photo-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.board-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--r-surface-sunken);
+  /* 容器比例已与图片一致，cover 在生产上等同完整显示；只有被 max-height 限住时才裁。 */
+  object-fit: cover;
+}
+
+/* 保留期是图片的元信息：常规状态跟点赞/评论同排、用中性色；
+   只有剩余 ≤7 天才升级为琥珀色提醒（评审 P1-5）。 */
+.board-retention-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -4px 0 0;
+  color: var(--r-warning);
+  font-size: var(--fs-xs);
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.board-retention-dot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.72;
+}
+
+/* 兼容旧类名（历史页面缓存 / 旧模板片段），不再绝对定位 */
+.board-retention {
+  color: var(--r-warning);
+  font-size: var(--fs-xs);
+  font-weight: 650;
+}
+
+.board-caption {
+  margin: 0;
+  color: var(--r-body);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* meta 行：13px 一行，点赞与评论同色、同语法（P1-12） */
+.board-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--r-line-soft);
+  color: var(--r-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.board-meta form {
+  margin: 0;
+}
+
+.board-meta-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--r-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--dur-fast) ease;
+}
+
+.board-meta-link:hover {
+  color: var(--r-brand-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transform: none;
+}
+
+.board-meta-heart {
+  color: currentColor;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.board-like.is-liked {
+  color: var(--r-brand-dark);
+  background: none;
+  box-shadow: none;
+}
+
+.board-like.is-liked:hover {
+  color: var(--r-brand);
+}
+
+.board-meta-sep {
+  color: var(--r-muted-soft);
+}
+
+/* 评论预览（列表）与完整评论（详情） */
+.board-comments {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.board-comments li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.board-comments.is-full li {
+  padding: 10px 12px;
+  border: 1px solid var(--r-line-soft);
+  border-radius: var(--r-radius-sm);
+  background: var(--r-surface-sunken);
+}
+
+.board-comment-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.board-comment-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.board-comment-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--r-body);
+  overflow-wrap: anywhere;
+}
+
+.board-comment-body strong {
+  margin-right: 6px;
+  color: var(--r-ink);
+  font-size: 13px;
+}
+
+.board-comment-delete {
+  flex: 0 0 auto;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--r-muted-soft);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.board-comment-delete:hover {
+  color: var(--r-danger);
+}
+
+.board-more {
+  color: var(--r-brand-dark);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.board-comment-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.board-comment-form input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 40px;
+}
+
+.board-comment-form .button.slim {
+  flex: 0 0 auto;
+  padding: 9px 14px;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   4. 详情页：返回在页头，点赞/评论就地提示
+   -------------------------------------------------------------------------- */
+
+.board-page--detail {
+  gap: var(--sp-4);
+}
+
+.board-detail-head {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  width: 100%;
+  max-width: 820px;
+  margin-inline: auto;
+}
+
+.board-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  transition: color var(--dur-fast) ease;
+}
+
+.board-back:hover {
+  color: var(--r-brand-dark);
+}
+
+.board-back span {
+  font-size: 15px;
+}
+
+.board-detail-byline {
+  margin: 0;
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+.board-page--detail .board-card-detail {
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: var(--sp-4);
+  gap: var(--sp-4);
+}
+
+.board-page--detail .board-photo {
+  max-height: min(72vh, 720px);
+}
+
+.board-page--detail .board-photo.is-static img {
+  cursor: default;
+}
+
+.board-comment-section {
+  display: grid;
+  gap: var(--sp-3);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--r-line);
+}
+
+.board-comment-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.board-comment-head h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+  letter-spacing: -0.01em;
+}
+
+.board-comment-empty {
+  margin: 0;
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+}
+
+.board-inline-login {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+  margin: 0;
+  padding: 6px var(--sp-3);
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius-sm);
+  background: var(--r-surface-sunken);
+  color: var(--r-ink-2);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+
+/* --------------------------------------------------------------------------
+   5. 空状态与分页
+   -------------------------------------------------------------------------- */
+
+.board-empty {
+  width: 100%;
+  max-width: 640px;
+  margin: var(--sp-4) auto var(--sp-2);
+  padding: var(--sp-3);
+}
+
+.board-empty .r-empty {
+  padding: var(--sp-6) var(--sp-4);
+}
+
+.board-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2) var(--sp-4);
+  margin-top: var(--sp-2);
+}
+
+.board-empty-rules {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--r-brand-dark);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.board-empty-rules:hover {
+  color: var(--r-brand);
+}
+
+.board-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+  font-size: var(--fs-sm);
+}
+
+/* --------------------------------------------------------------------------
+   6. 发布按钮（FAB）：52px、右/下 16px、避开 safe-area
+   桌面滚动后缩到 44px；移动端首屏隐藏（页头已有「发布留言」），滚过首屏再出现
+   —— 这样 390px 下不会再压第一张卡。
+   -------------------------------------------------------------------------- */
+
+.board-fab {
+  position: fixed;
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(135deg, var(--r-brand), var(--r-brand-dark));
+  box-shadow: 0 14px 28px rgba(15, 118, 110, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: width var(--dur-fast) ease, height var(--dur-fast) ease, transform var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease, opacity var(--dur-page) ease, visibility var(--dur-page) ease;
+}
+
+.board-fab svg {
+  width: 24px;
+  height: 24px;
+}
+
+.board-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgba(15, 118, 110, 0.4);
+}
+
+.board-fab:active {
+  transform: scale(0.96);
+}
+
+.board-fab.is-compact {
+  width: 44px;
+  height: 44px;
+}
+
+.board-fab.is-compact svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* --------------------------------------------------------------------------
+   7. 移动端（≤760px，含 390px 验收宽度）
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  .board-page {
+    gap: var(--sp-3);
+  }
+
+  .board-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sp-3);
+  }
+
+  .board-head h1,
+  .board-detail-head h1 {
+    font-size: var(--fs-xl);
+  }
+
+  .board-head-actions {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+
+  .board-publish {
+    flex: 1 1 auto;
+    min-height: 44px;
+  }
+
+  .board-rules-details {
+    order: 0;
+  }
+
+  .board-rules-summary {
+    min-height: 44px;
+    padding: 0 12px;
+  }
+
+  .board-rules-list {
+    right: 0;
+    width: min(320px, calc(100vw - 40px));
+  }
+
+  .board-login-bar {
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+
+  .board-card {
+    gap: 10px;
+    padding: 12px;
+    border-radius: var(--r-radius);
+  }
+
+  .board-card-head {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .board-card-tools {
+    margin-left: auto;
+  }
+
+  .board-author-meta strong {
+    font-size: 15px;
+  }
+
+  .board-meta {
+    gap: 10px;
+    min-height: 44px;
+  }
+
+  .board-meta-link {
+    min-height: 44px;
+    padding: 10px 0;
+  }
+
+  .board-meta-heart {
+    font-size: 14px;
+  }
+
+  .board-comment-form input {
+    min-height: 44px;
+  }
+
+  .board-comment-avatar {
+    flex-basis: 26px;
+    width: 26px;
+    height: 26px;
+  }
+
+  .board-page--detail .board-card-detail {
+    padding: 12px;
+    gap: var(--sp-3);
+  }
+
+  .board-detail-head {
+    gap: 4px;
+  }
+
+  .board-inline-login {
+    font-size: 13px;
+  }
+
+  /* 移动端恢复发布入口：页头 CTA 滚走之后，FAB 在滚动 240px 后出现（评审 M7）。
+     卡片底部留出安全距离，避免覆盖「发表评论」整行。 */
+  .board-page {
+    padding-bottom: 72px;
+  }
+
+  .board-fab {
+    width: 48px;
+    height: 48px;
+  }
+
+  .board-fab.is-visible {
+    display: grid;
+  }
+
+  /* 评论表单在窄屏保持单行：输入框 + 紧凑按钮，不再整宽大按钮。
+     全局 input 有 width:100%，这里必须用 width:auto + flex-basis 0 覆盖，
+     否则输入框会占满整行、把按钮挤到下一行。 */
+  .board-page .board-comment-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+  }
+
+  .board-page .board-comment-form input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .board-page .board-comment-form .button.slim {
+    width: auto;
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+}
+
+/* 极窄屏（≤360px）：横条允许换行，不允许横向溢出。 */
+@media (max-width: 380px) {
+  .board-login-bar,
+  .board-inline-login {
+    flex-wrap: wrap;
+    font-size: 13px;
+  }
+
+  .board-rules-list {
+    width: calc(100vw - 36px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-page *,
+  .board-page *::before,
+  .board-page *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* --------------------------------------------------------------------------
+   评审修复（P1-5）：保留期从图片下方移到 meta 行
+   -------------------------------------------------------------------------- */
+
+.board-retention-inline {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.board-retention-inline.is-urgent {
+  color: var(--r-warning);
+  font-weight: 700;
+}
+
+
+/* 评审修复（P1-4）：从登录/评论链接跳回 #comments 时，标题不被固定顶栏遮住 */
+.board-comment-section {
+  scroll-margin-top: 90px;
+}
+
+.board-posts + .board-comment-section,
+#comments {
+  scroll-margin-top: 90px;
+}
+
+/* 点赞计数用独立 span，便于 fetch 局部更新 */
+.board-like-count {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 评审修复（P1-6）：点赞与返回链接的触控区 */
+.board-like {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.board-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}

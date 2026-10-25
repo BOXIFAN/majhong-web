@@ -1,0 +1,854 @@
+/* ==========================================================================
+   BRML UI/UX 调研改造 · WP5 赛季规则页
+   --------------------------------------------------------------------------
+   对应报告：P0-4（5004px / 移动 7229px 无目录、每行套小卡）、可用性 T4、
+             P1「长页的章节感」、文案与术语表。
+   作用域：.rules-page / .rules-*，后加载覆盖 style.css 中的旧规则页样式。
+   ========================================================================== */
+
+.rules-page {
+  --rules-side-width: 272px;
+  --rules-sticky-top: 24px;
+  --rules-anchor-offset: 24px;
+  --rules-toc-row: 44px;
+}
+
+/* --------------------------------------------------------------------------
+   1. 页头：标题 + 赛季状态 + 4 项速览（替代旧 page-head + 文档头两层）
+   -------------------------------------------------------------------------- */
+
+.rules-hero {
+  margin: 0 0 28px;
+}
+
+.rules-hero__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 24px;
+}
+
+.rules-hero__intro {
+  min-width: 0;
+  max-width: 780px;
+}
+
+.rules-hero__title {
+  margin: 0 0 10px;
+  color: var(--r-ink);
+  font-size: clamp(32px, 3.4vw, 42px);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.rules-hero__lead {
+  margin: 0 0 14px;
+  max-width: 62ch;
+  color: var(--r-body);
+  font-size: var(--fs-base);
+  line-height: 1.7;
+}
+
+.rules-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin: 0;
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+.rules-hero__meta strong {
+  color: var(--r-ink);
+  font-weight: 650;
+}
+
+.rules-hero__sep {
+  color: var(--r-line);
+}
+
+.rules-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 6px;
+}
+
+/* 归档版本页：顶部返回当前规则的入口 */
+.rules-hero__back {
+  margin: 0 0 10px;
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+.rules-hero__back a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  color: var(--r-brand-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.rules-hero__back a:hover {
+  color: var(--r-brand);
+}
+
+/* 4 项速览：把「参与决赛需要几场」「负分后是否继续」提到正文之前（报告 C13）。 */
+.rules-keyfacts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 20px 0 0;
+  padding: 16px 0 14px;
+  border-top: 1px solid var(--r-line);
+  border-bottom: 1px solid var(--r-line);
+}
+
+.rules-keyfacts > div {
+  min-width: 0;
+  padding: 0 20px;
+}
+
+.rules-keyfacts > div:first-child {
+  padding-left: 0;
+}
+
+.rules-keyfacts > div + div {
+  border-left: 1px solid var(--r-line-soft);
+}
+
+.rules-keyfacts dt {
+  margin: 0 0 4px;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.rules-keyfacts dd {
+  margin: 0;
+  color: var(--r-ink);
+  font-size: var(--fs-lg);
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.rules-hero__unit {
+  margin: 10px 0 0;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   2. 两栏：sticky 8 项目录（右） + 规则文档（左）
+   -------------------------------------------------------------------------- */
+
+.rules-page .rules-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--rules-side-width);
+  gap: 28px;
+  align-items: start;
+}
+
+.rules-page .rules-document {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  padding: 32px;
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius-lg);
+  background: var(--r-surface);
+  box-shadow: var(--r-shadow-soft);
+}
+
+.rules-side {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  gap: 16px;
+  position: sticky;
+  top: var(--rules-sticky-top);
+}
+
+/* 目录：13px / 44px 行高 / 当前项绿色左条（P0-4） */
+.rules-toc {
+  padding: 12px 8px;
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius);
+  background: var(--r-surface);
+  box-shadow: var(--r-shadow-soft);
+}
+
+.rules-toc__title {
+  margin: 0 0 6px;
+  padding: 0 12px;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.rules-toc__items {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rules-toc a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--rules-toc-row);
+  padding: 0 12px;
+  border-radius: 8px;
+  color: var(--r-ink-2);
+  font-size: 13px;
+  line-height: 1.3;
+  text-decoration: none;
+  transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+}
+
+.rules-toc a:hover {
+  color: var(--r-brand-dark);
+  background: rgba(15, 118, 110, 0.055);
+}
+
+.rules-toc a.is-active {
+  color: var(--r-brand-dark);
+  font-weight: 700;
+  background: linear-gradient(90deg, rgba(15, 118, 110, 0.11), rgba(15, 118, 110, 0.03) 72%, transparent);
+  box-shadow: inset 3px 0 0 var(--r-brand);
+}
+
+.rules-toc__num {
+  color: var(--r-muted-soft);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.rules-toc a.is-active .rules-toc__num {
+  color: var(--r-brand);
+}
+
+/* 往期规则卡：移到目录下方（P0-4） */
+.rules-archive {
+  padding: 14px;
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius);
+  background: var(--r-surface);
+  box-shadow: var(--r-shadow-soft);
+}
+
+.rules-archive__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 4px;
+  padding: 0 6px;
+}
+
+.rules-archive__head h2 {
+  margin: 0;
+  color: var(--r-ink);
+  font-size: var(--fs-sm);
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.rules-archive__count {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rules-archive__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rules-archive__list li + li {
+  border-top: 1px solid var(--r-line-soft);
+}
+
+.rules-archive__item {
+  display: grid;
+  gap: 3px;
+  min-height: 44px;
+  padding: 9px 6px;
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+  transition: background 120ms ease;
+}
+
+.rules-archive__item:hover {
+  background: rgba(15, 118, 110, 0.05);
+}
+
+.rules-archive__name {
+  color: var(--r-ink);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.rules-archive__meta {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+}
+
+.rules-archive__test {
+  justify-self: start;
+  margin-top: 2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--r-warning-soft);
+  color: var(--r-warning);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.rules-archive__empty {
+  margin: 8px 6px 4px;
+  color: var(--r-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* --------------------------------------------------------------------------
+   3. 章节：01–08 编号 + 26–28px 标题 + 上方 56px 间距
+   -------------------------------------------------------------------------- */
+
+.rules-section {
+  min-width: 0;
+  max-width: none;
+  padding: 0;
+  border: 0;
+  scroll-margin-top: var(--rules-anchor-offset);
+}
+
+.rules-section + .rules-section {
+  padding-top: 56px;
+}
+
+.rules-section__head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 4px;
+}
+
+.rules-section__num {
+  flex: none;
+  color: var(--r-brand);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.rules-section__title {
+  margin: 0;
+  color: var(--r-ink);
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+}
+
+.rules-section__count {
+  margin-left: auto;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   4. 参数行：52px 行高、中文 15px、英文 12px 次行、数值 16px 右对齐
+      去掉了每行的小卡边框，只保留每 5 行一条发丝线（双列每 4 项一条）。
+   -------------------------------------------------------------------------- */
+
+.rules-params {
+  display: grid;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.rules-param {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  column-gap: 24px;
+  align-items: center;
+  min-height: 52px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+}
+
+.rules-param__label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rules-param__primary {
+  color: var(--r-ink);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.rules-param__secondary {
+  color: var(--r-muted-soft);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.rules-param__value {
+  margin: 0;
+  color: var(--r-ink);
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.4;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.rules-param__value.is-on {
+  color: var(--r-brand-dark);
+}
+
+.rules-param__value.is-off {
+  color: var(--r-muted);
+  font-weight: 500;
+}
+
+/* 发丝线：单列每 5 行一条，避免 40 多条每行都有分隔。 */
+.rules-params--single > .rules-param:nth-child(5n) {
+  box-shadow: inset 0 -1px 0 var(--r-line);
+}
+
+/* 纯布尔短章节在桌面用两列，移动端退回单列（见第 6 节）。 */
+.rules-params--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 40px;
+}
+
+.rules-params--two > .rules-param:nth-child(4n + 3),
+.rules-params--two > .rules-param:nth-child(4n + 4) {
+  box-shadow: inset 0 -1px 0 var(--r-line);
+}
+
+/* --------------------------------------------------------------------------
+   5. 罚则：正文 16px / 1.7，中英文统一 400 字重（英文不再比中文粗、深）
+   -------------------------------------------------------------------------- */
+
+.rules-penalties {
+  display: grid;
+  margin: 8px 0 0;
+}
+
+.rules-penalty {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  column-gap: 24px;
+  align-items: baseline;
+  min-height: 52px;
+  padding: 9px 0;
+}
+
+.rules-penalty + .rules-penalty {
+  border-top: 1px solid var(--r-line-soft);
+}
+
+.rules-penalty__label {
+  color: var(--r-body);
+  font-size: var(--fs-base);
+  font-weight: 400;
+  line-height: 1.7;
+}
+
+.rules-penalty__value {
+  color: var(--r-ink);
+  font-size: var(--fs-base);
+  font-weight: 400;
+  line-height: 1.7;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.rules-penalty--note {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.rules-penalty__detail {
+  margin: 0;
+  max-width: 68ch;
+  color: var(--r-body);
+  font-size: var(--fs-base);
+  font-weight: 400;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.rules-penalty__hint {
+  margin: 12px 0 0;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+}
+
+/* 文档结尾：术语说明 + 管理操作 */
+.rules-terms {
+  margin: 40px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--r-line-soft);
+  color: var(--r-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.rules-page .document-actions {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--r-line-soft);
+}
+
+/* --------------------------------------------------------------------------
+   6. 「回到顶部」按钮（长页常驻右下，44px 触达）
+   -------------------------------------------------------------------------- */
+
+.rules-backtop {
+  position: fixed;
+  right: max(24px, env(safe-area-inset-right));
+  bottom: max(24px, env(safe-area-inset-bottom));
+  z-index: 25;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--r-line);
+  border-radius: 999px;
+  background: var(--r-surface);
+  color: var(--r-ink-2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: var(--r-shadow);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 160ms ease, transform 160ms ease, visibility 0s linear 160ms,
+    color 160ms ease, border-color 160ms ease;
+}
+
+.rules-backtop.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 160ms ease, transform 160ms ease, visibility 0s,
+    color 160ms ease, border-color 160ms ease;
+}
+
+.rules-backtop:hover {
+  color: var(--r-brand-dark);
+  border-color: var(--r-brand-line);
+}
+
+.rules-backtop svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+/* --------------------------------------------------------------------------
+   7. 窄屏：目录变 sticky 横向滚动条，文档在前、往期规则在后
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 960px) {
+  .rules-page {
+    --rules-sticky-top: 82px;
+    --rules-anchor-offset: 146px;
+    --rules-side-width: 0;
+  }
+
+  .rules-page .rules-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* 拆开右栏：目录条吸顶，往期规则卡落到文档之后。 */
+  .rules-page .rules-side {
+    display: contents;
+  }
+
+  .rules-toc {
+    order: 1;
+    position: sticky;
+    top: var(--rules-sticky-top);
+    z-index: 20;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    padding: 6px;
+    border-radius: 14px;
+  }
+
+  .rules-toc__title {
+    display: none;
+  }
+
+  .rules-toc__items {
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+  }
+
+  .rules-toc__items::-webkit-scrollbar {
+    display: none;
+  }
+
+  .rules-toc__items li {
+    flex: 0 0 auto;
+    scroll-snap-align: center;
+  }
+
+  .rules-toc a {
+    gap: 8px;
+    padding: 0 14px;
+    white-space: nowrap;
+  }
+
+  .rules-page .rules-document {
+    order: 2;
+    padding: 24px;
+    border-radius: var(--r-radius);
+  }
+
+  .rules-archive {
+    order: 3;
+  }
+
+  /* 平板宽度下两列会挤压双语标签，统一退回单列。 */
+  .rules-params--two {
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+  }
+
+  .rules-params--two > .rules-param:nth-child(4n + 3),
+  .rules-params--two > .rules-param:nth-child(4n + 4) {
+    box-shadow: none;
+  }
+
+  .rules-params--two > .rules-param:nth-child(5n) {
+    box-shadow: inset 0 -1px 0 var(--r-line-soft);
+  }
+}
+
+/* 右栏占掉约 300px 后，961–1279px 的文档宽度放不下两列长标签，退回单列。 */
+@media (min-width: 961px) and (max-width: 1279px) {
+  .rules-params--two {
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+  }
+
+  .rules-params--two > .rules-param:nth-child(4n + 3),
+  .rules-params--two > .rules-param:nth-child(4n + 4) {
+    box-shadow: none;
+  }
+
+  .rules-params--two > .rules-param:nth-child(5n) {
+    box-shadow: inset 0 -1px 0 var(--r-line-soft);
+  }
+}
+
+@media (max-width: 560px) {
+  .rules-page {
+    --rules-sticky-top: 74px;
+    --rules-anchor-offset: 138px;
+  }
+
+  .rules-hero {
+    margin-bottom: 20px;
+  }
+
+  .rules-hero__title {
+    font-size: 32px;
+  }
+
+  .rules-hero__lead {
+    font-size: var(--fs-base);
+    margin-bottom: 12px;
+  }
+
+  .rules-hero__meta {
+    font-size: 13px;
+  }
+
+  .rules-keyfacts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 16px;
+    padding: 14px 0;
+  }
+
+  .rules-keyfacts > div {
+    padding: 0 12px;
+  }
+
+  .rules-keyfacts > div:nth-child(odd) {
+    padding-left: 0;
+  }
+
+  .rules-keyfacts > div:nth-child(2n) {
+    padding-right: 0;
+  }
+
+  .rules-keyfacts > div:nth-child(3) {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .rules-keyfacts dd {
+    font-size: var(--fs-base);
+  }
+
+  .rules-page .rules-document {
+    padding: 18px;
+    border-radius: var(--r-radius);
+  }
+
+  /* 分区上方 56px 间距与桌面保持一致，移动端靠目录条控制首屏成本。 */
+  .rules-section + .rules-section {
+    padding-top: 56px;
+  }
+
+  .rules-section__title {
+    font-size: 26px;
+  }
+
+  /* 移动端：数值回到标签同一行右端，不掉下一行。 */
+  .rules-params--two {
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+  }
+
+  .rules-params--two > .rules-param:nth-child(4n + 3),
+  .rules-params--two > .rules-param:nth-child(4n + 4) {
+    box-shadow: none;
+  }
+
+  .rules-param,
+  .rules-penalty {
+    column-gap: 16px;
+    min-height: 52px;
+  }
+
+  .rules-param__primary {
+    line-height: 1.5;
+  }
+
+  .rules-param__secondary {
+    line-height: 1.45;
+  }
+
+  .rules-param__value,
+  .rules-penalty__value {
+    font-size: var(--fs-base);
+  }
+
+  .rules-terms {
+    margin-top: 32px;
+    font-size: 13px;
+  }
+
+  .rules-backtop {
+    right: max(16px, env(safe-area-inset-right));
+    bottom: max(16px, env(safe-area-inset-bottom));
+    padding: 0 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rules-toc a,
+  .rules-backtop,
+  .rules-archive__item {
+    transition: none;
+  }
+}
+
+
+/* --------------------------------------------------------------------------
+   评审修复（P1-10）：移动端英文术语默认收起（可一键展开），并收紧参数行。
+   -------------------------------------------------------------------------- */
+
+.rules-terms-toggle {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .rules-terms-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 44px;
+    margin: 8px 0 0;
+    padding: 8px 14px;
+    border: 1px solid var(--r-line);
+    border-radius: 999px;
+    background: var(--r-surface);
+    color: var(--r-muted);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .rules-terms-toggle[aria-pressed="true"] {
+    border-color: var(--r-brand-line);
+    background: var(--r-brand-soft);
+    color: var(--r-brand-dark);
+  }
+
+  .rules-page .rules-param__secondary {
+    display: none;
+  }
+
+  .rules-page.show-en-terms .rules-param__secondary {
+    display: block;
+  }
+
+  .rules-page .rules-param {
+    padding-block: 12px;
+    min-height: 0;
+  }
+}

@@ -1,91 +1,168 @@
 {% extends "base.html" %}
-{% block title %}{{ t('meetup.detail') }} · Brisbane Riichi{% endblock %}
+{% block title %}{{ display_title }} · Brisbane Riichi{% endblock %}
+{% block report_css %}<link rel="stylesheet" href="{{ url_for('static', filename='report/30-meetups.css') }}">{% endblock %}
+
+{#- 与列表页相同的 Sakamoto 星期计算（后端只下发 "YYYY-MM-DD HH:MM:SS" 文本）。 -#}
+{% macro weekday_label(value) -%}
+  {%- set y = value[0:4]|int -%}
+  {%- set m = value[5:7]|int -%}
+  {%- set d = value[8:10]|int -%}
+  {%- if m < 3 -%}{%- set m = m + 12 -%}{%- set y = y - 1 -%}{%- endif -%}
+  {%- set h = (d + ((13 * (m + 1)) // 5) + (y % 100) + ((y % 100) // 4) + ((y // 100) // 4) + (5 * (y // 100))) % 7 -%}
+  {%- if locale == 'en' -%}{{ ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'][h] }}{%- else -%}{{ ['周六', '周日', '周一', '周二', '周三', '周四', '周五'][h] }}{%- endif -%}
+{%- endmacro %}
+
 {% block content %}
-<section class="page-head row meetup-detail-head">
-  <div>
-    <p class="eyebrow">BRML Meetup</p>
-    <h1>{{ meetup.meetup_at[:16] }}</h1>
-    <p>{{ t('meetup.timezone') }} · {{ t('meetup.deadline') }}：{{ meetup.signup_deadline[:16] }}</p>
-    <p class="meetup-detail-venue"><strong>{{ t('meetup.venue') }}：</strong>{{ meetup.venue }}</p>
-  </div>
-  <span class="meetup-status-badge status-{{ status }}">{{ t('meetup.' ~ status) }}</span>
-</section>
+{% set meeting_at = meetup.meetup_at %}
+{% set deadline_at = meetup.signup_deadline %}
+<div class="meetup-detail is-{{ status }}">
+  <header class="meetup-detail-head">
+    <a class="meetup-back" data-back href="{{ url_for('meetups') }}">{{ t('meetup2.back') }}</a>
+    <p class="eyebrow">{{ t('meetup2.eyebrow') }}</p>
+    <h1>{{ display_title }}</h1>
+    <p class="meetup-detail-when">
+      <time datetime="{{ meeting_at.replace(' ', 'T') }}">{{ meeting_at[:10] }} {{ weekday_label(meeting_at) }} {{ meeting_at[11:16] }}</time>
+      <span class="meetup-detail-zone">{{ t('meetup2.when_zone') }}</span>
+    </p>
+  </header>
 
-<section class="meetup-detail-layout">
-  <article class="panel meetup-signup-panel{{ ' is-archived' if status == 'archived' else '' }}">
-    <div class="section-head">
-      <div>
-        <p class="eyebrow">Attendees</p>
-        <h2>{{ t('meetup.attendees') }}</h2>
-      </div>
-      <span class="muted">{{ t('meetup.attendee_count', count=attendees|length) }}</span>
-    </div>
-
-    {% if status == 'open' %}
-      {% if is_signed_up %}
-        <div class="meetup-signup-state">✓ {{ t('meetup.signed_up') }}</div>
+  <div class="meetup-status-bar is-{{ status }}">
+    <div class="meetup-status-bar-main">
+      {% if status == 'open' %}
+        <span class="r-status is-open">{{ t('meetup2.badge_open') }}</span>
+        <span class="meetup-status-sep" aria-hidden="true">·</span>
+        <p class="meetup-status-text">{{ t('meetup2.status_open', date=deadline_at[:10] ~ ' ' ~ deadline_at[11:16]) }}</p>
+      {% elif status == 'closed' %}
+        <span class="r-status is-closed">{{ t('meetup2.badge_closed') }}</span>
+        <span class="meetup-status-sep" aria-hidden="true">·</span>
+        <p class="meetup-status-text">{{ t('meetup2.status_closed') }}</p>
       {% else %}
-        <form method="post" action="{{ url_for('meetup_signup', meetup_id=meetup.id) }}">
-          <button class="button meetup-primary-action" type="submit">{{ t('meetup.signup') }}</button>
-        </form>
+        <span class="r-status is-archived">{{ t('meetup2.badge_archived') }}</span>
+        <span class="meetup-status-sep" aria-hidden="true">·</span>
+        <p class="meetup-status-text">{{ t('meetup2.status_archived') }}</p>
       {% endif %}
-    {% else %}
-      <div class="meetup-signup-state is-closed">{{ t('meetup.signup_closed') }}</div>
-    {% endif %}
+    </div>
+    <div class="meetup-status-bar-actions">
+      {% if status == 'open' %}
+        {% if is_signed_up %}
+          <span class="meetup-signed">✓ {{ t('meetup2.badge_signed') }}</span>
+          <form method="post" action="{{ url_for('meetup_signup_cancel', meetup_id=meetup.id) }}"
+                onsubmit="return confirm({{ t('meetup2.cancel_confirm')|tojson }});">
+            <button class="meetup-cancel" type="submit">{{ t('meetup2.cancel_action') }}</button>
+          </form>
+        {% elif current_user %}
+          <form method="post" action="{{ url_for('meetup_signup', meetup_id=meetup.id) }}">
+            <button class="button" type="submit">{{ t('meetup2.signup') }}</button>
+          </form>
+        {% else %}
+          <a class="button" href="{{ url_for('login', next=url_for('meetup_detail', meetup_id=meetup.id)) }}">{{ t('meetup2.login_to_signup') }}</a>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
 
-    {% if attendees %}
-      <div class="meetup-attendee-list">
-        {% for attendee in attendees %}
-          <div class="meetup-attendee-row">
-            <span class="meetup-attendee">
-              <b>{{ attendee.display_name[:1] }}</b>
-              {{ attendee.display_name }}
-            </span>
-            {% if current_user and current_user.role == 'super_admin' %}
-              <form method="post" action="{{ url_for('meetup_attendee_remove', meetup_id=meetup.id, user_id=attendee.user_id) }}" onsubmit="return confirm({{ t('meetup.remove_confirm', name=attendee.display_name)|tojson }});">
-                <button class="danger-button compact" type="submit">{{ t('meetup.remove_member') }}</button>
-              </form>
-            {% endif %}
-          </div>
-        {% endfor %}
+  <div class="meetup-detail-grid">
+    <section class="meetup-panel meetup-info" aria-labelledby="meetup-info-title">
+      <h2 id="meetup-info-title">{{ t('meetup2.info_title') }}</h2>
+      <dl class="meetup-facts">
+        <div class="meetup-fact">
+          <dt>{{ t('meetup2.fee') }}</dt>
+          <dd>{{ fee_note }}</dd>
+        </div>
+        <div class="meetup-fact">
+          <dt>{{ t('meetup2.capacity') }}</dt>
+          <dd>
+            {% if meetup.capacity %}{{ t('meetup2.capacity_value', count=meetup.capacity) }}{% else %}{{ t('meetup2.capacity_open') }}{% endif %}
+            <span class="meetup-fact-note">{{ t('meetup2.capacity_usage', count=attendees|length) }}</span>
+          </dd>
+        </div>
+        <div class="meetup-fact is-wide">
+          <dt>{{ t('meetup2.venue') }}</dt>
+          <dd>
+            {{ meetup.venue }}
+            <a class="r-link" href="{{ map_url }}" target="_blank" rel="noopener noreferrer">{{ t('meetup2.map') }}</a>
+          </dd>
+        </div>
+      </dl>
+
+      {# 第一次来是样板说明，收进折叠，避免把报名成员挤到首屏之外（评审 P1-11）。 #}
+      <details class="meetup-first-time">
+        <summary>{{ t('meetup2.first_time_title') }}</summary>
+        <ul>
+          <li>{{ t('meetup2.first_time_1') }}</li>
+          <li>{{ t('meetup2.first_time_2') }}</li>
+          <li>{{ t('meetup2.first_time_3') }}</li>
+        </ul>
+      </details>
+
+      {% if meetup.note %}
+        <div class="meetup-note">
+          <h3>{{ t('meetup2.note_title') }}</h3>
+          <p>{{ meetup.note }}</p>
+        </div>
+      {% endif %}
+    </section>
+
+    <section class="meetup-panel meetup-attendees" aria-labelledby="meetup-attendees-title">
+      <div class="meetup-panel-head">
+        <h2 id="meetup-attendees-title">{{ t('meetup2.attendees_title') }}</h2>
+        <span class="r-meta">{{ t('meetup2.attendees_count', count=attendees|length) }}</span>
       </div>
-    {% else %}
-      <div class="empty meetup-empty">{{ t('meetup.no_attendees') }}</div>
-    {% endif %}
-  </article>
+      {% if attendees %}
+        <ul class="meetup-attendee-list">
+          {% for attendee in attendees %}
+            <li class="meetup-attendee-row">
+              <span class="meetup-attendee">
+                <b>{{ attendee.display_name[:1] }}</b>
+                {{ attendee.display_name }}
+              </span>
+              {% if current_user and current_user.role == 'super_admin' %}
+                <form method="post" action="{{ url_for('meetup_attendee_remove', meetup_id=meetup.id, user_id=attendee.user_id) }}" onsubmit="return confirm({{ t('meetup.remove_confirm', name=attendee.display_name)|tojson }});">
+                  <button class="danger-button compact" type="submit">{{ t('meetup2.remove_member') }}</button>
+                </form>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="meetup-attendees-empty">{{ t('meetup2.no_attendees') }}</p>
+      {% endif %}
+    </section>
+  </div>
 
   {% if current_user and current_user.role == 'super_admin' %}
-    <aside class="panel meetup-admin-panel">
-      <h2>{{ t('meetup.manage_attendees') }}</h2>
-      {% if eligible_users %}
-        <form class="form" method="post" action="{{ url_for('meetup_attendee_add', meetup_id=meetup.id) }}">
-          <label>{{ t('meetup.choose_member') }}
-            <select name="user_id" required>
-              <option value="">{{ t('meetup.choose_member') }}</option>
-              {% for user in eligible_users %}
-                <option value="{{ user.id }}">{{ user.display_name }} · {{ roles[user.role] }}</option>
-              {% endfor %}
-            </select>
-          </label>
-          <button class="secondary-button" type="submit">{{ t('meetup.add_member') }}</button>
-        </form>
-      {% endif %}
-      <div class="meetup-admin-actions">
-        <a class="secondary-button" href="{{ url_for('meetup_edit', meetup_id=meetup.id) }}">{{ t('meetup.edit') }}</a>
-        {% if status != 'archived' %}
-          <form method="post" action="{{ url_for('meetup_archive', meetup_id=meetup.id) }}" onsubmit="return confirm({{ t('meetup.archive_confirm')|tojson }});">
-            <button class="danger-button" type="submit">{{ t('meetup.archive') }}</button>
+    <section class="meetup-panel meetup-admin" aria-labelledby="meetup-admin-title">
+      <h2 id="meetup-admin-title">{{ t('meetup2.manage_title') }}</h2>
+      <div class="meetup-admin-grid">
+        <div class="meetup-admin-members">
+          <h3>{{ t('meetup2.attendee_manage') }}</h3>
+          {% if eligible_users %}
+            <form class="meetup-admin-form" method="post" action="{{ url_for('meetup_attendee_add', meetup_id=meetup.id) }}">
+              <label>{{ t('meetup2.choose_member') }}
+                <select name="user_id" required>
+                  <option value="">{{ t('meetup2.choose_member') }}</option>
+                  {% for user in eligible_users %}
+                    <option value="{{ user.id }}">{{ user.display_name }} · {{ roles[user.role] }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <button class="secondary-button" type="submit">{{ t('meetup2.add_member') }}</button>
+            </form>
+          {% endif %}
+        </div>
+        <div class="meetup-admin-actions">
+          <a class="secondary-button" href="{{ url_for('meetup_edit', meetup_id=meetup.id) }}">{{ t('meetup2.edit') }}</a>
+          {% if status != 'archived' %}
+            <form method="post" action="{{ url_for('meetup_archive', meetup_id=meetup.id) }}" onsubmit="return confirm({{ t('meetup.archive_confirm')|tojson }});">
+              <button class="danger-button" type="submit">{{ t('meetup2.archive') }}</button>
+            </form>
+          {% endif %}
+          <form method="post" action="{{ url_for('meetup_delete', meetup_id=meetup.id) }}" onsubmit="return confirm({{ t('meetup.delete_confirm')|tojson }});">
+            <button class="danger-button" type="submit">{{ t('meetup2.delete') }}</button>
           </form>
-        {% endif %}
-        <form method="post" action="{{ url_for('meetup_delete', meetup_id=meetup.id) }}" onsubmit="return confirm({{ t('meetup.delete_confirm')|tojson }});">
-          <button class="danger-button" type="submit">{{ t('meetup.delete') }}</button>
-        </form>
+        </div>
       </div>
-    </aside>
+    </section>
   {% endif %}
-</section>
-
-<div class="document-actions meetup-back-action">
-  <a class="ghost-link" href="{{ url_for('meetups') }}">← {{ t('meetup.back') }}</a>
 </div>
 {% endblock %}

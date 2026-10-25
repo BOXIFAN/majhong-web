@@ -1,13 +1,32 @@
+{% macro nav_item(endpoint_list, href, label) -%}
+  <a href="{{ href }}"{% if request.endpoint in endpoint_list %} aria-current="page"{% endif %}>{{ label }}</a>
+{%- endmacro %}
+{% macro footer_link(href, label) -%}
+  <a href="{{ href }}">{{ label }}</a>
+{%- endmacro %}
 <!doctype html>
 <html lang="{{ 'zh-CN' if locale == 'zh' else 'en' }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{{ t('meta.description') }}">
+    <meta name="theme-color" content="#f4f6f2">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Brisbane Riichi Mahjong League">
+    <meta property="og:title" content="{{ self.title() }}">
+    <meta property="og:description" content="{{ t('meta.description') }}">
+    <meta property="og:image" content="{{ url_for('static', filename='web_logo.jpg', _external=True) }}">
+    <meta name="twitter:card" content="summary">
+    <link rel="canonical" href="{{ request.url }}">
     <title>{% block title %}Brisbane Riichi{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='report/00-base.css') }}">
+    {% block report_css %}{% endblock %}
     <script defer src="{{ url_for('static', filename='app.js') }}"></script>
   </head>
   <body>
+    {# 访客登录/注册按钮统一带回跳地址；在登录页/注册页本身不再嵌套 next，避免循环。 #}
+    {% set login_next = none if request.endpoint in ['login', 'register', 'logout'] else (request.full_path if request.query_string else request.path) %}
     <div class="site-shell">
       <header class="mobile-topbar">
         <a class="brand compact" href="{{ url_for('index') }}">
@@ -23,26 +42,41 @@
           <span></span>
         </button>
       </header>
-      <div class="mobile-menu" id="mobile-menu">
+      <div class="mobile-menu" id="mobile-menu" aria-label="{{ t('nav.open_menu') }}">
+        <div class="mobile-menu-head">
+          <a class="brand compact" href="{{ url_for('index') }}">
+            <span class="brand-mark logo-image"><img src="{{ url_for('static', filename='web_logo.jpg') }}" alt=""></span>
+            <span>
+              <strong>Brisbane Riichi</strong>
+              <small>Mahjong League</small>
+            </span>
+          </a>
+          <button class="menu-close" type="button" aria-label="{{ t('nav.close_menu') }}">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
         <nav class="nav">
-          <a href="{{ url_for('index') }}">{{ t('nav.home') }}</a>
-          <a href="{{ url_for('leaderboard') }}">{{ t('nav.leaderboard') }}</a>
-          <a href="{{ url_for('matches') }}">{{ t('nav.matches') }}</a>
-          <a href="{{ url_for('seasons') }}">{{ t('nav.rules') }}</a>
-          <a href="{{ url_for('meetups') }}">{{ t('nav.meetups') }}</a>
-          <a href="{{ url_for('board') }}">{{ t('nav.board') }}</a>
+          {{ nav_item(['index'], url_for('index'), t('nav.home')) }}
+          {% if current_user and current_user.role in ['super_admin', 'referee'] %}
+            {# 录入比赛是裁判/管理员的高频入口，放在首页之后、排行榜之前 #}
+            {{ nav_item(['match_new', 'match_edit'], url_for('match_new'), t('nav.match_entry')) }}
+          {% endif %}
+          {{ nav_item(['leaderboard', 'player_profile'], url_for('leaderboard'), t('nav.leaderboard')) }}
+          {{ nav_item(['matches', 'match_detail'], url_for('matches'), t('nav.matches')) }}
+          {{ nav_item(['seasons', 'season_detail', 'season_new', 'season_edit'], url_for('seasons'), t('nav.rules')) }}
+          {{ nav_item(['meetups', 'meetup_detail'], url_for('meetups'), t('nav.meetups')) }}
+          {{ nav_item(['board', 'board_post_detail', 'board_new', 'board_post_edit'], url_for('board'), t('nav.board')) }}
           {% if current_user %}
             {% if current_user.role in ['super_admin', 'referee'] %}
-              <a href="{{ url_for('finance') }}">{{ t('nav.finance') }}</a>
-              <a href="{{ url_for('match_new') }}">{{ t('nav.match_entry') }}</a>
+              {{ nav_item(['finance', 'finance_create', 'finance_edit'], url_for('finance'), t('nav.finance')) }}
             {% endif %}
             {% if current_user.role == 'super_admin' %}
-              <a href="{{ url_for('admin_users') }}">{{ t('nav.admin') }}</a>
-              <a href="{{ url_for('announcements') }}">{{ t('announcement.manage') }}</a>
-              <a href="{{ url_for('board_admin') }}">{{ t('nav.board_admin') }}</a>
+              {{ nav_item(['admin_users'], url_for('admin_users'), t('nav.admin')) }}
+              {{ nav_item(['announcements', 'announcement_edit'], url_for('announcements'), t('announcement.manage')) }}
+              {{ nav_item(['board_admin'], url_for('board_admin'), t('nav.board_admin')) }}
             {% endif %}
           {% endif %}
-          <a href="{{ url_for('about') }}">{{ t('nav.about') }}</a>
+          {{ nav_item(['about'], url_for('about'), t('nav.about')) }}
         </nav>
         <div class="language-switch" aria-label="{{ t('language.switch') }}">
           <a class="{{ 'active' if locale == 'zh' else '' }}" href="{{ url_for('set_language', locale='zh') }}">中</a>
@@ -62,8 +96,8 @@
               <small>{{ t('account.guest_mobile_hint') }}</small>
             </div>
             <div class="account-actions">
-              <a class="logout-button" href="{{ url_for('login') }}">{{ t('auth.login') }}</a>
-              <a class="logout-button subtle" href="{{ url_for('register') }}">{{ t('auth.register') }}</a>
+              <a class="logout-button" href="{{ url_for('login', next=login_next) }}">{{ t('auth.login') }}</a>
+              <a class="logout-button subtle" href="{{ url_for('register', next=login_next) }}">{{ t('auth.register') }}</a>
             </div>
           {% endif %}
         </div>
@@ -78,24 +112,27 @@
           </span>
         </a>
         <nav class="nav">
-          <a href="{{ url_for('index') }}">{{ t('nav.home') }}</a>
-          <a href="{{ url_for('leaderboard') }}">{{ t('nav.leaderboard') }}</a>
-          <a href="{{ url_for('matches') }}">{{ t('nav.matches') }}</a>
-          <a href="{{ url_for('seasons') }}">{{ t('nav.rules') }}</a>
-          <a href="{{ url_for('meetups') }}">{{ t('nav.meetups') }}</a>
-          <a href="{{ url_for('board') }}">{{ t('nav.board') }}</a>
+          {{ nav_item(['index'], url_for('index'), t('nav.home')) }}
+          {% if current_user and current_user.role in ['super_admin', 'referee'] %}
+            {# 录入比赛是裁判/管理员的高频入口，放在首页之后、排行榜之前 #}
+            {{ nav_item(['match_new', 'match_edit'], url_for('match_new'), t('nav.match_entry')) }}
+          {% endif %}
+          {{ nav_item(['leaderboard', 'player_profile'], url_for('leaderboard'), t('nav.leaderboard')) }}
+          {{ nav_item(['matches', 'match_detail'], url_for('matches'), t('nav.matches')) }}
+          {{ nav_item(['seasons', 'season_detail', 'season_new', 'season_edit'], url_for('seasons'), t('nav.rules')) }}
+          {{ nav_item(['meetups', 'meetup_detail'], url_for('meetups'), t('nav.meetups')) }}
+          {{ nav_item(['board', 'board_post_detail', 'board_new', 'board_post_edit'], url_for('board'), t('nav.board')) }}
           {% if current_user %}
             {% if current_user.role in ['super_admin', 'referee'] %}
-              <a href="{{ url_for('finance') }}">{{ t('nav.finance') }}</a>
-              <a href="{{ url_for('match_new') }}">{{ t('nav.match_entry') }}</a>
+              {{ nav_item(['finance', 'finance_create', 'finance_edit'], url_for('finance'), t('nav.finance')) }}
             {% endif %}
             {% if current_user.role == 'super_admin' %}
-              <a href="{{ url_for('admin_users') }}">{{ t('nav.admin') }}</a>
-              <a href="{{ url_for('announcements') }}">{{ t('announcement.manage') }}</a>
-              <a href="{{ url_for('board_admin') }}">{{ t('nav.board_admin') }}</a>
+              {{ nav_item(['admin_users'], url_for('admin_users'), t('nav.admin')) }}
+              {{ nav_item(['announcements', 'announcement_edit'], url_for('announcements'), t('announcement.manage')) }}
+              {{ nav_item(['board_admin'], url_for('board_admin'), t('nav.board_admin')) }}
             {% endif %}
           {% endif %}
-          <a href="{{ url_for('about') }}">{{ t('nav.about') }}</a>
+          {{ nav_item(['about'], url_for('about'), t('nav.about')) }}
         </nav>
         <div class="language-switch" aria-label="{{ t('language.switch') }}">
           <a class="{{ 'active' if locale == 'zh' else '' }}" href="{{ url_for('set_language', locale='zh') }}">中</a>
@@ -115,11 +152,11 @@
             <div class="account-card desktop-account guest-account">
               <div class="account-meta">
                 <strong>{{ t('account.guest') }}</strong>
-                <small>{{ t('account.guest_desktop_hint') }}</small>
+                <small>{{ t('account.guest_desktop_hint') }} <a class="guest-join-link" href="{{ url_for('about') }}">{{ t('account.how_to_join') }}</a></small>
               </div>
               <div class="account-actions">
-                <a class="logout-button" href="{{ url_for('login') }}">{{ t('auth.login') }}</a>
-                <a class="logout-button subtle" href="{{ url_for('register') }}">{{ t('auth.register') }}</a>
+                <a class="logout-button" href="{{ url_for('login', next=login_next) }}">{{ t('auth.login') }}</a>
+                <a class="logout-button subtle" href="{{ url_for('register', next=login_next) }}">{{ t('auth.register') }}</a>
               </div>
             </div>
           {% endif %}
@@ -137,7 +174,38 @@
           {% endif %}
         {% endwith %}
         {% block content %}{% endblock %}
-        <footer class="site-footer">Web designed by Rua</footer>
+        <footer class="site-footer">
+          <div class="site-footer-grid">
+            <div class="site-footer-brand">
+              <span class="brand-mark logo-image"><img src="{{ url_for('static', filename='web_logo.jpg') }}" alt=""></span>
+              <strong>{{ t('footer.brand_line') }}</strong>
+              <p>{{ t('footer.tagline') }}</p>
+            </div>
+            <div>
+              <h2>{{ t('footer.nav') }}</h2>
+              <nav class="site-footer-links" aria-label="{{ t('footer.nav') }}">
+                {{ footer_link(url_for('leaderboard'), t('nav.leaderboard')) }}
+                {{ footer_link(url_for('matches'), t('nav.matches')) }}
+                {{ footer_link(url_for('meetups'), t('nav.meetups')) }}
+                {{ footer_link(url_for('seasons'), t('nav.rules')) }}
+                {{ footer_link(url_for('board'), t('nav.board')) }}
+                {{ footer_link(url_for('about'), t('nav.about')) }}
+              </nav>
+            </div>
+            <div>
+              <h2>{{ t('footer.contact') }}</h2>
+              <div class="site-footer-links">
+                <a href="mailto:contact@bneriichi.com">contact@bneriichi.com</a>
+                <a href="https://x.com/bneriichi" target="_blank" rel="noopener noreferrer">X · @bneriichi</a>
+                <a href="https://xhslink.cn/o/1YX4phhFyRu" target="_blank" rel="noopener noreferrer">{{ t('contact.xiaohongshu') }}</a>
+              </div>
+            </div>
+          </div>
+          <p class="site-footer-credit">
+            <span>Web designed by Rua</span>
+            <span>{{ t('footer.version', version=site_version) }}</span>
+          </p>
+        </footer>
       </main>
     </div>
   </body>

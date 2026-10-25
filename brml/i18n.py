@@ -10,7 +10,7 @@ ROLE_LABELS = {
     "zh": {
         "super_admin": "超级管理员",
         "referee": "裁判",
-        "user": "普通用户",
+        "user": "会员",
     },
     "en": {
         "super_admin": "Super Admin",
@@ -1187,6 +1187,16 @@ TRANSLATIONS = {
         "mobile.total_label": "Total",
     },
 }
+
+# UI/UX 调研改造的增量文案按页面分片放在 brml/i18n_report/ 下，避免多人同时编辑本文件。
+# 分片只补位或覆盖既有键，主表始终可用；导入失败时静默跳过，不影响原有文案。
+try:  # pragma: no cover - 分片缺失时走降级分支
+    from brml.i18n_report import REPORT_TRANSLATIONS
+
+    for _locale, _values in REPORT_TRANSLATIONS.items():
+        TRANSLATIONS.setdefault(_locale, {}).update(_values)
+except Exception:  # pragma: no cover
+    REPORT_TRANSLATIONS = {"zh": {}, "en": {}}
 
 
 def get_locale() -> str:

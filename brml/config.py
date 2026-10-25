@@ -17,7 +17,12 @@ SEED_DEMO_DATA = os.environ.get("SEED_DEMO_DATA", "false").lower() in {"1", "tru
 ADMIN_PASSWORD_HASH = "pbkdf2:sha256:600000$OE6JuNaR26tucuw6$c7c3987d9ac3d9e86f2fab2c689c8b49dab963e674f571e8d32d78bf5aaf8c80"
 ADMIN_PASSWORD_MIGRATION = "set-admin-password-2026-08-24"
 
-DEFAULT_MEETUP_VENUE = "upc 8 Gillingham street, QLD4102"
+DEFAULT_MEETUP_VENUE = "UPC · 8 Gillingham Street, QLD 4102"
+
+# 活动详情与加入路径共用的运营信息（调研报告 P1-8：会费只藏在折叠公告里）。
+MEETUP_FEE_NOTE = "会员 $20 / 季 · 首次体验免费"
+MEETUP_MAP_URL = "https://maps.google.com/?q=8+Gillingham+Street+QLD+4102"
+MEETUP_DEFAULT_TITLE = "周六例行对局 · 新手友好"
 
 # 留言板单次请求的体积上限：比图片硬上限略大，留出 multipart 头部开销。
 BOARD_MAX_REQUEST_BYTES = 26 * 1024 * 1024
@@ -26,5 +31,5 @@ BOARD_MAX_REQUEST_BYTES = 26 * 1024 * 1024
 # 需要更大空间时改这个环境变量即可，例如 BOARD_STORAGE_BUDGET_MB=600。
 BOARD_STORAGE_BUDGET_MB = int(os.environ.get("BOARD_STORAGE_BUDGET_MB", "300"))
 
-# 网站版本，用于首页显示；改版时同步更新即可。
-SITE_VERSION = "v1.2.1"
+# 网站版本；改版时同步更新即可（首页赛季条不再显示版本号，页脚统一展示）。
+SITE_VERSION = "v1.3.0"

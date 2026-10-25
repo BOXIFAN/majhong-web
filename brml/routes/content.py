@@ -2,13 +2,67 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from flask import flash, g, redirect, render_template, request, session, url_for
 
 from brml.auth import role_required
 from brml.db import execute, query_all, query_one
-from brml.i18n import SUPPORTED_LOCALES, translate
+from brml.i18n import SUPPORTED_LOCALES, get_locale, translate
 from brml.match_service import current_season
-from brml.timeutils import now
+from brml.timeutils import WEEKDAY_LABELS, now, weekday_label
+
+
+def _attach_match_entries(rows: list[dict]) -> list[dict]:
+    """给对局列表补上牌手与得分摘要（调研报告 P1-7 / 可用性 4）。
+
+    列表页原本只有「类型 + 时间 + 裁判」，玩家与结果必须点进详情才能看到。
+    这里一次性批量查询，避免 N+1。
+    """
+    if not rows:
+        return rows
+    placeholders = ",".join("?" for _ in rows)
+    entries_map: dict[int, list[dict]] = {}
+    for entry in query_all(
+        f"""
+        select me.match_id, me.placement, me.final_score, me.rank_points, me.penalty_points,
+               u.display_name, u.id as user_id
+        from match_entries me join users u on u.id = me.user_id
+        where me.match_id in ({placeholders})
+        order by me.match_id, me.placement asc, me.final_score desc
+        """,
+        tuple(row["id"] for row in rows),
+    ):
+        entries_map.setdefault(entry["match_id"], []).append(dict(entry))
+
+    locale = get_locale() if get_locale() in WEEKDAY_LABELS else "zh"
+    for row in rows:
+        entries = entries_map.get(row["id"], [])
+        row["entries"] = entries
+        row["winner"] = entries[0] if entries else None
+        row["player_names"] = " / ".join(entry["display_name"] for entry in entries)
+        row["date_key"] = row["played_at"][:10]
+        row["time_label"] = row["played_at"][11:16]
+        row["entry_count"] = len(entries)
+        row["weekday_label"] = weekday_label(row["date_key"], locale)
+        row["date_label"] = f"{row['date_key'][5:]} {row['weekday_label']}".strip()
+    return rows
+
+
+def _group_matches_by_day(rows: list[dict]) -> list[dict]:
+    """把对局按日期分组，让列表变成可扫读的时间线。"""
+    groups: list[dict] = []
+    for row in rows:
+        if not groups or groups[-1]["date"] != row["date_key"]:
+            groups.append(
+                {
+                    "date": row["date_key"],
+                    "label": row.get("date_label") or row["date_key"],
+                    "matches": [],
+                }
+            )
+        groups[-1]["matches"].append(row)
+    return groups
 
 
 def register_routes(app) -> None:
@@ -41,15 +95,20 @@ def register_routes(app) -> None:
         season_param = season_id if season_id else ""
         if page > pages:
             return redirect(url_for("matches", page=pages, season_id=season_param))
-        rows = query_all(
-            f"""
-            select m.*, u.display_name as referee_name
-            from matches m left join users u on u.id = m.referee_id
-            {filters}
-            order by m.played_at desc, m.id desc limit ? offset ?
-            """,
-            params + (per_page, (page - 1) * per_page),
-        )
+        rows = [
+            dict(row)
+            for row in query_all(
+                f"""
+                select m.*, u.display_name as referee_name
+                from matches m left join users u on u.id = m.referee_id
+                {filters}
+                order by m.played_at desc, m.id desc limit ? offset ?
+                """,
+                params + (per_page, (page - 1) * per_page),
+            )
+        ]
+        _attach_match_entries(rows)
+        match_groups = _group_matches_by_day(rows)
         pagination = {
             "page": page,
             "pages": pages,
@@ -58,10 +117,12 @@ def register_routes(app) -> None:
             "has_next": page < pages,
             "prev_page": page - 1,
             "next_page": page + 1,
+            "page_numbers": list(range(max(1, page - 2), min(pages, page + 2) + 1)),
         }
         return render_template(
             "matches.html",
             matches=rows,
+            match_groups=match_groups,
             pagination=pagination,
             seasons=seasons_data,
             selected_season=selected_season,
@@ -80,8 +141,7 @@ def register_routes(app) -> None:
             (announcement_id,),
         )
         if not announcement:
-            flash(translate("announcement.missing"), "error")
-            return redirect(url_for("index"))
+            return render_template("404.html", not_found_kind="announcement"), 404
         return render_template("announcement_detail.html", announcement=announcement)
 
     @app.route("/admin/announcements", methods=("GET", "POST"))

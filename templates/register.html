@@ -1,14 +1,247 @@
 {% extends "base.html" %}
 {% block title %}{{ t('auth.register') }} · Brisbane Riichi{% endblock %}
+{% block report_css %}<link rel="stylesheet" href="{{ url_for('static', filename='report/80-account.css') }}">{% endblock %}
 {% block content %}
-<section class="auth-card">
-  <h1>{{ t('auth.register') }}</h1>
-  <form method="post" class="form">
-    <label>{{ t('auth.display_name') }}<input name="display_name" required></label>
-    <label>{{ t('auth.email') }}<input name="email" type="email" required></label>
-    <label>{{ t('auth.password') }}<input name="password" type="password" minlength="8" required></label>
-    <label>{{ t('auth.invite_code') }}<input name="invite_code" required></label>
-    <button class="button" type="submit">{{ t('auth.create_account') }}</button>
-  </form>
-</section>
+{# 调研报告 A-2 / T5 / P1-10：邀请码来源、密码规则、公开名称提示、登录互链、字段下错误。 #}
+<div class="auth-page">
+  <aside class="auth-visual">
+    <div class="auth-visual-top">
+      <span class="auth-brand-mark"><img src="{{ url_for('static', filename='web_logo.jpg') }}" alt=""></span>
+      <span class="auth-brand-name">
+        <strong>Brisbane Riichi</strong>
+        <small>{{ t('footer.brand_line') }}</small>
+      </span>
+    </div>
+    <div class="auth-visual-copy">
+      <p class="auth-visual-eyebrow">{{ t('auth2.brand_eyebrow') }}</p>
+      <h2>{{ t('auth2.visual_title') }}</h2>
+      <p>{{ t('auth2.visual_lead') }}</p>
+    </div>
+    <div class="auth-tiles" aria-hidden="true">
+      <span class="auth-tile" style="--tile-rotate: -9deg"><img src="{{ url_for('static', filename='mj-east.svg') }}" alt=""></span>
+      <span class="auth-tile" style="--tile-rotate: -3deg"><img src="{{ url_for('static', filename='mj-south.svg') }}" alt=""></span>
+      <span class="auth-tile" style="--tile-rotate: 4deg"><img src="{{ url_for('static', filename='mj-five-wan.svg') }}" alt=""></span>
+      <span class="auth-tile" style="--tile-rotate: 10deg"><img src="{{ url_for('static', filename='mj-red-dragon.svg') }}" alt=""></span>
+    </div>
+    <ul class="auth-benefits">
+      <li>
+        <strong>{{ t('auth2.benefit_rank_title') }}</strong>
+        <span>{{ t('auth2.benefit_rank_body') }}</span>
+      </li>
+      <li>
+        <strong>{{ t('auth2.benefit_meetup_title') }}</strong>
+        <span>{{ t('auth2.benefit_meetup_body') }}</span>
+      </li>
+      <li>
+        <strong>{{ t('auth2.benefit_board_title') }}</strong>
+        <span>{{ t('auth2.benefit_board_body') }}</span>
+      </li>
+    </ul>
+    <p class="auth-visual-foot">
+      <span>{{ t('auth2.visual_foot_label') }}</span>
+      <strong>{{ default_meetup_venue }}</strong>
+    </p>
+  </aside>
+
+  <section class="auth-form-col">
+    <div class="auth-mobile-brand">
+      <a href="{{ url_for('index') }}">
+        <img src="{{ url_for('static', filename='web_logo.jpg') }}" alt="">
+        <span>
+          <strong>Brisbane Riichi</strong>
+          <small>{{ t('footer.brand_line') }}</small>
+        </span>
+      </a>
+    </div>
+
+    <div class="auth-card">
+      <header class="auth-card-head">
+        <h1>{{ t('auth.register') }}</h1>
+        <p class="auth-lead">{{ t('auth2.register_lead') }}</p>
+      </header>
+
+      {% if next_url %}
+        <p class="auth-return-note">{{ t('auth2.register_return_notice') }}</p>
+      {% endif %}
+
+      <form class="form auth-form" id="auth-register-form" method="post" novalidate>
+        {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+
+        <div class="auth-field">
+          <label for="auth-register-name">{{ t('auth.display_name') }}</label>
+          <input
+            id="auth-register-name"
+            name="display_name"
+            type="text"
+            autocomplete="nickname"
+            maxlength="40"
+            value="{{ form_values.display_name }}"
+            {% if errors.get('display_name') %}
+              class="r-field-invalid" aria-invalid="true" aria-describedby="auth-register-name-error auth-register-name-hint"
+            {% else %}
+              aria-describedby="auth-register-name-hint"
+            {% endif %}
+          >
+          {% if errors.get('display_name') %}
+            <p class="r-field-error" id="auth-register-name-error">{{ t(errors['display_name']) }}</p>
+          {% endif %}
+          <p class="auth-field-hint" id="auth-register-name-hint">{{ t('auth2.display_name_public') }}</p>
+        </div>
+
+        <div class="auth-field">
+          <label for="auth-register-email">{{ t('auth.email') }}</label>
+          <input
+            id="auth-register-email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            inputmode="email"
+            spellcheck="false"
+            value="{{ form_values.email }}"
+            {% if errors.get('email') %}
+              class="r-field-invalid" aria-invalid="true" aria-describedby="auth-register-email-error auth-register-email-hint"
+            {% else %}
+              aria-describedby="auth-register-email-hint"
+            {% endif %}
+          >
+          {% if errors.get('email') %}
+            <p class="r-field-error" id="auth-register-email-error">{{ t(errors['email']) }}</p>
+          {% endif %}
+          <p class="auth-field-hint" id="auth-register-email-hint">{{ t('auth2.email_hint') }}</p>
+        </div>
+
+        <div class="auth-field">
+          <label for="auth-register-password">{{ t('auth.password') }}</label>
+          <input
+            id="auth-register-password"
+            name="password"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            maxlength="128"
+            {% if errors.get('password') %}
+              class="r-field-invalid" aria-invalid="true" aria-describedby="auth-register-password-error auth-register-password-hint"
+            {% else %}
+              aria-describedby="auth-register-password-hint"
+            {% endif %}
+          >
+          {% if errors.get('password') %}
+            <p class="r-field-error" id="auth-register-password-error">{{ t(errors['password']) }}</p>
+          {% endif %}
+          <p class="auth-field-hint" id="auth-register-password-hint">{{ t('auth2.password_rule') }}</p>
+        </div>
+
+        <div class="auth-field auth-field-invite">
+          <label for="auth-register-invite">{{ t('auth.invite_code') }}</label>
+          <input
+            id="auth-register-invite"
+            name="invite_code"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="PLAY-XXX-XXX"
+            value="{{ form_values.invite_code }}"
+            {% if errors.get('invite_code') %}
+              class="r-field-invalid" aria-invalid="true" aria-describedby="auth-register-invite-error auth-register-invite-hint"
+            {% else %}
+              aria-describedby="auth-register-invite-hint"
+            {% endif %}
+          >
+          {% if errors.get('invite_code') %}
+            <p class="r-field-error" id="auth-register-invite-error">{{ t(errors['invite_code']) }}</p>
+          {% endif %}
+          <p class="auth-field-hint auth-invite-hint" id="auth-register-invite-hint">
+            {{ t('auth2.invite_help') }} ·
+            {{ t('auth2.invite_contact') }}
+            <a class="r-link" href="mailto:contact@bneriichi.com">contact@bneriichi.com</a>
+            {{ t('auth2.invite_onsite') }}
+          </p>
+        </div>
+
+        <button class="button auth-submit" type="submit">{{ t('auth.create_account') }}</button>
+      </form>
+
+      <div class="auth-alt">
+        <p>
+          {{ t('auth2.have_account') }}
+          <a class="r-link" href="{{ url_for('login', next=next_url) if next_url else url_for('login') }}">{{ t('auth.login') }}</a>
+        </p>
+      </div>
+    </div>
+
+    <p class="auth-foot-note">{{ t('auth2.privacy_note') }}</p>
+  </section>
+</div>
+
+<script>
+  (function () {
+    var form = document.getElementById('auth-register-form');
+    if (!form) { return; }
+    var copy = {
+      nameRequired: {{ t('auth2.err_display_name_required')|tojson }},
+      emailRequired: {{ t('auth2.err_email_required')|tojson }},
+      emailInvalid: {{ t('auth2.err_email_invalid')|tojson }},
+      passwordRequired: {{ t('auth2.err_password_required')|tojson }},
+      passwordShort: {{ t('auth2.err_password_short')|tojson }},
+      inviteRequired: {{ t('auth2.err_invite_required')|tojson }}
+    };
+    var emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+    function fieldOf(input) { return input.closest('.auth-field'); }
+    function errorNode(input) {
+      var field = fieldOf(input);
+      if (!field) { return null; }
+      var node = field.querySelector('.r-field-error');
+      if (node) { return node; }
+      node = document.createElement('p');
+      node.className = 'r-field-error';
+      node.id = input.id + '-error';
+      var hint = field.querySelector('.auth-field-hint');
+      field.insertBefore(node, hint || null);
+      return node;
+    }
+    function showError(input, message) {
+      input.classList.add('r-field-invalid');
+      input.setAttribute('aria-invalid', 'true');
+      errorNode(input).textContent = message;
+    }
+    function clearError(input) {
+      input.classList.remove('r-field-invalid');
+      input.removeAttribute('aria-invalid');
+      var field = fieldOf(input);
+      var node = field ? field.querySelector('.r-field-error') : null;
+      if (node) { node.remove(); }
+    }
+
+    form.addEventListener('submit', function (event) {
+      var name = form.elements.display_name;
+      var email = form.elements.email;
+      var password = form.elements.password;
+      var invite = form.elements.invite_code;
+      var firstInvalid = null;
+      [name, email, password, invite].forEach(clearError);
+
+      if (!name.value.trim()) { showError(name, copy.nameRequired); firstInvalid = firstInvalid || name; }
+      if (!email.value.trim()) {
+        showError(email, copy.emailRequired); firstInvalid = firstInvalid || email;
+      } else if (!emailPattern.test(email.value.trim())) {
+        showError(email, copy.emailInvalid); firstInvalid = firstInvalid || email;
+      }
+      if (!password.value) {
+        showError(password, copy.passwordRequired); firstInvalid = firstInvalid || password;
+      } else if (password.value.length < 8) {
+        showError(password, copy.passwordShort); firstInvalid = firstInvalid || password;
+      }
+      if (!invite.value.trim()) { showError(invite, copy.inviteRequired); firstInvalid = firstInvalid || invite; }
+
+      if (firstInvalid) {
+        event.preventDefault();
+        firstInvalid.focus();
+      }
+    });
+    [form.elements.display_name, form.elements.email, form.elements.password, form.elements.invite_code].forEach(function (input) {
+      input.addEventListener('input', function () { clearError(input); });
+    });
+  })();
+</script>
 {% endblock %}

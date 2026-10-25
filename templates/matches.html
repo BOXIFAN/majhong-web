@@ -1,45 +1,103 @@
 {% extends "base.html" %}
 {% block title %}{{ t('nav.matches') }} · Brisbane Riichi{% endblock %}
+{% block report_css %}<link rel="stylesheet" href="{{ url_for('static', filename='report/40-matches.css') }}">{% endblock %}
 {% block content %}
-<section class="page-head row season-filter-page">
-  <div class="page-head-title">
-    <p class="eyebrow">Match History</p>
-    <div class="page-head-title-main">
+<div class="match-page">
+  <header class="match-page-head">
+    <div class="match-page-heading">
       <h1>{{ t('nav.matches') }}</h1>
-      <span class="muted page-head-count">{{ t('home.match_count', count=pagination.total) }}</span>
+      <p class="match-page-sub">
+        <span class="match-page-scope">{{ selected_season.name if selected_season else t('season.all') }}</span>
+        <span class="match-page-sub-sep" aria-hidden="true">·</span>
+        <span>{{ t('match.list.count', count=pagination.total) }}</span>
+        <span class="match-page-sub-sep" aria-hidden="true">·</span>
+        <span>{{ t('match.list.order') }}</span>
+      </p>
     </div>
-  </div>
-  <div class="page-head-actions">
-    <form class="inline-form" method="get">
-      <select name="season_id" onchange="this.form.submit()">
+    <form class="match-season-form" method="get" action="{{ url_for('matches') }}">
+      <label for="match-season-filter">{{ t('match.list.season_filter') }}</label>
+      <select id="match-season-filter" name="season_id" onchange="this.form.submit()">
         <option value="">{{ t('season.all') }}</option>
         {% for season in seasons %}
           <option value="{{ season.id }}" {% if selected_season and season.id == selected_season.id %}selected{% endif %}>{{ season.name }}</option>
         {% endfor %}
       </select>
     </form>
-  </div>
-</section>
-<section class="panel vt-match-panel">
-  {% if matches %}
-    <div class="match-list matches-page-list">
-      {% for match in matches %}
-        <a class="match-card" style="--i: {{ [loop.index0, 12]|min }}" data-vt="match-{{ match.id }}" href="{{ url_for('match_detail', match_id=match.id) }}">
-          <span>{{ match_type_label(match.table_name) }}</span>
-          <strong>{{ match.played_at }}</strong>
-          <small>{{ t('home.referee', name=(match.referee_name or t('home.system'))) }}</small>
-        </a>
+  </header>
+
+  {% if match_groups %}
+    <div class="match-timeline vt-match-panel">
+      {% for group in match_groups %}
+        <section class="match-day" aria-labelledby="match-day-{{ group.date }}">
+          <h2 class="match-day-label" id="match-day-{{ group.date }}">{{ group.label }}</h2>
+          <ul class="match-day-rows">
+            {% for match in group.matches %}
+              <li>
+                <a class="match-row" href="{{ url_for('match_detail', match_id=match.id) }}">
+                  <span class="match-row-time"><time datetime="{{ match.played_at|replace(' ', 'T') }}">{{ match.time_label }}</time></span>
+                  <span class="match-row-type{% if match.table_name and match.table_name|lower == 'meetup' %} is-meetup{% endif %}">{{ match_type_label(match.table_name) }}</span>
+                  <span class="match-row-summary">
+                    {% if match.winner %}
+                      <span class="match-row-winner">
+                        {% if match.winner.placement == 1 %}
+                          {{ t('match.list.winner', name=match.winner.display_name) }}
+                        {% else %}
+                          {{ t('match.list.winner_tied', placement='%g'|format(match.winner.placement), name=match.winner.display_name) }}
+                        {% endif %}
+                      </span>
+                      <span class="match-row-points{% if match.winner.rank_points > 0 %} is-positive{% elif match.winner.rank_points < 0 %} is-negative{% endif %}">{{ '%+.1f'|format(match.winner.rank_points) }}</span>
+                      {% if match.entry_count > 1 %}
+                        <span class="match-row-sep" aria-hidden="true">·</span>
+                        <span class="match-row-others">{{ match.entries[1:]|map(attribute='display_name')|join(' / ') }}</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="match-row-nodata">{{ t('match.list.no_result') }}</span>
+                    {% endif %}
+                  </span>
+                  <span class="match-row-referee">{{ t('match.list.referee', name=(match.referee_name or t('home.system'))) }}</span>
+                  <span class="match-row-arrow" aria-hidden="true">→</span>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
       {% endfor %}
     </div>
+
     {% if pagination.pages > 1 %}
-      <nav class="pagination" aria-label="{{ t('pagination.recent_matches') }}">
-        {% if pagination.has_prev %}<a href="{{ url_for('matches', page=pagination.prev_page, season_id=season_id) }}">{{ t('pagination.prev') }}</a>{% else %}<span class="disabled">{{ t('pagination.prev') }}</span>{% endif %}
-        <strong>{{ pagination.page }} / {{ pagination.pages }}</strong>
-        {% if pagination.has_next %}<a href="{{ url_for('matches', page=pagination.next_page, season_id=season_id) }}">{{ t('pagination.next') }}</a>{% else %}<span class="disabled">{{ t('pagination.next') }}</span>{% endif %}
+      <nav class="match-pagination" aria-label="{{ t('pagination.recent_matches') }}">
+        {% if pagination.has_prev %}
+          <a class="match-page-step" href="{{ url_for('matches', page=pagination.prev_page, season_id=season_id) }}"><span class="match-page-step-dir" aria-hidden="true">←</span>{{ t('pagination.prev') }}</a>
+        {% else %}
+          <span class="match-page-step is-disabled" aria-disabled="true"><span class="match-page-step-dir" aria-hidden="true">←</span>{{ t('pagination.prev') }}</span>
+        {% endif %}
+        <ol class="match-page-numbers">
+          {% for number in pagination.page_numbers %}
+            <li>
+              {% if number == pagination.page %}
+                <span class="match-page-number is-current" aria-current="page">{{ number }}</span>
+              {% else %}
+                <a class="match-page-number" href="{{ url_for('matches', page=number, season_id=season_id) }}" aria-label="{{ t('pagination.page_number', page=number) }}">{{ number }}</a>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ol>
+        {% if pagination.has_next %}
+          <a class="match-page-step" href="{{ url_for('matches', page=pagination.next_page, season_id=season_id) }}">{{ t('pagination.next') }}<span class="match-page-step-dir" aria-hidden="true">→</span></a>
+        {% else %}
+          <span class="match-page-step is-disabled" aria-disabled="true">{{ t('pagination.next') }}<span class="match-page-step-dir" aria-hidden="true">→</span></span>
+        {% endif %}
       </nav>
     {% endif %}
   {% else %}
-    <div class="empty">{{ t('home.first_match_hint') }}</div>
+    <div class="match-empty">
+      <div class="r-empty">
+        <img src="{{ url_for('static', filename='mj-east.svg') }}" alt="">
+        <strong>{{ t('match.list.empty_title') }}</strong>
+        <p>{{ t('match.list.empty_body') }}</p>
+        <a class="button" href="{{ url_for('meetups') }}">{{ t('match.list.empty_action') }}</a>
+      </div>
+    </div>
   {% endif %}
-</section>
+</div>
 {% endblock %}

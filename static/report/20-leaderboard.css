@@ -1,0 +1,730 @@
+/* ==========================================================================
+   WP2 · 排行榜（templates/leaderboard.html）
+   --------------------------------------------------------------------------
+   对应 review-report.md：
+     P0-3  绿/粉排名带无图例 → 图例 + 第 4/5 名与末位区前的虚线切线
+     P1-8  赛季下拉悬空、决赛卡套卡 → 紧凑赛季控件对齐表格右缘；72px 决赛横条
+     B5    排行榜不解释在看什么 → 决胜条件、均顺、可负积分、单位统一
+     B6    半庄/场次/对局混用 → 表头统一「场次」、决赛条统一「场（半庄）」
+     B9 / 移动端专项 2 → 390px 每人两行、不横滑、表头与图例吸顶
+   现有样式（style.css 的 .board-table/.top-rank/.low-rank/.finals-status-* 等）只读复用，
+   本文件后加载，同选择器前缀 .lb-* 提高特异性后覆盖。
+   ========================================================================== */
+
+.lb-page {
+  --lb-panel-pad: 22px;   /* 与 .panel 的内边距一致：赛季控件右缘 = 表格右缘 */
+  --lb-sticky-top: 0px;
+  display: grid;
+  /* 固定单列轨道，长英文标签不能把网格撑出视口（英文站 390px 会横溢）。 */
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* --------------------------------------------------------------------------
+   1. 页头：标题 + 赛季状态 / 右侧紧凑赛季控件（240–280px，同一条右锚线）
+   -------------------------------------------------------------------------- */
+
+.lb-page .page-head.row.season-filter-page.lb-head {
+  align-items: flex-end;
+  gap: 12px 20px;
+  padding-right: var(--lb-panel-pad);
+  text-align: left;
+}
+
+.lb-head-copy {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.lb-head-copy h1 {
+  margin: 0;
+}
+
+.lb-head-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0;
+}
+
+.lb-season-current {
+  color: var(--r-ink-2);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.lb-season-form {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.lb-season-label {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.lb-season-control {
+  position: relative;
+  display: block;
+  width: 260px;
+}
+
+.lb-season-control::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--r-muted);
+  border-bottom: 2px solid var(--r-muted);
+  pointer-events: none;
+  transform: translateY(-70%) rotate(45deg);
+}
+
+#lb-season-select {
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 38px 10px 14px;
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius-sm);
+  color: var(--r-ink);
+  background: var(--r-surface);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-align: left;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+#lb-season-select:hover {
+  border-color: var(--r-brand-line);
+}
+
+/* --------------------------------------------------------------------------
+   2. 决赛资格：72px 横条，不再卡套卡（P1-8）
+   访客态 = 条件说明 + 登录按钮（不出现「已完成 0 个」假进度）；
+   登录态 = 左「还需要 N 场 / 已完成 x/y」+ 右杯赛状态。
+   -------------------------------------------------------------------------- */
+
+.lb-finals-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 24px;
+  min-height: 72px;
+  margin-bottom: 22px;
+  padding: 12px 20px;
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius-sm);
+  background: var(--r-surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), var(--r-shadow-soft);
+}
+
+.lb-finals-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+  min-width: 0;
+}
+
+.lb-finals-title {
+  margin: 0;
+  color: var(--r-brand-dark);
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.lb-finals-main {
+  margin: 0;
+  color: var(--r-body);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+
+.lb-finals-sep {
+  color: var(--r-muted);
+}
+
+.lb-finals-state {
+  display: grid;
+  gap: 2px;
+  text-align: right;
+}
+
+.lb-finals-cup {
+  margin: 0;
+  color: var(--r-ink-2);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.lb-finals-note {
+  margin: 0;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+}
+
+.lb-finals-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--r-brand);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background var(--dur-fast) ease;
+}
+
+.lb-finals-cta:hover {
+  background: var(--r-brand-dark);
+}
+
+/* --------------------------------------------------------------------------
+   3. 表格工具条：图例（P0-3）+ 说明
+   -------------------------------------------------------------------------- */
+
+.lb-board-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding: 0 0 10px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--r-line-soft);
+}
+
+.lb-legend {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.lb-legend-note {
+  display: none;
+}
+
+.lb-board-note {
+  margin: 0;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+  text-align: right;
+}
+
+/* --------------------------------------------------------------------------
+   4. 排名表：色带、切线、数值列（P0-3）
+   绿/粉行底色与图例色块使用同一组色值，颜色只承担「决赛席位 / 烧鸟区」一种含义。
+   -------------------------------------------------------------------------- */
+
+.lb-table {
+  width: 100%;
+}
+
+.lb-table th,
+.lb-table td {
+  padding: 12px;
+}
+
+.lb-table thead th {
+  border-bottom: 1px solid var(--r-line);
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  line-height: 1.4;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.lb-th-note {
+  display: block;
+  margin-top: 2px;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  text-align: right;
+}
+
+/* 移动端表头用短标签，完整列名只在桌面出现（英文长标签会压垮 390px 列宽）。 */
+.lb-th-short {
+  display: none;
+}
+
+.lb-table tbody td {
+  border-bottom: 1px solid var(--r-line-soft);
+  color: var(--r-ink-2);
+  font-size: var(--fs-sm);
+}
+
+/* 表头列宽：右缘对齐同一条锚线；数值列右对齐并等宽。 */
+.lb-table .lb-col-rank,
+.lb-table td.lb-rank {
+  width: 52px;
+}
+
+.lb-table .lb-col-points,
+.lb-table td.lb-points {
+  width: 128px;
+}
+
+.lb-table .lb-col-matches,
+.lb-table td.lb-matches {
+  width: 80px;
+}
+
+.lb-table .lb-col-avg,
+.lb-table td.lb-avg {
+  width: 160px;
+}
+
+.lb-table .lb-col-first,
+.lb-table td.lb-rate-first {
+  width: 92px;
+}
+
+.lb-table .lb-col-fourth,
+.lb-table td.lb-rate-fourth {
+  width: 92px;
+}
+
+.lb-col-points,
+.lb-col-matches,
+.lb-col-avg,
+.lb-col-first,
+.lb-col-fourth,
+td.lb-points,
+td.lb-matches,
+td.lb-avg,
+td.lb-rate {
+  text-align: right;
+}
+
+td.lb-points,
+td.lb-matches,
+td.lb-avg,
+td.lb-rate {
+  font-variant-numeric: tabular-nums;
+}
+
+.lb-table td.lb-points {
+  color: var(--r-ink);
+  font-weight: 800;
+}
+
+.lb-table td.lb-rank {
+  color: var(--r-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.lb-rate-label {
+  display: none;
+}
+
+/* 1–4 名奖牌序号必须始终可见：style.css 的 badge-pop 入场动画在无头浏览器
+   整页截图（captureBeyondViewport）时会停回 0%（opacity 0），导致奖牌「消失」。
+   排名徽章是信息本身，不承担动效，这里只在本页关掉它的动画。 */
+.lb-page .lb-table tbody tr.top-rank .rank-no-badge {
+  animation: none;
+}
+
+/* 名字过长时省略，避免把数值列挤走。 */
+.lb-player .rank-player {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.lb-player .rank-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 绿/粉排名带：色值与 .r-legend 的 i.is-finals / i.is-bottom 完全一致。 */
+.lb-table tbody tr.top-rank {
+  background: #dff0ea;
+}
+
+.lb-table tbody tr.low-rank {
+  background: #fbe7e4;
+}
+
+.lb-table tbody tr.top-rank:hover {
+  background: #d3ebe2;
+}
+
+.lb-table tbody tr.low-rank:hover {
+  background: #f7dbd7;
+}
+
+.lb-table tbody tr:not(.top-rank):not(.low-rank):hover {
+  background: rgba(15, 118, 110, 0.04);
+}
+
+/* 切线：第 4/5 名之间（决赛线）与末位区起点（烧鸟线）。 */
+.lb-table tbody tr.lb-cut-row:hover {
+  background: transparent;
+}
+
+.lb-table tbody tr.lb-cut-row td {
+  padding: 2px 12px 6px;
+  border-bottom: 0;
+}
+
+.lb-cut-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lb-cut-line {
+  flex: 1 1 auto;
+  height: 0;
+  border-top: 1px dashed #bcb2a2;
+}
+
+.lb-cut-label {
+  flex: none;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
+   5. 响应式：≤1180px 每人两行（全部指标可见、无横滑），图例与表头吸顶。
+   960 以上开始出现 280px 侧栏，主内容区只剩 680–900px，7 列表格放不下，
+   所以卡片布局的断点必须与「侧栏是否出现」对齐，而不是按手机宽度。
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 960px) {
+  .lb-page {
+    --lb-sticky-top: 82px;  /* 固定顶栏高度 */
+  }
+}
+
+@media (max-width: 560px) {
+  .lb-page {
+    --lb-sticky-top: 74px;  /* 小屏顶栏更矮 */
+  }
+}
+
+@media (max-width: 1180px) {
+  .lb-page .page-head.row.season-filter-page.lb-head {
+    align-items: flex-start;
+    padding-right: var(--lb-panel-pad);
+  }
+
+  .lb-page .page-head.row.season-filter-page.lb-head .lb-season-form {
+    flex: none;
+    align-self: flex-end;
+    margin-left: 0;
+  }
+
+  .lb-season-control {
+    width: 240px;
+  }
+
+  .lb-finals-bar {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .lb-finals-copy {
+    display: block;
+  }
+
+  .lb-finals-title {
+    margin-bottom: 3px;
+    font-size: var(--fs-xs);
+    letter-spacing: 0.06em;
+  }
+
+  .lb-finals-main {
+    font-size: var(--fs-sm);
+  }
+
+  .lb-finals-state {
+    text-align: left;
+  }
+
+  .lb-finals-cta {
+    width: 100%;
+  }
+
+  /* 图例条：吸顶，固定高度以便表头紧贴其下；第二行放均顺说明。 */
+  .lb-board-tools {
+    position: sticky;
+    top: var(--lb-sticky-top);
+    z-index: 3;
+    align-items: flex-start;
+    height: 54px;
+    padding: 8px 0;
+    margin-bottom: 0;
+    background: var(--r-surface);
+  }
+
+  .lb-legend {
+    gap: 2px 12px;
+  }
+
+  .lb-legend-note {
+    display: block;
+    flex-basis: 100%;
+    color: var(--r-muted);
+    font-size: var(--fs-xs);
+  }
+
+  .lb-board-note {
+    display: none;
+  }
+
+  .lb-page .lb-table-wrap {
+    margin-inline: 0;
+    padding-inline: 0;
+    overflow: visible;
+  }
+
+  /* 表头吸顶：显示在图例条下方。 */
+  .lb-table,
+  .lb-table thead,
+  .lb-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .lb-table thead {
+    position: sticky;
+    top: calc(var(--lb-sticky-top) + 54px);
+    z-index: 2;
+    background: var(--r-surface);
+  }
+
+  .lb-table thead tr {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+  }
+
+  .lb-table thead th {
+    display: block;
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--r-line);
+    background: var(--r-surface);
+  }
+
+  .lb-th-note {
+    display: none;
+  }
+
+  .lb-table tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 10px 0 9px;
+    border-bottom: 1px solid var(--r-line-soft);
+  }
+
+  .lb-table tbody tr.top-rank,
+  .lb-table tbody tr.low-rank {
+    border-bottom-color: transparent;
+  }
+
+  .lb-table tbody td {
+    display: block;
+    padding: 0 4px;
+    border-bottom: 0;
+    font-size: var(--fs-sm);
+  }
+
+  /* 第一行：# 玩家 积分 场次 均顺 —— 首列固定在最左，不参与横滑。 */
+  .lb-table .lb-col-rank,
+  .lb-table tbody td.lb-rank {
+    flex: 0 0 30px;
+    width: auto;
+    padding-left: 0;
+    text-align: left;
+  }
+
+  .lb-table .lb-col-player,
+  .lb-table tbody td.lb-player {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+  }
+
+  .lb-table thead th {
+    min-width: 0;
+  }
+
+  .lb-th-long {
+    display: none;
+  }
+
+  .lb-th-short {
+    display: inline;
+  }
+
+  .lb-table .lb-col-points,
+  .lb-table tbody td.lb-points {
+    flex: 0 0 52px;
+    width: auto;
+  }
+
+  .lb-table .lb-col-matches,
+  .lb-table tbody td.lb-matches {
+    flex: 0 0 56px;
+    width: auto;
+  }
+
+  .lb-table .lb-col-avg,
+  .lb-table tbody td.lb-avg {
+    flex: 0 0 42px;
+    width: auto;
+  }
+
+  .lb-table .lb-col-first,
+  .lb-table .lb-col-fourth {
+    display: none;
+  }
+
+  /* 强制换行：第一行只放 # 玩家 积分 场次 均顺，比率第二行。 */
+  .lb-table tbody tr::before {
+    content: "";
+    flex: 0 0 100%;
+    order: 1;
+    height: 0;
+  }
+
+  .lb-table tbody tr.lb-cut-row::before {
+    content: none;
+  }
+
+  .lb-table tbody td {
+    order: 0;
+  }
+
+  /* 第二行：12px「一位 27.1% · 四位 13.5%」，保留两项比率。 */
+  .lb-table tbody td.lb-rate {
+    flex: 0 0 auto;
+    order: 2;
+    width: auto;
+    padding-top: 2px;
+    color: var(--r-muted);
+    font-size: var(--fs-xs);
+    text-align: left;
+  }
+
+  .lb-table tbody td.lb-rate-first {
+    margin-left: 30px;
+  }
+
+  .lb-rate-label {
+    display: inline;
+    margin-right: 3px;
+  }
+
+  .lb-table tbody td.lb-rate-fourth::before {
+    content: "·";
+    margin: 0 6px 0 2px;
+    color: var(--r-muted);
+  }
+
+  .lb-table tbody tr.lb-cut-row {
+    padding: 0;
+  }
+
+  .lb-table tbody tr.lb-cut-row td {
+    flex: 1 1 100%;
+    padding: 4px 0;
+  }
+
+  .lb-cut-label {
+    padding-right: 2px;
+  }
+}
+
+/* 小屏手机：顶栏仍在，赛季控件与表格右缘共用同一条锚线。 */
+@media (max-width: 560px) {
+  .lb-page {
+    --lb-panel-pad: 18px;
+  }
+
+  #lb-season-select {
+    font-size: var(--fs-base);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. 评审修复（P1-7）：≤380px 窄屏下姓名不再被省略号截断。
+   360 宽时固定列（场次/均顺/积分）挤占玩家列，Daniel Wong 会变成「Daniel …」。
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 380px) {
+  .lb-table .lb-col-rank,
+  .lb-table tbody td.lb-rank {
+    flex: 0 0 24px;
+  }
+
+  .lb-table tbody td {
+    padding: 0 2px;
+  }
+
+  .lb-table .lb-col-points,
+  .lb-table tbody td.lb-points {
+    flex: 0 0 46px;
+    font-size: var(--fs-xs);
+  }
+
+  .lb-table .lb-col-matches,
+  .lb-table tbody td.lb-matches {
+    flex: 0 0 38px;
+    font-size: var(--fs-xs);
+  }
+
+  .lb-table .lb-col-avg,
+  .lb-table tbody td.lb-avg {
+    flex: 0 0 36px;
+    font-size: var(--fs-xs);
+  }
+
+  .lb-table tbody td.lb-player,
+  .lb-table tbody td.lb-player .rank-player {
+    min-width: 0;
+  }
+
+  .lb-table tbody td.lb-player .rank-name {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+  }
+}
+
+/* 评审修复（P1-6）：玩家名链接是进玩家页的唯一入口，点击区抬到 44px */
+.lb-table tbody td.lb-player .rank-player {
+  min-height: 44px;
+  padding-block: 8px;
+}

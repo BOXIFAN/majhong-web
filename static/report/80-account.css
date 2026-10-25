@@ -1,0 +1,997 @@
+/* ==========================================================================
+   WP8 · 账号流（登录/注册）与玩家页
+   --------------------------------------------------------------------------
+   对应 review-report.md：P1-10、P1-11、A-2、A-3、可用性 T5/T7/T8、移动端专项 10。
+   只作用于 `.auth-*` / `.player-*` / `.trend-point` 等本页类名；设计 token 全部复用
+   static/report/00-base.css，不新增近似颜色与字号。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 登录 / 注册：桌面左右分栏（左视觉 + 右 440px 表单），移动端单列
+   -------------------------------------------------------------------------- */
+
+.auth-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 440px;
+  gap: clamp(20px, 3vw, 44px);
+  align-items: stretch;
+  min-height: max(620px, calc(100dvh - 210px));
+  margin-bottom: var(--sp-5);
+}
+
+.auth-visual {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: var(--sp-5);
+  padding: clamp(26px, 3vw, 40px);
+  overflow: hidden;
+  border-radius: var(--r-radius-lg);
+  color: #f4faf8;
+  background:
+    radial-gradient(120% 90% at 12% 0%, rgba(255, 255, 255, 0.16), transparent 46%),
+    radial-gradient(90% 70% at 100% 100%, rgba(4, 47, 43, 0.55), transparent 60%),
+    linear-gradient(150deg, #0f766e 0%, #115e59 52%, #0b3f3b 100%);
+  box-shadow: var(--r-shadow);
+}
+
+/* 右上角一枚极淡的牌面圆环，作为视觉锚点（纯装饰）。 */
+.auth-visual::after {
+  content: "";
+  position: absolute;
+  right: -70px;
+  top: -80px;
+  width: 260px;
+  height: 260px;
+  border: 1px solid rgba(244, 250, 248, 0.18);
+  border-radius: 50%;
+  box-shadow: 0 0 0 34px rgba(244, 250, 248, 0.04), 0 0 0 68px rgba(244, 250, 248, 0.03);
+  pointer-events: none;
+}
+
+.auth-visual-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.auth-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  border-radius: 13px;
+  background: #fbfaf6;
+  box-shadow: 0 10px 22px rgba(4, 47, 43, 0.3);
+}
+
+.auth-brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.auth-brand-name {
+  display: grid;
+  gap: 2px;
+  line-height: 1.25;
+}
+
+.auth-brand-name strong {
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.auth-brand-name small {
+  color: rgba(244, 250, 248, 0.68);
+  font-size: var(--fs-xs);
+}
+
+.auth-visual-copy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+
+.auth-visual-eyebrow {
+  margin: 0;
+  color: rgba(244, 250, 248, 0.62);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.auth-visual-copy h2 {
+  margin: 0;
+  font-size: clamp(28px, 2.6vw, 40px);
+  text-wrap: balance;
+  line-height: 1.16;
+  letter-spacing: -0.03em;
+  color: #fbfaf6;
+}
+
+.auth-visual-copy p:not(.auth-visual-eyebrow) {
+  margin: 0;
+  max-width: 42ch;
+  color: rgba(244, 250, 248, 0.78);
+  font-size: var(--fs-sm);
+  line-height: 1.72;
+}
+
+/* 麻将牌静物：复用站内既有 SVG 牌面，白色牌 + 墨色字，纯 CSS 排布。 */
+.auth-tiles {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  margin: var(--sp-2) 0 0 6px;
+  padding-bottom: 4px;
+}
+
+.auth-tile {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 80px;
+  margin-right: -12px;
+  border-radius: 9px;
+  background:
+    radial-gradient(circle at 30% 12%, #fffefb 0 26%, #f3eee2 72%, #e6ddc9 100%);
+  box-shadow: 0 12px 24px rgba(4, 34, 31, 0.34), inset 0 -2px 0 rgba(139, 121, 86, 0.28);
+  transform: rotate(var(--tile-rotate, 0deg));
+  transform-origin: 50% 90%;
+}
+
+.auth-tile img {
+  display: block;
+  width: 62%;
+  height: auto;
+  opacity: 0.92;
+}
+
+.auth-benefits {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--sp-3);
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.auth-benefits li {
+  display: grid;
+  gap: 3px;
+  padding-left: var(--sp-4);
+  border-left: 1px solid rgba(244, 250, 248, 0.24);
+}
+
+.auth-benefits strong {
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  color: #fbfaf6;
+}
+
+.auth-benefits span {
+  color: rgba(244, 250, 248, 0.7);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+}
+
+.auth-visual-foot {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 3px;
+  align-self: end;
+  margin: auto 0 0;
+  padding-top: var(--sp-4);
+  border-top: 1px solid rgba(244, 250, 248, 0.2);
+}
+
+.auth-visual-foot span {
+  color: rgba(244, 250, 248, 0.62);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.08em;
+}
+
+.auth-visual-foot strong {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: #fbfaf6;
+}
+
+.auth-form-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--sp-3);
+  width: 100%;
+  max-width: 440px;
+  justify-self: end;
+  min-width: 0;
+}
+
+.auth-mobile-brand {
+  display: none;
+}
+
+.auth-mobile-brand a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  color: var(--r-ink);
+}
+
+.auth-mobile-brand img {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.auth-mobile-brand span {
+  display: grid;
+  gap: 1px;
+  line-height: 1.25;
+}
+
+.auth-mobile-brand strong {
+  font-size: var(--fs-sm);
+  font-weight: 800;
+}
+
+.auth-mobile-brand small {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+}
+
+/* 表单卡片：覆盖 style.css 里旧的 460px 居中卡。 */
+.auth-page .auth-card {
+  width: 100%;
+  margin: 0;
+  padding: var(--sp-6);
+  border-radius: var(--r-radius-lg);
+}
+
+.auth-card-head {
+  display: grid;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+.auth-card-head h1 {
+  margin: 0;
+  font-size: var(--fs-xl);
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+
+.auth-lead {
+  margin: 0;
+  color: var(--r-body);
+  font-size: var(--fs-sm);
+  line-height: 1.65;
+}
+
+.auth-return-note {
+  margin: 0 0 var(--sp-2);
+  padding: 8px 12px;
+  border: 1px solid var(--r-brand-line);
+  border-radius: var(--r-radius-sm);
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.auth-form {
+  gap: var(--sp-3);
+}
+
+.auth-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.auth-field > label {
+  gap: 0;
+  color: var(--r-ink-2);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.auth-field input {
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 13px;
+  border-radius: var(--r-radius-sm);
+  font-size: var(--fs-base);
+}
+
+.auth-field input::placeholder {
+  color: #98a2b3;
+}
+
+.auth-field-hint {
+  margin: 0;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.55;
+}
+
+.auth-field .r-field-error {
+  margin-top: 0;
+}
+
+.auth-invite-hint {
+  display: block;
+  padding: 8px 10px;
+  border-radius: var(--r-radius-sm);
+  background: var(--r-surface-sunken);
+  border: 1px solid var(--r-line-soft);
+}
+
+.auth-invite-hint .r-link {
+  white-space: nowrap;
+}
+
+.auth-remember {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-remember input {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  margin: 0;
+  accent-color: var(--r-brand);
+}
+
+.auth-submit {
+  width: 100%;
+  min-height: 48px;
+  margin-top: var(--sp-1);
+  font-size: var(--fs-base);
+}
+
+.auth-alt {
+  display: grid;
+  gap: var(--sp-2);
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--r-line);
+  color: var(--r-body);
+  font-size: var(--fs-sm);
+}
+
+.auth-alt p {
+  margin: 0;
+}
+
+.auth-forgot {
+  color: var(--r-muted);
+}
+
+.auth-foot-note {
+  margin: 0;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   2. 玩家页：页头返回、指标卡、雷达与趋势
+   -------------------------------------------------------------------------- */
+
+.player-back-nav {
+  margin-bottom: var(--sp-3);
+}
+
+.player-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 14px 8px 10px;
+  border: 1px solid var(--r-line);
+  border-radius: 999px;
+  background: var(--r-surface);
+  color: var(--r-brand-dark);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.player-back:hover,
+.player-back:focus-visible {
+  transform: translateX(-2px);
+  border-color: var(--r-brand-line);
+  background: var(--r-brand-soft);
+}
+
+.player-page .player-page-head {
+  margin-bottom: var(--sp-4);
+}
+
+.player-page .player-head-name h1 {
+  letter-spacing: -0.03em;
+}
+
+/* 指标卡：当前积分强调卡 + 场（半庄）/平均顺位 + 两张双率卡。
+   双率卡的两个百分比用 1px 竖线分隔、值 24px、标签在值上方、禁止换行。 */
+.player-metrics {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.2fr)
+    minmax(0, 0.85fr)
+    minmax(0, 1.05fr)
+    minmax(0, 2.5fr);
+  gap: var(--sp-3);
+  align-items: stretch;
+}
+
+.player-metric {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+  padding: var(--sp-4);
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 255, 255, 0.7), transparent 44%),
+    var(--r-surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), var(--r-shadow-soft);
+}
+
+.player-metric-label {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.player-metric-value {
+  color: var(--r-ink);
+  font-size: 24px;
+  font-weight: 850;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.player-metric-hint {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.player-metric.is-primary {
+  border-color: transparent;
+  color: #f4faf8;
+  background:
+    radial-gradient(circle at 16% 0%, rgba(255, 255, 255, 0.18), transparent 48%),
+    linear-gradient(148deg, #0f766e 0%, #115e59 58%, #0b3f3b 100%);
+  box-shadow: 0 14px 30px rgba(15, 94, 89, 0.22);
+}
+
+.player-metric.is-primary .player-metric-label {
+  color: rgba(244, 250, 248, 0.78);
+}
+
+.player-metric.is-primary .player-metric-value {
+  color: #fbfaf6;
+  font-size: 28px;
+}
+
+.player-metric.is-primary .player-metric-hint {
+  color: rgba(244, 250, 248, 0.72);
+}
+
+.player-metric-pair {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.player-pair {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.player-pair-label {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.player-pair-value {
+  color: var(--r-ink);
+  font-size: 24px;
+  font-weight: 850;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.player-pair-divider {
+  flex: none;
+  width: 1px;
+  height: 36px;
+  background: var(--r-line);
+}
+
+.player-metrics-note {
+  margin: 10px 0 var(--sp-5);
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+}
+
+/* 桌面端「赛季数据」details 作为跨两列的网格项展示（details 有 shadow DOM，
+   display:contents 无法把子卡铺进父网格，所以让它自己承载 2×1 内网格）。
+   summary 只在移动端出现，桌面端由页面内联脚本保持 open。 */
+.player-more {
+  grid-column: 4 / 6;
+  min-width: 0;
+}
+
+.player-more > summary {
+  display: none;
+}
+
+.player-more-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-3);
+  height: 100%;
+}
+
+.player-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  gap: var(--sp-5);
+  align-items: start;
+}
+
+.player-trend-card,
+.player-radar-card {
+  min-width: 0;
+}
+
+.player-trend-card .r-section-head {
+  margin-bottom: var(--sp-3);
+}
+
+.player-trend-card .r-section-head h2 {
+  font-size: var(--fs-lg);
+}
+
+.player-trend-card .r-section-head p {
+  max-width: 42ch;
+}
+
+.player-history-title {
+  margin: var(--sp-5) 0 var(--sp-2);
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.player-history-list {
+  margin-top: 0;
+}
+
+.player-trend-card .pagination a,
+.player-trend-card .pagination span {
+  min-height: 44px;
+}
+
+.player-history-card {
+  grid-template-columns: 92px auto minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 12px 48px 12px var(--sp-4);
+  min-height: 64px;
+}
+
+.player-history-card small {
+  text-align: right;
+}
+
+.player-history-date {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.player-history-points {
+  color: var(--r-ink);
+  font-size: var(--fs-lg);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 趋势节点 tooltip：悬停或键盘聚焦节点时显示日期/顺位/积分（报告 移动端-10）。 */
+.player-trend-card .trend-point {
+  cursor: help;
+}
+
+.player-trend-card .trend-point::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 9px);
+  z-index: 6;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--r-ink);
+  color: #fbfaf6;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(23, 32, 51, 0.22);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, 4px);
+  transition: opacity 140ms ease, transform 140ms ease, visibility 0s linear 140ms;
+}
+
+.player-trend-card .trend-point:hover::after,
+.player-trend-card .trend-point:focus::after,
+.player-trend-card .trend-point:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition: opacity 140ms ease, transform 140ms ease, visibility 0s;
+}
+
+/* 雷达：保留 420px 宽的图形；红色中位数改 2px 虚线并提高可见度（P1-11）。 */
+.player-radar-card {
+  display: grid;
+  align-content: start;
+  gap: var(--sp-4);
+}
+
+.player-radar-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.player-radar-head h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+}
+
+.player-radar-head-meta {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.player-radar {
+  max-width: 420px;
+}
+
+/* 去掉雷达外又一层的「卡中卡」：面板本身就是容器，图形不再套第二层边框。 */
+.player-radar-wrap {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.player-radar-card .radar-median {
+  stroke: var(--bad, #b91c1c);
+  stroke-width: 2;
+  stroke-dasharray: 7 5;
+  opacity: 1;
+  filter: drop-shadow(0 4px 8px rgba(185, 28, 28, 0.16));
+}
+
+.player-radar-card .radar-median-node {
+  fill: var(--bad, #b91c1c);
+  r: 3.4;
+}
+
+.player-radar-note,
+.player-radar-tobi {
+  margin: 0;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+}
+
+.player-radar-note {
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--r-line-soft);
+}
+
+.player-radar-tobi {
+  color: var(--r-brand-dark);
+  font-weight: 700;
+}
+
+/* 玩家页空状态与密码卡（仅本人可见）。 */
+.player-trend-card .r-empty,
+.player-radar-card .r-empty {
+  padding: var(--sp-6) var(--sp-4);
+}
+
+.player-page .player-password-card {
+  margin-top: var(--sp-5);
+}
+
+/* --------------------------------------------------------------------------
+   3. 响应式
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+  .player-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .player-radar-card {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 1279px) {
+  /* 窄屏/平板/iPad 横屏：单列，隐藏左侧视觉，表单浮到首屏。
+     分栏需要「主内容区 − 440px 表单」仍够放视觉面板：桌面侧栏 280px 下，
+     1280 视口只剩 560px 给左栏，1280 以下分栏会把标题与牌组挤到卡片下面。 */
+  .auth-page {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    gap: var(--sp-4);
+  }
+
+  .auth-visual {
+    display: none;
+  }
+
+  .auth-form-col {
+    max-width: 560px;
+    margin-inline: auto;
+    justify-self: center;
+  }
+
+  .auth-mobile-brand {
+    display: block;
+  }
+}
+
+@media (max-width: 1199px) and (min-width: 761px) {
+  /* 中等宽度：指标 3 列，双率卡整行换到第二行。 */
+  .player-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .player-more {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .auth-page .auth-card {
+    padding: var(--sp-5) var(--sp-4);
+  }
+
+  .auth-card-head h1 {
+    font-size: 30px;
+  }
+
+  .auth-field input {
+    font-size: var(--fs-base);
+  }
+
+  .auth-alt {
+    margin-top: var(--sp-4);
+  }
+
+  .auth-foot-note {
+    margin: 4px 0 var(--sp-3);
+  }
+
+  /* 移动端默认只露 3 个核心数字（当前积分/场次/平均顺位），其余折叠。 */
+  .player-metrics {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .player-metric {
+    padding: 14px var(--sp-4);
+  }
+
+  .player-metric.is-primary {
+    order: -1;
+  }
+
+  .player-more {
+    display: block;
+    grid-column: 1 / -1;
+    border: 1px solid var(--r-line);
+    border-radius: var(--r-radius);
+    background: var(--r-surface);
+    box-shadow: var(--r-shadow-soft);
+    overflow: hidden;
+  }
+
+  .player-more > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+    padding: 0 var(--sp-4);
+    color: var(--r-brand-dark);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .player-more > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .player-more > summary::after {
+    content: "+";
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .player-more[open] > summary {
+    border-bottom: 1px solid var(--r-line-soft);
+  }
+
+  .player-more[open] > summary::after {
+    content: "−";
+  }
+
+  .player-more-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .player-more-grid .player-metric {
+    border: 0;
+    box-shadow: none;
+    background: var(--r-surface-sunken);
+  }
+
+  .player-metrics-note {
+    margin: var(--sp-2) 0 var(--sp-4);
+  }
+
+  .player-radar-head {
+    align-items: flex-start;
+  }
+
+  .player-radar-head-meta {
+    justify-items: start;
+  }
+
+  .radar-color-legend {
+    justify-content: flex-start;
+  }
+
+  .player-radar {
+    max-width: 100%;
+  }
+
+  .player-trend-card .r-section-head p {
+    font-size: var(--fs-xs);
+  }
+
+  .player-history-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 2px;
+    min-height: 68px;
+  }
+
+  .player-history-card .player-history-date {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .player-history-card .player-history-points {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+  }
+
+  .player-history-card small {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    text-align: left;
+  }
+
+  .player-page .player-password-card,
+  .player-page .player-password-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .player-metric-pair {
+    gap: 10px;
+  }
+
+  .player-pair-value,
+  .player-metric-value {
+    font-size: 22px;
+  }
+
+  .player-metric.is-primary .player-metric-value {
+    font-size: 26px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   评审修复（P1-9）：≤960 已有移动顶栏，正文品牌块重复，隐藏它把主按钮拉回首屏。
+   960–1279（无顶栏的平板）保留正文品牌块。
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 960px) {
+  .auth-page .auth-mobile-brand {
+    display: none;
+  }
+
+  .auth-page .auth-form-col {
+    max-width: 560px;
+  }
+}
+
+/* 评审修复（P1-6）：趋势节点视觉 13px，但热区扩到 44px；
+   tooltip 在靠近右缘时不再被裁掉。 */
+.player-page .trend-point {
+  position: absolute;
+}
+
+.player-page .trend-point::before {
+  content: "";
+  position: absolute;
+  inset: -16px;
+  border-radius: 50%;
+}
+
+.player-page .trend-point[data-tip]:hover::after,
+.player-page .trend-point[data-tip]:focus-visible::after {
+  max-width: min(220px, 62vw);
+}

@@ -1,0 +1,1045 @@
+/* ==========================================================================
+   WP3 · 活动报名（列表 / 详情 / 管理表单）
+   --------------------------------------------------------------------------
+   对应调研报告：
+     P0-2  归档卡不再整体淡化：表面 #F7F5F0 + 边框 #E7E1D7，透明度保持 1；
+     A-1   列表分「即将开始 / 已结束 · 存档」，状态文案与 CTA 联动，空态给周期与联系方式；
+     P1-7  详情页 H1 改活动名、日期退为副标题，补费用/名额/场地+地图/第一次来/备注；
+     移动端专项 5  每张卡压成两行（日期 22px + 12px 元信息），内边距 16px。
+   作用域：.meetup-page / .meetup-detail / .meetup-form-page，不污染其他页面。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   0. 页面骨架
+   -------------------------------------------------------------------------- */
+
+.meetup-page,
+.meetup-detail,
+.meetup-form-page {
+  display: grid;
+  gap: var(--sp-6);
+  min-width: 0;
+}
+
+.meetup-page-head,
+.meetup-detail-head,
+.meetup-form-head {
+  display: grid;
+  gap: var(--sp-2);
+  justify-items: start;
+  min-width: 0;
+}
+
+.meetup-page h1,
+.meetup-detail h1,
+.meetup-form-page h1 {
+  margin: 0;
+  font-size: clamp(30px, 4vw, var(--fs-2xl));
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--r-ink);
+  overflow-wrap: anywhere;
+}
+
+.meetup-page-lead,
+.meetup-form-hint {
+  max-width: 68ch;
+  margin: 0;
+  color: var(--r-body);
+  font-size: var(--fs-base);
+  line-height: 1.7;
+}
+
+.meetup-rhythm {
+  margin: 0;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.meetup-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  margin-bottom: var(--sp-1);
+  color: var(--r-brand-dark);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.meetup-back:hover,
+.meetup-back:focus-visible {
+  color: var(--r-brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* --------------------------------------------------------------------------
+   1. 列表：两段 × 两行卡（P0-2 / 移动端专项 5）
+   -------------------------------------------------------------------------- */
+
+.meetup-section {
+  scroll-margin-top: 100px;
+}
+
+.meetup-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.meetup-row {
+  display: grid;
+  gap: 6px;
+  padding: 16px; /* 验收：内边距 16px */
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius);
+  background: var(--r-surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 6px rgba(31, 45, 68, 0.04);
+  transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.meetup-row:hover {
+  border-color: var(--r-brand-line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), var(--r-shadow-soft);
+}
+
+/* 归档卡只降级表面色与边框，不整体淡化、不去色（P0-2 的直接修复）。 */
+.meetup-row.is-archived {
+  background: #f7f5f0;
+  border-color: #e7e1d7;
+  box-shadow: none;
+}
+
+.meetup-row.is-archived:hover {
+  border-color: #d8d0c2;
+  box-shadow: none;
+}
+
+.meetup-row-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  min-width: 0;
+}
+
+.meetup-row-date {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 40px;
+  min-width: 0;
+  padding: 2px 0;
+  color: var(--r-ink);
+  text-decoration: none;
+}
+
+.meetup-row-date time {
+  font-size: 22px; /* 验收：第 1 行日期 22px */
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.meetup-row-date small {
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.meetup-row-date:hover time {
+  color: var(--r-brand-dark);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.meetup-row-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  min-width: 0;
+}
+
+.meetup-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  min-width: 0;
+  margin: 0;
+  color: var(--r-muted);
+  font-size: var(--fs-xs); /* 验收：第 2 行 12px */
+  line-height: 1.5;
+}
+
+.meetup-row-meta > span + span::before {
+  content: "·";
+  margin-right: 8px;
+  color: var(--r-line);
+}
+
+.meetup-row-venue {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* 桌面显示完整地址；移动端只留场地名，避免第二行换行（移动端专项 5）。 */
+.meetup-row-venue-short {
+  display: none;
+}
+
+.meetup-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.meetup-row-actions form {
+  display: inline-flex;
+  margin: 0;
+}
+
+/* CTA：open 实心，closed / archived 描边（状态与动作联动）。 */
+.meetup-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid var(--r-brand);
+  border-radius: 999px;
+  background: var(--r-brand);
+  color: #fdfcf8;
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.meetup-cta:hover,
+.meetup-cta:focus-visible {
+  background: var(--r-brand-dark);
+  border-color: var(--r-brand-dark);
+  color: #ffffff;
+}
+
+.meetup-cta.is-quiet {
+  background: transparent;
+  border-color: var(--r-line);
+  color: var(--r-brand-dark);
+}
+
+.meetup-cta.is-quiet:hover,
+.meetup-cta.is-quiet:focus-visible {
+  background: var(--r-brand-soft);
+  border-color: var(--r-brand-line);
+  color: var(--r-brand-dark);
+}
+
+.meetup-row.is-archived .meetup-cta.is-quiet,
+.meetup-status-bar.is-archived .meetup-cta.is-quiet {
+  border-color: #e0d9cd;
+  color: var(--r-ink-2);
+}
+
+.meetup-row.is-archived .meetup-cta.is-quiet:hover,
+.meetup-status-bar.is-archived .meetup-cta.is-quiet:hover {
+  background: #efeae0;
+  border-color: #d8d0c2;
+  color: var(--r-ink);
+}
+
+/* 空态：鸟 + 一句人话 + 联系方式（A-1：下一场待公布也给下一步动作）。 */
+.meetup-page .meetup-empty {
+  display: grid;
+  gap: var(--sp-3);
+  justify-items: center;
+  padding: var(--sp-6) var(--sp-5);
+  border: 1px dashed var(--r-line);
+  border-radius: var(--r-radius);
+  background: var(--r-surface);
+  text-align: center;
+}
+
+.meetup-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.meetup-empty-actions .button,
+.meetup-empty-actions .secondary-button {
+  min-height: 44px;
+  padding: 0 16px;
+}
+
+.meetup-empty-contact {
+  margin: 0;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+}
+
+.meetup-archive-empty {
+  margin: 0;
+  padding: var(--sp-4);
+  border: 1px dashed var(--r-line);
+  border-radius: var(--r-radius-sm);
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+}
+
+/* --------------------------------------------------------------------------
+   2. 分页（只服务归档段）
+   -------------------------------------------------------------------------- */
+
+.meetup-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--r-line-soft);
+}
+
+.meetup-pagination a,
+.meetup-pagination strong,
+.meetup-pagination span {
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: var(--r-radius-sm);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.meetup-pagination .meetup-pagination-pages {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: 0;
+  padding: 0;
+}
+
+.meetup-pagination-pages a,
+.meetup-pagination-pages strong {
+  min-width: 40px;
+  justify-content: center;
+  text-align: center;
+}
+
+.meetup-pagination-pages strong {
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+}
+
+.meetup-pagination .meetup-pagination-label {
+  padding-left: var(--sp-2);
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   3. 详情页（P1-7）：H1 = 活动名，状态条 + 信息区块
+   -------------------------------------------------------------------------- */
+
+.meetup-detail {
+  gap: var(--sp-5);
+}
+
+.meetup-detail-when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+  color: var(--r-ink-2);
+  font-size: var(--fs-base);
+  font-weight: 650;
+}
+
+.meetup-detail-zone {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+}
+
+/* 顶部状态条：说明「现在能不能报名」，并提供对应的下一步动作。 */
+.meetup-status-bar {
+  position: sticky;
+  top: var(--sp-2);
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: 14px 18px;
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius);
+  background: var(--r-surface);
+  box-shadow: var(--r-shadow-soft);
+}
+
+.meetup-status-bar.is-open {
+  background: var(--r-brand-soft);
+  border-color: var(--r-brand-line);
+}
+
+.meetup-status-bar.is-closed {
+  background: var(--r-warning-soft);
+  border-color: #f0dfc0;
+}
+
+.meetup-status-bar.is-archived {
+  background: var(--r-surface-sunken);
+  border-color: var(--r-line);
+}
+
+.meetup-status-bar-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+}
+
+.meetup-status-text {
+  margin: 0;
+  color: var(--r-ink-2);
+  font-size: var(--fs-sm);
+  font-weight: 650;
+}
+
+.meetup-status-sep {
+  color: var(--r-muted);
+  font-weight: 700;
+}
+
+.meetup-status-bar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.meetup-status-bar .button {
+  min-height: 40px;
+  padding: 0 18px;
+  font-size: var(--fs-sm);
+}
+
+.meetup-signed {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--r-brand);
+  color: #ffffff;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.meetup-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: var(--sp-4);
+  align-items: start;
+}
+
+.meetup-panel {
+  min-width: 0;
+  padding: var(--sp-5);
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius);
+  background: var(--r-surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.meetup-panel > h2,
+.meetup-panel-head h2 {
+  margin: 0;
+  color: var(--r-ink);
+  font-size: var(--fs-lg);
+  letter-spacing: -0.01em;
+}
+
+.meetup-panel > h2 {
+  margin-bottom: var(--sp-4);
+}
+
+.meetup-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+  margin-bottom: var(--sp-3);
+}
+
+/* 活动信息：费用 / 名额 / 场地（定义列表，不再逐行套小卡）。 */
+.meetup-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-3) var(--sp-5);
+  margin: 0;
+}
+
+.meetup-fact {
+  min-width: 0;
+}
+
+.meetup-fact.is-wide {
+  grid-column: 1 / -1;
+}
+
+.meetup-fact dt {
+  margin-bottom: 3px;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.meetup-fact dd {
+  margin: 0;
+  color: var(--r-ink);
+  font-size: var(--fs-base);
+  font-weight: 650;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.meetup-fact-note {
+  display: block;
+  margin-top: 2px;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+}
+
+.meetup-fact dd .r-link {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.meetup-first-time,
+.meetup-note {
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--r-line-soft);
+}
+
+.meetup-first-time h3,
+.meetup-note h3 {
+  margin: 0 0 var(--sp-2);
+  color: var(--r-ink);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.meetup-first-time ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--r-body);
+  font-size: var(--fs-sm);
+  line-height: 1.65;
+}
+
+.meetup-note p {
+  margin: 0;
+  color: var(--r-body);
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+}
+
+/* 报名成员：行式列表（不再逐行套小卡，避免「卡里套卡」）。
+   注意：旧版 static/style.css 里 `.meetup-attendees { display:flex; flex-wrap:wrap }`
+   会把「标题栏」和「名单」并排，导致名单挤在右半幅 —— 这里显式收口为块级。 */
+.meetup-detail .meetup-attendees {
+  display: block;
+}
+
+.meetup-detail .meetup-attendees .meetup-panel-head {
+  margin-bottom: var(--sp-2);
+}
+
+.meetup-detail .meetup-attendee-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.meetup-detail .meetup-attendee-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid var(--r-line-soft);
+  border-radius: 0;
+  background: transparent;
+}
+
+.meetup-detail .meetup-attendee-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.meetup-detail .meetup-attendee-row form {
+  margin: 0;
+}
+
+.meetup-detail .meetup-attendee {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--r-ink-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.meetup-detail .meetup-attendee b {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+  font-size: var(--fs-xs);
+}
+
+@media (min-width: 560px) {
+  .meetup-detail .meetup-attendee-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--sp-5);
+  }
+}
+
+.meetup-attendees-empty {
+  margin: 0;
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+}
+
+/* --------------------------------------------------------------------------
+   4. 管理区（页尾）与管理员创建表单
+   -------------------------------------------------------------------------- */
+
+.meetup-detail .meetup-admin {
+  border-style: dashed;
+  background: var(--r-surface-sunken);
+}
+
+.meetup-admin-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--sp-4);
+  align-items: start;
+}
+
+.meetup-admin-members h3 {
+  margin: 0 0 var(--sp-2);
+  color: var(--r-ink);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.meetup-admin-form {
+  display: grid;
+  gap: var(--sp-2);
+  max-width: 320px;
+}
+
+.meetup-admin-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.meetup-detail .meetup-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border-top: 0;
+  width: auto;
+}
+
+.meetup-detail .meetup-admin-actions form {
+  margin: 0;
+}
+
+.meetup-detail .meetup-admin-actions .secondary-button,
+.meetup-detail .meetup-admin-actions .danger-button {
+  min-height: 40px;
+  width: auto;
+}
+
+.meetup-admin-create {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border: 1px dashed var(--r-line);
+  border-radius: var(--r-radius);
+  background: var(--r-surface-sunken);
+}
+
+.meetup-admin-create-head {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 2px;
+}
+
+.meetup-admin-create-head strong {
+  color: var(--r-ink);
+  font-size: var(--fs-lg);
+}
+
+.meetup-admin-create-head small {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+}
+
+.meetup-admin-create label {
+  display: grid;
+  gap: 4px;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.meetup-admin-create .button {
+  min-height: 44px;
+  align-self: end;
+}
+
+/* --------------------------------------------------------------------------
+   5. 编辑表单（meetup_form.html）
+   -------------------------------------------------------------------------- */
+
+.meetup-form-page {
+  gap: var(--sp-5);
+}
+
+.meetup-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-4);
+  max-width: 760px;
+  padding: var(--sp-5);
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius);
+  background: var(--r-surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.meetup-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--r-ink-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.meetup-form label.is-wide {
+  grid-column: 1 / -1;
+}
+
+.meetup-form label small {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+}
+
+.meetup-form input,
+.meetup-form select,
+.meetup-form textarea {
+  min-height: 44px;
+}
+
+.meetup-form textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.meetup-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0;
+  padding-top: var(--sp-2);
+}
+
+.meetup-form-actions .secondary-button,
+.meetup-form-actions .button {
+  min-height: 44px;
+}
+
+/* --------------------------------------------------------------------------
+   6. 响应式：390px 无横向溢出，卡片仍两行
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 960px) {
+  .meetup-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .meetup-admin-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .meetup-admin-form {
+    max-width: none;
+  }
+
+  .meetup-status-bar {
+    position: static;
+  }
+}
+
+@media (max-width: 760px) {
+  .meetup-page,
+  .meetup-detail,
+  .meetup-form-page {
+    gap: var(--sp-5);
+  }
+
+  .meetup-list {
+    gap: 8px;
+  }
+
+  .meetup-row-venue-full {
+    display: none;
+  }
+
+  .meetup-row-venue-short {
+    display: inline;
+  }
+
+  .meetup-row-top {
+    align-items: flex-start;
+    gap: 6px 8px;
+  }
+
+  .meetup-row .r-status {
+    padding: 3px 8px;
+  }
+
+  .meetup-row-date {
+    min-height: 44px;
+    gap: 6px;
+  }
+
+  .meetup-row-date time {
+    font-size: 19px;
+  }
+
+  .meetup-row-date small {
+    font-size: 13px;
+  }
+
+  .meetup-row-bottom {
+    align-items: stretch;
+  }
+
+  .meetup-row-actions {
+    flex: 1 1 100%;
+  }
+
+  .meetup-row-actions form {
+    flex: 1 1 auto;
+  }
+
+  .meetup-row-actions .meetup-cta {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .meetup-row-actions form .meetup-cta {
+    width: 100%;
+  }
+
+  .meetup-cta {
+    min-height: 44px;
+  }
+
+  .meetup-status-bar {
+    padding: 12px 14px;
+  }
+
+  .meetup-status-bar-actions {
+    width: 100%;
+  }
+
+  .meetup-status-bar-actions .button,
+  .meetup-status-bar-actions .meetup-cta,
+  .meetup-signed {
+    min-height: 44px;
+  }
+
+  .meetup-status-bar-actions .button {
+    width: 100%;
+  }
+
+  .meetup-panel {
+    padding: var(--sp-4);
+  }
+
+  .meetup-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .meetup-form {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--sp-4);
+  }
+
+  .meetup-admin-create {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .meetup-pagination {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .meetup-row-date {
+    gap: 6px;
+  }
+
+  .meetup-empty-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .meetup-empty-actions .button,
+  .meetup-empty-actions .secondary-button {
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meetup-row,
+  .meetup-cta {
+    transition: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   8. 评审修复：活动名称行 / 已报名状态 / 取消报名
+   -------------------------------------------------------------------------- */
+
+/* 活动名：列表卡在日期行下方补一层标题，让「万圣节特别场」与常规场可区分。 */
+.meetup-row-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: var(--r-ink);
+  font-size: var(--fs-base);
+  font-weight: 600;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.meetup-row-title:hover,
+.meetup-row-title:focus-visible {
+  color: var(--r-brand-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.meetup-row-title.is-quiet {
+  color: var(--r-ink-2);
+}
+
+/* 「已报名」状态胶囊：实心品牌底，与「可报名」的浅底区分。 */
+.r-status.is-signed {
+  background: var(--r-brand);
+  color: #fff;
+}
+
+/* 取消报名：次级小按钮，与主 CTA 同排但不抢视觉。 */
+.meetup-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius-sm);
+  background: var(--r-surface);
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.meetup-cancel:hover,
+.meetup-cancel:focus-visible {
+  border-color: var(--r-danger);
+  color: var(--r-danger);
+  background: var(--r-danger-soft);
+}
+
+@media (max-width: 560px) {
+  .meetup-row-actions {
+    flex-wrap: wrap;
+  }
+
+  .meetup-cancel {
+    min-height: 44px;
+  }
+}
+
+/* 评审修复（P1-6）：活动详情返回链接点击区 40 → 44 */
+.meetup-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}

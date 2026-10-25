@@ -1,0 +1,1089 @@
+/* ==========================================================================
+   BRML · 关于我们（WP6）
+   --------------------------------------------------------------------------
+   依据 report/review-report.md：
+     · P0-5  关于我们 4026px / 9 个同构分区 / 价值观网格留空 / 团队卡像表单；
+     · 移动端专项 3  右栏（团队 + 联系 + 成为会员）被排到正文前；
+     · A-2  「加入 3 步」与邀请码路径；
+     · B-8  $20 / 季会费从折叠公告上移到关于页；
+     · 提升 2 / 5  01–09 编号、2 张真实牌桌照片打断正文墙、开放画布 + 色块断点。
+
+   结构（模板 templates/about.html）：
+     .about-hero            页头：关于我们 + 一句话定位 + 两个入口
+     .about-doc             开放画布（无玻璃卡），01–09 章节
+       .about-chapter       普通章节：左侧编号 + 标题，右侧正文
+       .about-facts         色块断点：每周六 / 每季 $20 / 每月教学
+       .about-feature      媒体章节 04、05：真实照片 + 短文案（替换长政策段）
+       .about-join          色块断点：加入 3 步 + 报名是否需要账号
+     .about-people          我们的愿景之后：管理团队（LEADERSHIP）+ 联系（CONTACT）
+     .about-cta             页末「成为会员」CTA
+
+   所有字号只用 00-base.css 的 6 级 token（12/14/16/20/28/44）。
+   ========================================================================== */
+
+.about-page {
+  display: block;
+}
+
+/* --------------------------------------------------------------------------
+   1. 页头：保留「关于我们」，删掉英文眉标与重复标签
+   -------------------------------------------------------------------------- */
+
+.about-hero {
+  max-width: 860px;
+  padding: 4px 0 30px;
+}
+
+.about-hero h1 {
+  margin: 0;
+  color: var(--r-ink);
+  font-size: var(--fs-2xl);
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+}
+
+.about-hero-lead {
+  max-width: 40ch;
+  margin: 14px 0 0;
+  color: var(--r-ink-2);
+  font-size: var(--fs-lg);
+  line-height: 1.5;
+}
+
+.about-hero-meta {
+  margin: 10px 0 0;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.about-hero-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 24px;
+  margin-top: 18px;
+}
+
+.about-hero-primary,
+.about-hero-secondary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.about-hero-primary {
+  color: var(--r-brand-dark);
+  border-bottom: 2px solid var(--r-brand-line);
+}
+
+.about-hero-primary:hover {
+  border-bottom-color: var(--r-brand);
+}
+
+.about-hero-secondary {
+  color: var(--r-ink-2);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--r-line);
+}
+
+.about-hero-secondary:hover {
+  color: var(--r-brand-dark);
+  text-decoration-color: var(--r-brand);
+}
+
+/* --------------------------------------------------------------------------
+   2. 开放画布：01–09 章节。左侧编号 / 右侧正文，不再每个分区套一张玻璃卡
+   -------------------------------------------------------------------------- */
+
+.about-doc {
+  border-top: 1px solid var(--r-line);
+}
+
+.about-chapter {
+  display: grid;
+  grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+  gap: 0 44px;
+  padding: 40px 0;
+  border-top: 1px solid var(--r-line);
+}
+
+.about-chapter:first-child {
+  border-top: 0;
+}
+
+.about-chapter-head {
+  min-width: 0;
+}
+
+.about-chapter-num {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--r-brand);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+}
+
+.about-chapter h2,
+.about-feature-copy h2 {
+  margin: 0;
+  color: var(--r-ink);
+  font-size: var(--fs-xl);
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.about-chapter-body {
+  max-width: 70ch;
+  min-width: 0;
+}
+
+.about-chapter-body > p {
+  margin: 0 0 12px;
+  color: var(--r-body);
+  font-size: var(--fs-base);
+  line-height: 1.72;
+}
+
+.about-chapter-body > p:last-child {
+  margin-bottom: 0;
+}
+
+/* 章节内的无序清单：发丝线行式，不用小卡（规则页同款批评） */
+.about-plain-list,
+.about-uses,
+.about-check-list,
+.about-values,
+.about-steps,
+.about-team-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.about-plain-list {
+  /* 列表行宽单独收窄：14px 英文条目在 70ch 正文宽下会排到约 100 字符/行 */
+  max-width: 34em;
+  margin: 6px 0 4px;
+}
+
+.about-plain-list li,
+.about-uses li {
+  position: relative;
+  padding: 11px 0 11px 24px;
+  color: var(--r-body);
+  font-size: var(--fs-sm);
+  line-height: 1.65;
+}
+
+.about-plain-list li + li,
+.about-uses li + li {
+  border-top: 1px solid var(--r-line-soft);
+}
+
+.about-plain-list li::before,
+.about-uses li::before {
+  content: "";
+  position: absolute;
+  top: 20px;
+  left: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--r-brand);
+}
+
+.about-uses {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 28px;
+  margin: 8px 0 18px;
+}
+
+.about-uses li {
+  padding: 9px 0 9px 22px;
+}
+
+.about-uses li::before {
+  top: 17px;
+}
+
+.about-uses li + li {
+  border-top: 0;
+}
+
+/* 双列清单：每列第 2 项起才有分隔线，避免错位 */
+.about-uses li:nth-child(n + 3) {
+  border-top: 1px solid var(--r-line-soft);
+}
+
+/* --------------------------------------------------------------------------
+   3. 04 / 05：真实照片替换两段最长的政策段落（左右交替，打破同构）
+   -------------------------------------------------------------------------- */
+
+.about-feature {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+  gap: 24px 44px;
+  align-items: center;
+  padding: 42px 0;
+  border-top: 1px solid var(--r-line);
+}
+
+.about-feature.is-reversed .about-figure {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.about-feature.is-reversed .about-feature-copy {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.about-figure {
+  margin: 0;
+  min-width: 0;
+}
+
+.about-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius-lg);
+  background: var(--r-surface-sunken);
+  box-shadow: var(--r-shadow-soft);
+}
+
+.about-figure figcaption {
+  margin-top: 10px;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.55;
+}
+
+.about-feature-copy {
+  min-width: 0;
+}
+
+.about-feature-copy h2 {
+  margin: 10px 0 16px;
+}
+
+.about-feature-copy p {
+  margin: 0 0 12px;
+  color: var(--r-body);
+  font-size: var(--fs-base);
+  line-height: 1.72;
+}
+
+.about-feature-copy p.about-mini-head {
+  margin: 20px 0 4px;
+  color: var(--r-ink-2);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.about-check-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 22px;
+  margin: 10px 0 18px;
+}
+
+.about-check-list li {
+  position: relative;
+  padding-left: 22px;
+  color: var(--r-body);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+
+.about-check-list li::before {
+  content: "✓";
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--r-brand);
+  font-weight: 800;
+}
+
+.about-inline-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 2px;
+  color: var(--r-brand-dark);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 2px solid var(--r-brand-line);
+}
+
+.about-inline-link:hover {
+  border-bottom-color: var(--r-brand);
+}
+
+/* --------------------------------------------------------------------------
+   4. 06 价值观：1 列 5 行（不再 2 列网格 + 右下留空）
+   -------------------------------------------------------------------------- */
+
+.about-chapter--values .about-chapter-body {
+  max-width: 78ch;
+}
+
+.about-values {
+  border-top: 1px solid var(--r-line-soft);
+}
+
+.about-value {
+  display: grid;
+  grid-template-columns: minmax(0, 168px) minmax(0, 1fr);
+  gap: 4px 28px;
+  padding: 16px 0;
+  border-top: 1px solid var(--r-line-soft);
+}
+
+.about-value:first-child {
+  border-top: 0;
+  padding-top: 4px;
+}
+
+.about-value h3 {
+  margin: 0;
+  color: var(--r-ink);
+  font-size: var(--fs-lg);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.about-value p {
+  margin: 0;
+  color: var(--r-body);
+  font-size: var(--fs-base);
+  line-height: 1.7;
+}
+
+/* --------------------------------------------------------------------------
+   5. 08 会员费：金额上移 + 用途清单 + 透明度
+   -------------------------------------------------------------------------- */
+
+.about-chapter-body > p.about-fee {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 16px;
+  margin: 0 0 16px;
+  padding: 14px 18px;
+  border-left: 4px solid var(--r-brand);
+  border-radius: 0 var(--r-radius) var(--r-radius) 0;
+  background: var(--r-brand-soft);
+}
+
+.about-fee strong {
+  color: var(--r-brand-dark);
+  font-size: var(--fs-xl);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.about-fee span {
+  color: var(--r-ink-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   6. 色块断点 A：一眼看 BRML（每周六 / 每季 $20 / 每月教学）
+   -------------------------------------------------------------------------- */
+
+.about-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 16px 0 0;
+  padding: 30px 36px;
+  border-radius: var(--r-radius-lg);
+  color: #eefaf7;
+  background: linear-gradient(135deg, #0c3f3a 0%, #115e59 56%, #0f766e 100%);
+  box-shadow: var(--r-shadow);
+}
+
+.about-fact {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 28px;
+}
+
+.about-fact:first-child {
+  padding-left: 0;
+}
+
+.about-fact:last-child {
+  padding-right: 0;
+}
+
+.about-fact + .about-fact {
+  border-left: 1px solid rgba(238, 250, 247, 0.22);
+}
+
+.about-fact strong {
+  color: #ffffff;
+  font-size: var(--fs-xl);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.about-fact span {
+  color: rgba(238, 250, 247, 0.82);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+/* 色块之后不再画发丝线：色块本身就是分隔 */
+.about-facts + .about-feature {
+  border-top: 0;
+  padding-top: 40px;
+}
+
+/* --------------------------------------------------------------------------
+   7. 色块断点 B：加入 3 步（来一次 → 拿邀请码 → 注册记录成绩）
+   -------------------------------------------------------------------------- */
+
+.about-join {
+  margin: 12px 0 0;
+  padding: 30px 36px 24px;
+  border: 1px solid var(--r-brand-line);
+  border-radius: var(--r-radius-lg);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(255, 255, 255, 0.66), transparent 46%),
+    var(--r-brand-soft);
+}
+
+.about-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  color: var(--r-brand-dark);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.about-kicker::before {
+  content: "";
+  width: 22px;
+  height: 2px;
+  background: var(--r-brand);
+}
+
+.about-join h2 {
+  max-width: 26ch;
+  margin: 0 0 20px;
+  color: var(--r-ink);
+  font-size: var(--fs-xl);
+  line-height: 1.24;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.about-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0 0 18px;
+}
+
+.about-step {
+  min-width: 0;
+  padding: 16px 0 0;
+  border: 0;
+  border-top: 2px solid var(--r-brand-line);
+  border-radius: 0;
+  background: transparent;
+}
+
+.about-step-num {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 12px;
+  border-radius: 50%;
+  background: var(--r-brand);
+  color: #ffffff;
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.about-step h3 {
+  margin: 0 0 6px;
+  color: var(--r-ink);
+  font-size: var(--fs-base);
+  line-height: 1.4;
+}
+
+.about-step p {
+  margin: 0;
+  color: var(--r-body);
+  font-size: var(--fs-sm);
+  line-height: 1.65;
+}
+
+.about-join-account {
+  max-width: 46em;
+  margin: 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--r-brand-line);
+  color: var(--r-ink-2);
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+}
+
+.about-join + .about-chapter {
+  border-top: 0;
+}
+
+/* --------------------------------------------------------------------------
+   8. 09 愿景：结尾句做成收束陈述
+   -------------------------------------------------------------------------- */
+
+.about-chapter-body > p.about-closing {
+  margin-top: 18px;
+  padding-left: 20px;
+  border-left: 3px solid var(--r-brand-line);
+  color: var(--r-brand-dark);
+  font-size: var(--fs-lg);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+}
+
+/* --------------------------------------------------------------------------
+   9. 愿景之后：管理团队（LEADERSHIP）+ 联系（CONTACT）
+      移动端 DOM 顺序即内容顺序，不再把右栏排到正文前
+   -------------------------------------------------------------------------- */
+
+.about-people {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 28px 56px;
+  margin-top: 44px;
+  padding-top: 36px;
+  border-top: 1px solid var(--r-line);
+}
+
+.about-team h2,
+.about-contact h3 {
+  margin: 6px 0 10px;
+  color: var(--r-ink);
+  font-size: var(--fs-xl);
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+}
+
+.about-team .eyebrow,
+.about-contact .eyebrow {
+  margin: 0;
+}
+
+.about-team-hint {
+  max-width: 42ch;
+  margin: 0 0 20px;
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.65;
+}
+
+.about-team-list {
+  margin-top: 4px;
+}
+
+.about-person {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 0;
+  border-top: 1px solid var(--r-line-soft);
+}
+
+.about-person:last-child {
+  border-bottom: 1px solid var(--r-line-soft);
+}
+
+.about-avatar {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.about-avatar--2 {
+  background: var(--r-gold-soft);
+  color: var(--r-gold);
+}
+
+.about-avatar--3 {
+  background: #e9eef6;
+  color: #34496b;
+}
+
+.about-avatar--4 {
+  background: #f6eae5;
+  color: #8a4636;
+}
+
+.about-avatar--5 {
+  background: #eef0e3;
+  color: #4d5a2a;
+}
+
+.about-avatar--6 {
+  background: #f1ebef;
+  color: #6b4358;
+}
+
+.about-person-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.about-person-text strong {
+  color: var(--r-ink);
+  font-size: var(--fs-base);
+  line-height: 1.4;
+}
+
+.about-person-text small {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+}
+
+/* 联系卡：复用 _contact_links.html，但去掉玻璃卡，改成行式清单 */
+.about-contact {
+  min-width: 0;
+}
+
+.about-page .about-contact .contact-block.is-detailed {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.about-page .about-contact .contact-links {
+  display: grid;
+  gap: 0;
+  margin-top: 4px;
+}
+
+.about-page .about-contact .contact-link {
+  min-height: 0;
+  padding: 13px 0;
+  border-top: 1px solid var(--r-line-soft);
+  border-radius: 0;
+  background: transparent;
+  color: var(--r-ink);
+}
+
+.about-page .about-contact .contact-link:last-child {
+  border-bottom: 1px solid var(--r-line-soft);
+}
+
+.about-page .about-contact .contact-link:hover,
+.about-page .about-contact .contact-link:focus-visible {
+  background: transparent;
+  transform: none;
+  color: var(--r-brand-dark);
+}
+
+.about-page .about-contact .contact-link-text small {
+  font-size: var(--fs-xs);
+}
+
+/* 英文界面里 LEADERSHIP / CONTACT 与下方英文标题重复，双语标签收敛为一层；
+   中文界面保留这两个功能性英文标签（P0-5 要求）。 */
+html[lang="en"] .about-team .eyebrow,
+html[lang="en"] .about-contact .eyebrow {
+  display: none;
+}
+
+/* 页末已有「成为会员」CTA，联系卡不再重复一张会员说明 */
+.about-page .about-contact .contact-membership-note {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   10. 页末 CTA：成为会员（唯一会员入口）
+   -------------------------------------------------------------------------- */
+
+.about-cta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px 40px;
+  align-items: end;
+  margin: 40px 0 8px;
+  padding: 32px 36px;
+  border-radius: var(--r-radius-lg);
+  color: #eefaf7;
+  background: linear-gradient(135deg, #0c3f3a 0%, #115e59 58%, #0f766e 100%);
+  box-shadow: var(--r-shadow);
+}
+
+.about-cta h2 {
+  margin: 0 0 12px;
+  color: #ffffff;
+  font-size: var(--fs-xl);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.about-cta-copy p {
+  max-width: 48ch;
+  margin: 0 0 8px;
+  color: rgba(238, 250, 247, 0.88);
+  font-size: var(--fs-base);
+  line-height: 1.65;
+}
+
+.about-cta-copy .about-cta-note {
+  margin: 0;
+  color: rgba(238, 250, 247, 0.72);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+
+.about-cta-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  min-width: 200px;
+}
+
+.about-cta-primary.button {
+  min-height: 44px;
+  padding: 12px 20px;
+  background: #ffffff;
+  color: var(--r-brand-dark);
+  text-align: center;
+  box-shadow: none;
+}
+
+.about-cta-primary.button:hover {
+  transform: none;
+  background: #f2fbf8;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+.about-cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid rgba(238, 250, 247, 0.38);
+  border-radius: 12px;
+  color: #d9f4ed;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.about-cta-secondary:hover {
+  border-color: rgba(238, 250, 247, 0.72);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* --------------------------------------------------------------------------
+   11. 响应式：≤1180 收窄，≤960 单列（正文在前），≤560 手机密度
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1180px) {
+  .about-chapter {
+    grid-template-columns: minmax(0, 200px) minmax(0, 1fr);
+    gap: 0 36px;
+  }
+
+  .about-value {
+    grid-template-columns: minmax(0, 150px) minmax(0, 1fr);
+    gap: 4px 24px;
+  }
+
+  .about-feature {
+    gap: 24px 36px;
+  }
+}
+
+/* 960–1180：内容区被侧栏压窄，媒体章节先上下堆叠，避免 300px 宽的正文列 */
+@media (max-width: 1120px) {
+  .about-feature {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 32px 0;
+  }
+
+  .about-feature.is-reversed .about-figure,
+  .about-feature.is-reversed .about-feature-copy {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .about-feature .about-figure {
+    order: 2;
+  }
+
+  .about-feature .about-feature-copy {
+    order: 1;
+  }
+}
+
+@media (max-width: 960px) {
+  .about-hero {
+    padding: 4px 0 32px;
+  }
+
+  .about-hero h1 {
+    font-size: var(--fs-2xl);
+  }
+
+  .about-hero-lead {
+    font-size: var(--fs-lg);
+    max-width: none;
+  }
+
+  .about-chapter {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 28px 0;
+  }
+
+  .about-chapter-body {
+    max-width: none;
+  }
+
+  .about-chapter h2,
+  .about-feature-copy h2 {
+    font-size: var(--fs-xl);
+  }
+
+  .about-values .about-value {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 18px 0;
+  }
+
+  .about-value h3 {
+    font-size: var(--fs-lg);
+  }
+
+  .about-feature {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 28px 0;
+  }
+
+  /* 手机：标题与正文在前，照片随后 */
+  .about-feature .about-figure {
+    order: 2;
+  }
+
+  .about-feature .about-feature-copy {
+    order: 1;
+  }
+
+  .about-feature.is-reversed .about-figure,
+  .about-feature.is-reversed .about-feature-copy {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .about-facts {
+    grid-template-columns: 1fr;
+    padding: 22px 24px;
+    margin-top: 16px;
+  }
+
+  .about-fact {
+    padding: 16px 0;
+  }
+
+  .about-fact:first-child {
+    padding-top: 4px;
+  }
+
+  .about-fact:last-child {
+    padding-bottom: 4px;
+  }
+
+  .about-fact + .about-fact {
+    border-left: 0;
+    border-top: 1px solid rgba(238, 250, 247, 0.22);
+  }
+
+  .about-fact strong {
+    font-size: var(--fs-lg);
+  }
+
+  .about-join {
+    margin-top: 8px;
+    padding: 24px 20px 20px;
+  }
+
+  .about-steps {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .about-step {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    column-gap: 14px;
+    padding: 14px 0 0;
+  }
+
+  .about-step-num {
+    grid-row: span 2;
+    margin-bottom: 0;
+  }
+
+  .about-step h3 {
+    align-self: center;
+    margin: 0;
+  }
+
+  .about-facts + .about-feature {
+    padding-top: 28px;
+  }
+
+  .about-people {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    margin-top: 40px;
+    padding-top: 36px;
+  }
+
+  .about-cta {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    margin-top: 32px;
+    padding: 26px 22px;
+  }
+
+  .about-cta-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .about-cta-primary.button,
+  .about-cta-secondary {
+    flex: 1 1 160px;
+  }
+}
+
+@media (max-width: 560px) {
+  .about-hero h1 {
+    font-size: var(--fs-2xl);
+    letter-spacing: -0.03em;
+  }
+
+  .about-hero-lead {
+    font-size: var(--fs-base);
+    line-height: 1.65;
+  }
+
+  .about-hero-links {
+    gap: 4px 20px;
+  }
+
+  .about-chapter {
+    padding: 24px 0;
+  }
+
+  .about-chapter-body > p,
+  .about-feature-copy p {
+    font-size: var(--fs-base);
+  }
+
+  .about-check-list {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .about-uses {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  /* 单列时每一项之间都要有分隔线（覆盖桌面双列的分组规则） */
+  .about-uses li:nth-child(n + 2) {
+    border-top: 1px solid var(--r-line-soft);
+  }
+
+  .about-chapter-body > p.about-fee {
+    padding: 14px 16px;
+  }
+
+  .about-fee strong {
+    font-size: var(--fs-lg);
+  }
+
+  .about-chapter-body > p.about-closing {
+    font-size: var(--fs-base);
+    padding-left: 16px;
+  }
+
+  .about-person {
+    padding: 10px 0;
+  }
+
+  .about-cta {
+    padding: 24px 20px;
+  }
+
+  .about-cta-actions {
+    flex-direction: column;
+  }
+
+  /* 竖排时 flex-basis 会变成高度，按钮不再被拉成 160px 高 */
+  .about-cta-primary.button,
+  .about-cta-secondary {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-page a,
+  .about-page .button {
+    transition: none !important;
+  }
+}

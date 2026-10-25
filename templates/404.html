@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ t('status.404.title') }} · Brisbane Riichi{% endblock %}
+{% block content %}
+<section class="status-page" aria-labelledby="status-title">
+  <div class="status-card">
+    <div class="status-visual" aria-hidden="true">
+      <span class="status-mark"><img src="{{ url_for('static', filename='report/brml-mark.svg') }}" alt=""></span>
+      <span class="status-tile"><img src="{{ url_for('static', filename='mj-east.svg') }}" alt=""></span>
+      <span class="status-code">404</span>
+    </div>
+    <h1 id="status-title">{{ t('status.404.title') }}</h1>
+    <p>{{ t('status.404.body') }}</p>
+    <div class="status-actions">
+      <a class="button" href="{{ url_for('index') }}">{{ t('status.404.home') }}</a>
+      <a class="secondary-button" href="{{ url_for('leaderboard') }}">{{ t('status.404.leaderboard') }}</a>
+      <a class="ghost-link" href="{{ url_for('matches') }}">{{ t('status.404.matches') }}</a>
+      <a class="ghost-link" href="{{ url_for('board') }}">{{ t('status.404.board') }}</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

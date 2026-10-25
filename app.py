@@ -8,13 +8,14 @@ from datetime import timedelta
 from pathlib import Path
 
 import click
-from flask import Flask, flash, g, redirect, session, url_for
+from flask import Flask, flash, g, redirect, render_template, request, session, url_for
 
 from brml.config import (
     BOARD_MAX_REQUEST_BYTES,
     DATABASE,
     DEFAULT_MEETUP_VENUE,
     SEED_DEMO_DATA,
+    SITE_VERSION,
 )
 from brml.avatars import AVATARS, avatar_meta
 from brml.db import close_db, ensure_database_initialized, get_db, init_db, query_one
@@ -107,7 +108,14 @@ def create_app() -> Flask:
             "default_meetup_venue": DEFAULT_MEETUP_VENUE,
             "avatar_options": AVATARS,
             "avatar_meta": avatar_meta,
+            "site_version": SITE_VERSION,
+            "is_mobile_app": request.path.startswith("/app"),
         }
+
+    # 404 品牌化：Flask 默认英文页没有导航、没有语言切换（报告 P1-10 / 可用性 11）。
+    @app.errorhandler(404)
+    def handle_not_found(_error):
+        return render_template("404.html"), 404
 
     @app.errorhandler(413)
     def handle_request_too_large(_error):

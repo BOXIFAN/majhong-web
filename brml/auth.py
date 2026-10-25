@@ -6,10 +6,21 @@ import functools
 import secrets
 import string
 
-from flask import flash, g, redirect, url_for
+from flask import flash, g, redirect, request, url_for
 
 from brml.db import query_one
 from brml.i18n import translate
+
+
+def _login_redirect():
+    """未登录时跳转登录页，并带上回跳地址（调研报告 A-3 / T7）。
+
+    只带站内相对路径；accounts.py 的 ``safe_next_url`` 会再次校验，
+    避免开放重定向。
+    """
+    target = request.full_path if request.query_string else request.path
+    return redirect(url_for("login", next=target))
+
 
 def generate_temporary_password(length: int = 12) -> str:
     """生成避开易混淆字符的临时密码。"""
@@ -33,8 +44,8 @@ def login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:
-            flash(translate("flash.login_required"), "error")
-            return redirect(url_for("login"))
+            flash(translate("flash.login_required"), "info")
+            return _login_redirect()
         return view(**kwargs)
     return wrapped_view
 
@@ -45,8 +56,8 @@ def role_required(*roles: str):
         @functools.wraps(view)
         def wrapped_view(**kwargs):
             if g.user is None:
-                flash(translate("flash.login_required"), "error")
-                return redirect(url_for("login"))
+                flash(translate("flash.login_required"), "info")
+                return _login_redirect()
             if g.user["role"] not in roles:
                 flash(translate("flash.permission_denied"), "error")
                 return redirect(url_for("index"))

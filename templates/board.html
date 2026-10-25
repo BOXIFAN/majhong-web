@@ -1,143 +1,247 @@
 {% extends "base.html" %}
 {% block title %}{{ t('board.title') }} · Brisbane Riichi{% endblock %}
+{% block report_css %}<link rel="stylesheet" href="{{ url_for('static', filename='report/70-board.css') }}">{% endblock %}
+{% macro like_aria(count) %}{{ t('board2.like_aria_one') if count == 1 else t('board2.like_aria', count=count) }}{% endmacro %}
+{% macro comment_text(count) %}{{ t('board2.comment_count_one') if count == 1 else t('board2.comment_count', count=count) }}{% endmacro %}
+{% macro comment_aria(count) %}{{ t('board2.comment_aria_one') if count == 1 else t('board2.comment_aria', count=count) }}{% endmacro %}
 {% block content %}
-<section class="page-head row board-page-head">
-  <div>
-    <p class="eyebrow">BRML Board</p>
-    <h1>{{ t('board.title') }}</h1>
-    <p>{{ t('board.subtitle') }}</p>
-  </div>
-  <ul class="board-rules">
-    <li>{{ t('board.rule_retention', days=retention_days) }}</li>
-    <li>{{ t('board.rule_daily', limit=daily_limit) }}</li>
-    {% if posts_left is not none %}
-      <li class="{{ 'is-full' if posts_left == 0 }}">
-        {{ t('board.rule_remaining', count=posts_left) }}
-      </li>
-    {% endif %}
-  </ul>
-</section>
+<div class="board-page">
+  <header class="board-head">
+    <div class="board-head-copy">
+      <h1>{{ t('board.title') }}</h1>
+      <p class="board-lede">{{ t('board.subtitle') }}</p>
+    </div>
+    <div class="board-head-actions">
+      {# 规则收进标题右侧的折叠面板：首屏只留发布时间和卡片（P1-12）。 #}
+      <details class="board-rules-details" id="board-rules">
+        <summary class="board-rules-summary">{{ t('board2.rules_summary') }}</summary>
+        <ul class="board-rules-list">
+          <li>{{ t('board.rule_retention', days=retention_days) }}</li>
+          <li>{{ t('board.rule_daily', limit=daily_limit) }}</li>
+          {% if posts_left is not none %}
+            <li class="{{ 'is-full' if posts_left == 0 }}">
+              {{ t('board.rule_remaining', count=posts_left) }}
+            </li>
+          {% endif %}
+        </ul>
+      </details>
+      <a class="board-publish" href="{{ url_for('board_new') }}">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+          <path d="M12 5v14M5 12h14"></path>
+        </svg>
+        {{ t('board.new') }}
+      </a>
+    </div>
+  </header>
 
-{% if posts %}
-  <div class="board-grid">
-    {% for post in posts %}
-      {% set av = avatar_meta(post) %}
-      <article class="board-card" id="post-{{ post.id }}">
-        <header class="board-card-head">
-          <a class="board-author" href="{{ url_for('player_profile', user_id=post.user_id) }}">
-            <span class="board-avatar"{% if av.kind == 'preset' %} style="background: {{ av.bg }}"{% endif %}>
-              {%- if av.kind == 'upload' -%}
-                <img src="{{ url_for('avatar_file', filename=av.src) }}" alt="" loading="lazy">
-              {%- elif av.kind == 'preset' -%}
-                {{ av.emoji }}
+  {# 登录提示全页只出现这一次（40px 横条），且「登录」必须是可点的链接。
+     后端 accounts.py 已支持 next 回跳，登录成功后回到留言板。 #}
+  {% if not current_user %}
+    <div class="board-login-bar" role="note">
+      <p>
+        <a class="board-login-bar-link" href="{{ url_for('login') }}?next={{ url_for('board') }}">{{ t('board2.login_action') }}</a>{{ t('board2.login_tail') }}
+      </p>
+    </div>
+  {% endif %}
+
+  {% if posts %}
+    <div class="board-grid">
+      {% for post in posts %}
+        {% set av = avatar_meta(post) %}
+        <article class="board-card" id="post-{{ post.id }}">
+          <header class="board-card-head">
+            <a class="board-author" href="{{ url_for('player_profile', user_id=post.user_id) }}">
+              <span class="board-avatar"{% if av.kind == 'preset' %} style="background: {{ av.bg }}"{% endif %}>
+                {%- if av.kind == 'upload' -%}
+                  <img src="{{ url_for('avatar_file', filename=av.src) }}" alt="" loading="lazy">
+                {%- elif av.kind == 'preset' -%}
+                  {{ av.emoji }}
+                {%- else -%}
+                  {{ av.letter }}
+                {%- endif -%}
+              </span>
+              <span class="board-author-meta">
+                <strong>{{ post.display_name }}</strong>
+                <small title="{{ post.created_label }}">{{ post.created_short }}</small>
+              </span>
+            </a>
+            {% if current_user and (current_user.id == post.user_id or current_user.role == 'super_admin') %}
+              <div class="board-card-tools">
+                {% if current_user.id == post.user_id %}
+                  <a class="board-tool is-edit" href="{{ url_for('board_post_edit', post_id=post.id) }}">{{ t('board.edit') }}</a>
+                {% endif %}
+                <form method="post" action="{{ url_for('board_post_delete', post_id=post.id) }}"
+                      onsubmit="return confirm({{ t('board.delete_confirm')|tojson }});">
+                  <button class="board-tool is-danger" type="submit">{{ t('board.delete') }}</button>
+                </form>
+              </div>
+            {% endif %}
+          </header>
+
+          {# 按图片原始比例渲染（后端记录宽高），横拍/竖拍的大牌照片都不会被 4:3 容器裁掉；
+             极端长图由 CSS 的 max-height 兜底。 #}
+          <div class="board-photo" style="--ar: {{ post.image_width or 4 }} / {{ post.image_height or 3 }}">
+            <a class="board-photo-link" href="{{ url_for('board_post_detail', post_id=post.id) }}">
+              <img src="{{ url_for('board_image', post_id=post.id) }}"
+                   alt="{{ t('board.image_alt', name=post.display_name) }}">
+            </a>
+          </div>
+
+          {% if post.caption %}<p class="board-caption">{{ post.caption }}</p>{% endif %}
+
+          {# 点赞与评论统一成 13px 同色文字链接：♥ 1 · 2 条评论 #}
+          <div class="board-meta">
+            {% if current_user %}
+              <form method="post" action="{{ url_for('board_like_toggle', post_id=post.id) }}"
+                    data-like-form data-post-id="{{ post.id }}">
+                <button class="board-meta-link board-like{{ ' is-liked' if post.liked }}" type="submit"
+                        aria-pressed="{{ 'true' if post.liked else 'false' }}"
+                        aria-label="{{ like_aria(post.like_count) }}">
+                  <span class="board-meta-heart" aria-hidden="true">♥</span><span class="board-like-count">{{ post.like_count }}</span>
+                </button>
+              </form>
+            {% else %}
+              <a class="board-meta-link board-like"
+                 href="{{ url_for('login', next=url_for('board') ~ '#post-' ~ post.id) }}"
+                 aria-label="{{ like_aria(post.like_count) }}">
+                <span class="board-meta-heart" aria-hidden="true">♥</span><span class="board-like-count">{{ post.like_count }}</span>
+              </a>
+            {% endif %}
+            <span class="board-meta-sep" aria-hidden="true">·</span>
+            <a class="board-meta-link board-comment-link" href="{{ url_for('board_post_detail', post_id=post.id) }}"
+               aria-label="{{ comment_aria(post.comment_count) }}">
+              {{ comment_text(post.comment_count) }}
+            </a>
+            {# 保留期降级为元信息：常规状态中性色，≤7 天才用提醒色（评审 P1-5）。 #}
+            <span class="board-meta-sep" aria-hidden="true">·</span>
+            <span class="board-retention-inline{% if post.days_left <= 7 %} is-urgent{% endif %}"
+                  title="{{ t('board.expires_at', date=post.expires_label) }}">
+              {%- if post.days_left <= 0 -%}
+                {{ t('board2.retention_today') }}
+              {%- elif post.days_left <= 7 -%}
+                {{ t('board2.retention_short_urgent', days=post.days_left, date=post.expires_label[5:10]) }}
               {%- else -%}
-                {{ av.letter }}
+                {{ t('board2.retention_short', days=post.days_left) }}
               {%- endif -%}
             </span>
-            <span class="board-author-meta">
-              <strong>{{ post.display_name }}</strong>
-              <small title="{{ post.created_label }}">{{ post.created_short }}</small>
-            </span>
-          </a>
-          <div class="board-card-tools">
-            <span class="board-days" title="{{ t('board.expires_at', date=post.expires_label) }}">
-              {{ post.days_label }}
-            </span>
-            {% if current_user and (current_user.id == post.user_id or current_user.role == 'super_admin') %}
-              {# 只有作者能编辑；管理员只参与删除，与本页面的后端权限保持一致。 #}
-              {% if current_user.id == post.user_id %}
-                <a class="board-tool is-edit" href="{{ url_for('board_post_edit', post_id=post.id) }}">{{ t('board.edit') }}</a>
-              {% endif %}
-              <form method="post" action="{{ url_for('board_post_delete', post_id=post.id) }}"
-                    onsubmit="return confirm({{ t('board.delete_confirm')|tojson }});">
-                <button class="board-tool is-danger" type="submit">{{ t('board.delete') }}</button>
-              </form>
-            {% endif %}
           </div>
-        </header>
 
-        <a class="board-photo" href="{{ url_for('board_post_detail', post_id=post.id) }}">
-          <img src="{{ url_for('board_image', post_id=post.id) }}"
-               alt="{{ t('board.image_alt', name=post.display_name) }}" loading="lazy" decoding="async">
-        </a>
+          {% if post.preview_comments %}
+            <ul class="board-comments">
+              {% for comment in post.preview_comments %}
+                {% set cav = avatar_meta(comment) %}
+                <li>
+                  <span class="board-comment-avatar"{% if cav.kind == 'preset' %} style="background: {{ cav.bg }}"{% endif %}>
+                    {%- if cav.kind == 'upload' -%}
+                      <img src="{{ url_for('avatar_file', filename=cav.src) }}" alt="" loading="lazy">
+                    {%- elif cav.kind == 'preset' -%}
+                      {{ cav.emoji }}
+                    {%- else -%}
+                      {{ cav.letter }}
+                    {%- endif -%}
+                  </span>
+                  <span class="board-comment-body">
+                    <strong>{{ comment.display_name }}</strong>{{ comment.content }}
+                  </span>
+                  {% if current_user and (current_user.id == comment.user_id or current_user.role == 'super_admin') %}
+                    <form method="post" action="{{ url_for('board_comment_delete', comment_id=comment.id) }}"
+                          onsubmit="return confirm({{ t('board.comment_delete_confirm')|tojson }});">
+                      <button class="board-comment-delete" type="submit" aria-label="{{ t('board.comment_delete') }}">×</button>
+                    </form>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+            {% if post.hidden_comment_count %}
+              <a class="board-more" href="{{ url_for('board_post_detail', post_id=post.id) }}">
+                {{ t('board.view_all_comments', count=post.comment_count) }}
+              </a>
+            {% endif %}
+          {% endif %}
 
-        {% if post.caption %}<p class="board-caption">{{ post.caption }}</p>{% endif %}
-
-        <div class="board-actions">
           {% if current_user %}
-            <form method="post" action="{{ url_for('board_like_toggle', post_id=post.id) }}">
-              <button class="board-like{{ ' is-liked' if post.liked }}" type="submit"
-                      aria-pressed="{{ 'true' if post.liked else 'false' }}">
-                <span aria-hidden="true">♥</span>{{ post.like_count }}
-              </button>
+            <form class="board-comment-form" method="post" action="{{ url_for('board_comment_add', post_id=post.id) }}">
+              <input name="content" type="text" maxlength="500" placeholder="{{ t('board.comment_placeholder') }}" required>
+              <button class="button slim" type="submit">{{ t('board.comment_submit') }}</button>
             </form>
-          {% else %}
-            <a class="board-like" href="{{ url_for('login') }}"><span aria-hidden="true">♥</span>{{ post.like_count }}</a>
           {% endif %}
-          <a class="board-comment-link" href="{{ url_for('board_post_detail', post_id=post.id) }}">
-            {{ t('board.comment_count', count=post.comment_count) }}
-          </a>
+        </article>
+      {% endfor %}
+    </div>
+
+    {% if pagination.pages > 1 %}
+      <nav class="pagination board-pagination" aria-label="{{ t('pagination.board') }}">
+        {% if pagination.has_prev %}<a href="{{ url_for('board', page=pagination.prev_page) }}">{{ t('pagination.prev') }}</a>{% else %}<span class="disabled">{{ t('pagination.prev') }}</span>{% endif %}
+        <strong>{{ pagination.page }} / {{ pagination.pages }}</strong>
+        {% if pagination.has_next %}<a href="{{ url_for('board', page=pagination.next_page) }}">{{ t('pagination.next') }}</a>{% else %}<span class="disabled">{{ t('pagination.next') }}</span>{% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <section class="board-empty panel">
+      <div class="r-empty">
+        <img src="{{ url_for('static', filename='report/brml-mark.svg') }}" alt="">
+        <strong>{{ t('board2.empty_title') }}</strong>
+        <p>{{ t('board2.empty_body') }}</p>
+        <div class="board-empty-actions">
+          <a class="board-publish" href="{{ url_for('board_new') }}">{{ t('board2.empty_cta') }}</a>
+          <a class="board-empty-rules" href="#board-rules" data-open-rules>{{ t('board2.empty_rules') }}</a>
         </div>
-
-        {% if post.preview_comments %}
-          <ul class="board-comments">
-            {% for comment in post.preview_comments %}
-              {% set cav = avatar_meta(comment) %}
-              <li>
-                <span class="board-comment-avatar"{% if cav.kind == 'preset' %} style="background: {{ cav.bg }}"{% endif %}>
-                  {%- if cav.kind == 'upload' -%}
-                    <img src="{{ url_for('avatar_file', filename=cav.src) }}" alt="" loading="lazy">
-                  {%- elif cav.kind == 'preset' -%}
-                    {{ cav.emoji }}
-                  {%- else -%}
-                    {{ cav.letter }}
-                  {%- endif -%}
-                </span>
-                <span class="board-comment-body">
-                  <strong>{{ comment.display_name }}</strong>{{ comment.content }}
-                </span>
-                {% if current_user and (current_user.id == comment.user_id or current_user.role == 'super_admin') %}
-                  <form method="post" action="{{ url_for('board_comment_delete', comment_id=comment.id) }}"
-                        onsubmit="return confirm({{ t('board.comment_delete_confirm')|tojson }});">
-                    <button class="board-comment-delete" type="submit" aria-label="{{ t('board.comment_delete') }}">×</button>
-                  </form>
-                {% endif %}
-              </li>
-            {% endfor %}
-          </ul>
-          {% if post.hidden_comment_count %}
-            <a class="board-more" href="{{ url_for('board_post_detail', post_id=post.id) }}">
-              {{ t('board.view_all_comments', count=post.comment_count) }}
-            </a>
-          {% endif %}
-        {% endif %}
-
-        {% if current_user %}
-          <form class="board-comment-form" method="post" action="{{ url_for('board_comment_add', post_id=post.id) }}">
-            <input name="content" type="text" maxlength="500" placeholder="{{ t('board.comment_placeholder') }}" required>
-            <button class="button slim" type="submit">{{ t('board.comment_submit') }}</button>
-          </form>
-        {% else %}
-          <p class="board-login-hint">{{ t('board.login_to_interact') }}</p>
-        {% endif %}
-      </article>
-    {% endfor %}
-  </div>
-
-  {% if pagination.pages > 1 %}
-    <nav class="pagination board-pagination" aria-label="{{ t('pagination.board') }}">
-      {% if pagination.has_prev %}<a href="{{ url_for('board', page=pagination.prev_page) }}">{{ t('pagination.prev') }}</a>{% else %}<span class="disabled">{{ t('pagination.prev') }}</span>{% endif %}
-      <strong>{{ pagination.page }} / {{ pagination.pages }}</strong>
-      {% if pagination.has_next %}<a href="{{ url_for('board', page=pagination.next_page) }}">{{ t('pagination.next') }}</a>{% else %}<span class="disabled">{{ t('pagination.next') }}</span>{% endif %}
-    </nav>
+      </div>
+    </section>
   {% endif %}
-{% else %}
-  <section class="panel"><div class="empty">{{ t('board.empty') }}</div></section>
-{% endif %}
 
-<a class="board-fab" href="{{ url_for('board_new') }}" aria-label="{{ t('board.new') }}" title="{{ t('board.new') }}">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
-    <path d="M12 5v14M5 12h14"></path>
-  </svg>
-</a>
+  {# 发布按钮：52px、距右/下 16px 并避开 safe-area；桌面滚动后缩到 44px，
+     移动端首屏隐藏（用页头「发布留言」替代），滚过第一张卡再出现，不再压卡。 #}
+  <a class="board-fab" data-board-fab href="{{ url_for('board_new') }}"
+     aria-label="{{ t('board.new') }}" title="{{ t('board.new') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+      <path d="M12 5v14M5 12h14"></path>
+    </svg>
+  </a>
+</div>
+
+<script>
+  (function () {
+    var fab = document.querySelector("[data-board-fab]");
+    var mobile = window.matchMedia("(max-width: 760px)");
+    var ticking = false;
+
+    function syncFab() {
+      var top = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+      if (!fab) return;
+      if (mobile.matches) {
+        // 移动端首屏不压第一张卡；滚过页头后再出现。
+        fab.classList.toggle("is-visible", top > 240);
+        fab.classList.remove("is-compact");
+      } else {
+        // 桌面端滚动后缩到 44px。
+        fab.classList.toggle("is-compact", top > 40);
+        fab.classList.add("is-visible");
+      }
+      ticking = false;
+    }
+
+    function requestFabSync() {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(syncFab);
+    }
+
+    window.addEventListener("scroll", requestFabSync, { passive: true });
+    if (mobile.addEventListener) mobile.addEventListener("change", requestFabSync);
+    syncFab();
+
+    var rules = document.getElementById("board-rules");
+    document.querySelectorAll("[data-open-rules]").forEach(function (link) {
+      link.addEventListener("click", function (event) {
+        if (!rules) return;
+        event.preventDefault();
+        rules.open = true;
+        rules.scrollIntoView({ block: "center", behavior: "smooth" });
+        var summary = rules.querySelector("summary");
+        if (summary) summary.focus({ preventScroll: true });
+      });
+    });
+  })();
+</script>
 {% endblock %}

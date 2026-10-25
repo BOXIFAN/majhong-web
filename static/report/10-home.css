@@ -1,0 +1,1515 @@
+/* ==========================================================================
+   BRML 首页（WP1）· static/report/10-home.css
+   --------------------------------------------------------------------------
+   对应调研报告：P1-9（首屏与赛季条像仪表盘）、A-1（找不到下一场活动）、
+   P0-6（字号膨胀 / 双语标签三层）、移动端专项 4（首屏牌组裁切、赛季卡过大）。
+   加载顺序在 style.css 与 00-base.css 之后，只覆盖 .home-page 内样式。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 页面骨架：从玻璃拟态改为实底表面（P0-1 的首页落点）
+   -------------------------------------------------------------------------- */
+
+.home-page {
+  --home-pad: clamp(22px, 4.4vw, 56px);
+  --home-ink: var(--r-ink);
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--r-line);
+  border-radius: 22px;
+  background: var(--r-surface);
+  box-shadow: var(--r-shadow-soft);
+}
+
+.home-page h1,
+.home-page h2,
+.home-page h3,
+.home-page p {
+  margin-top: 0;
+}
+
+.home-page h2 {
+  margin-bottom: 0;
+  font-size: var(--fs-xl);
+  font-weight: 820;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+
+.home-page .text-link {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+/* 状态胶囊沿用 base.css 的 .r-status，字号跟随 12px 体系。 */
+.home-page .r-status {
+  flex: none;
+}
+
+/* --------------------------------------------------------------------------
+   2. 首屏 hero：H1 收到 72px（移动 44px），保留麻将牌 + 雀字圆环构图
+   -------------------------------------------------------------------------- */
+
+.home-page .home-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  align-items: center;
+  gap: clamp(24px, 3vw, 40px);
+  min-height: 0;
+  padding: clamp(34px, 4vw, 48px) var(--home-pad);
+  border-bottom: 0;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(15, 118, 110, 0.1), transparent 46%),
+    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.9), transparent 42%),
+    linear-gradient(135deg, #fbfaf6 0%, #eef6f2 58%, #e4f0ea 100%);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.home-page .home-hero::after {
+  right: -8%;
+  bottom: -46%;
+  width: 52%;
+  border-color: rgba(15, 118, 110, 0.1);
+  box-shadow: 0 0 0 42px rgba(15, 118, 110, 0.02), 0 0 0 84px rgba(15, 118, 110, 0.014);
+}
+
+.home-page .home-hero-copy {
+  position: relative;
+  z-index: 2;
+}
+
+.home-page .home-hero h1 {
+  max-width: 11.5em;
+  margin: 0 0 18px;
+  color: #18252a;
+  font-size: var(--fs-display);
+  font-weight: 850;
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+}
+
+.home-page .home-hero h1 span {
+  display: block;
+  color: var(--r-brand);
+  font-size: 0.72em;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.home-page .home-hero-lead {
+  max-width: 26em;
+  margin: 0 0 24px;
+  color: var(--r-body);
+  font-size: var(--fs-base);
+  line-height: 1.68;
+}
+
+.home-page .hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.home-page .home-button {
+  min-height: 48px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-size: var(--fs-sm);
+  font-weight: 800;
+}
+
+.home-page .home-button-ghost {
+  border-color: var(--r-brand-line);
+  background: #ffffff;
+}
+
+.home-page .home-button-ghost:hover {
+  background: var(--r-brand-soft);
+}
+
+/* 牌桌小景：两张完整麻将牌 + 雀字圆环；删掉 PLAY / CONNECT（P0-6 / 提升 4）。 */
+.home-page .home-hero-visual {
+  position: relative;
+  min-height: 320px;
+}
+
+.home-page .hero-table-mark {
+  inset: 6% 4% 4% 2%;
+  border-color: rgba(15, 118, 110, 0.16);
+  color: rgba(15, 94, 89, 0.5);
+  transform: rotate(-4deg);
+}
+
+.home-page .hero-table-mark strong svg {
+  width: 96px;
+  height: 102px;
+}
+
+.home-page .hero-tile {
+  width: 66px;
+  height: 82px;
+  font-size: 32px;
+  border-radius: 10px;
+  box-shadow: 5px 6px 0 #cfe3dc, 0 16px 30px rgba(31, 66, 57, 0.12);
+}
+
+.home-page .hero-tile img {
+  width: 76%;
+  height: 82%;
+}
+
+.home-page .hero-tile-east {
+  top: 0;
+  right: 6%;
+}
+
+.home-page .hero-tile-five {
+  right: auto;
+  left: 2%;
+  bottom: 4%;
+}
+
+.home-page .hero-stick {
+  right: 0;
+  bottom: 16%;
+  width: 124px;
+  height: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   3. 赛季条：3 项（会员 / 对局 / 状态），总高 ≤96，数值 28 / 标签 12
+   -------------------------------------------------------------------------- */
+
+.home-page .season-overview {
+  position: relative;
+  z-index: 3;
+  width: calc(100% - 2 * var(--home-pad));
+  max-height: 96px;
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: clamp(14px, 2.4vw, 30px);
+  align-items: center;
+  margin: -38px auto 0;
+  padding: 13px clamp(16px, 2.4vw, 28px);
+  border: 1px solid var(--r-line);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 18px 40px rgba(31, 45, 68, 0.1), 0 2px 6px rgba(31, 45, 68, 0.05);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.home-page .season-heading {
+  min-width: 0;
+  padding-right: clamp(14px, 2vw, 24px);
+  border-right: 1px solid var(--r-line-soft);
+}
+
+.home-page .season-heading h2 {
+  display: block;
+  max-width: 12em;
+  margin: 0;
+  overflow: hidden;
+  color: var(--r-ink);
+  font-size: var(--fs-lg);
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-page .season-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-self: stretch;
+  align-items: center;
+  margin: 0;
+}
+
+.home-page .season-stats > div {
+  min-width: 0;
+  padding: 0 clamp(6px, 1.6vw, 22px);
+  border-left: 1px solid var(--r-line-soft);
+}
+
+.home-page .season-stats > div:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.home-page .season-stats dt {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.home-page .season-stats dd {
+  margin: 2px 0 0;
+  color: var(--r-brand-dark);
+  font-size: var(--fs-xl);
+  font-weight: 820;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 状态：中文「进行中」+ 2×24px 绿色短标记；去掉 3px 红色单侧线。 */
+.home-page .season-stat-status dd {
+  display: flex;
+  align-items: center;
+}
+
+.home-page .season-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--r-muted);
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.home-page .season-status i {
+  display: none;
+}
+
+.home-page .season-status.is-active {
+  color: var(--r-brand-dark);
+}
+
+.home-page .season-status.is-active i {
+  display: block;
+  width: 2px;
+  height: 24px;
+  border-radius: 2px;
+  background: #24a06b;
+  box-shadow: none;
+}
+
+/* --------------------------------------------------------------------------
+   4. 下一场活动 / 第一次来：首屏回答「什么时候、在哪、怎么参加」
+   -------------------------------------------------------------------------- */
+
+.home-page .home-next {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+  padding: 22px var(--home-pad) 0;
+  scroll-margin-top: 18px;
+}
+
+.home-page .next-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 20px 24px 22px;
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius-lg);
+  background: #ffffff;
+  box-shadow: var(--r-shadow-soft);
+}
+
+.home-page .next-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.home-page .next-head h2 {
+  margin: 0;
+  color: var(--r-ink);
+  font-size: var(--fs-lg);
+  font-weight: 820;
+  letter-spacing: -0.01em;
+}
+
+.home-page .next-body {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2.4vw, 26px);
+  min-width: 0;
+}
+
+/* 日期块用排版而不是卡片，避免「卡片套卡片」。 */
+.home-page .next-date {
+  flex: none;
+  display: grid;
+  gap: 2px;
+  min-width: 106px;
+  padding: 4px 20px 4px 0;
+  border: 0;
+  border-right: 1px solid var(--r-line);
+  border-radius: 0;
+  background: none;
+  justify-items: start;
+}
+
+.home-page .next-date time {
+  display: grid;
+  place-items: center;
+  gap: 2px;
+}
+
+.home-page .next-date-day {
+  color: var(--r-brand-dark);
+  font-size: var(--fs-2xl);
+  font-weight: 850;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.home-page .next-date-weekday {
+  color: var(--r-brand);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.home-page .next-info {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.home-page .next-name {
+  margin: 0;
+  color: var(--r-ink);
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.home-page .next-when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  margin: 0;
+  color: var(--r-body);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+.home-page .next-when time {
+  color: var(--r-ink-2);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.home-page .next-dot {
+  color: var(--r-muted);
+}
+
+.home-page .next-venue {
+  overflow-wrap: anywhere;
+}
+
+.home-page .next-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  margin: 0;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+}
+
+.home-page .next-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin-top: 6px;
+}
+
+/* 空态：说真话 + 固定周期 + 场地 + 联系方式（A-1）。 */
+.home-page .next-empty {
+  gap: 10px;
+  padding: 18px 16px 14px;
+  justify-items: center;
+  text-align: center;
+}
+
+.home-page .next-empty img {
+  width: 54px;
+  opacity: 0.42;
+}
+
+.home-page .next-empty strong {
+  color: var(--r-ink);
+  font-size: var(--fs-lg);
+}
+
+.home-page .next-empty p {
+  max-width: 44ch;
+  margin: 0;
+  color: var(--r-body);
+  font-size: var(--fs-sm);
+  line-height: 1.62;
+}
+
+.home-page .next-facts {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  max-width: 430px;
+  margin: 4px 0 0;
+  text-align: left;
+}
+
+.home-page .next-facts > div {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+}
+
+.home-page .next-facts dt {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.home-page .next-facts dd {
+  margin: 0;
+  color: var(--r-ink-2);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.home-page .next-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 18px;
+  margin-top: 4px;
+}
+
+/* 第一次来 */
+.home-page .first-visit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 20px 22px;
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius-lg);
+  background: var(--r-surface-sunken);
+}
+
+.home-page .first-visit h3 {
+  margin: 0;
+  color: var(--r-ink);
+  font-size: var(--fs-lg);
+  font-weight: 820;
+  letter-spacing: -0.01em;
+}
+
+.home-page .first-visit-intro {
+  margin: 0;
+  color: var(--r-body);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.home-page .first-visit-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--r-body);
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+}
+
+.home-page .first-visit-list li::marker {
+  color: var(--r-brand);
+}
+
+.home-page .first-visit-contact {
+  display: grid;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px dashed var(--r-line);
+}
+
+.home-page .first-visit-label {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.home-page .first-visit-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.home-page .first-visit-about {
+  margin-top: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   5. 探索区：每层只留一个标签，三张卡统一底色；排行榜卡在尺寸上更大
+   -------------------------------------------------------------------------- */
+
+.home-page .home-section {
+  padding: clamp(40px, 5vw, 64px) var(--home-pad);
+}
+
+.home-page .explore-section {
+  border-top: 1px solid var(--r-line-soft);
+}
+
+.home-page .home-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px 40px;
+  margin-bottom: 26px;
+}
+
+.home-page .home-section-head h2 {
+  margin: 0;
+  font-size: var(--fs-xl);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.home-page .home-section-head > p {
+  max-width: 44ch;
+  margin: 0;
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+
+.home-page .explore-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  grid-template-rows: repeat(2, minmax(0, auto));
+  gap: 14px;
+}
+
+.home-page .explore-leaderboard {
+  grid-row: 1 / span 2;
+}
+
+.home-page .explore-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 0;
+  padding: 18px 22px;
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius);
+  color: var(--r-ink);
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(31, 45, 68, 0.05);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transition: transform 180ms var(--ease-out), box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.home-page .explore-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--r-brand-line);
+  box-shadow: 0 16px 34px rgba(31, 45, 68, 0.09);
+}
+
+.home-page .explore-leaderboard {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 20px;
+  padding: 26px 28px;
+  color: var(--r-ink);
+  background: #ffffff;
+}
+
+.home-page .explore-icon {
+  flex: none;
+  align-self: center;
+  justify-self: auto;
+  width: 62px;
+  height: 78px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--r-line);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 4px 5px 0 rgba(15, 118, 110, 0.1), 0 12px 22px rgba(31, 45, 68, 0.07);
+  transform: rotate(-5deg);
+  transition: transform 220ms var(--ease-out);
+}
+
+.home-page .explore-icon img {
+  display: block;
+  width: 72%;
+  height: 78%;
+  object-fit: contain;
+}
+
+.home-page .explore-leaderboard .explore-icon {
+  align-self: flex-start;
+  width: 104px;
+  height: 128px;
+}
+
+/* 排行榜图标是「三根排名柱」，必须保持横排（旧样式为 flex，这里显式恢复）。 */
+.home-page .explore-icon.explore-rank {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 10px 12px;
+}
+
+.home-page .explore-leaderboard .explore-icon.explore-rank i {
+  width: 22px;
+}
+
+.home-page .explore-leaderboard .explore-icon.explore-rank i:nth-child(2) {
+  height: 74px;
+}
+
+.home-page .explore-leaderboard .explore-icon.explore-rank i:nth-child(1) {
+  height: 52px;
+}
+
+.home-page .explore-leaderboard .explore-icon.explore-rank i:nth-child(3) {
+  height: 38px;
+}
+
+.home-page .explore-card:hover .explore-icon {
+  transform: rotate(-2deg) scale(1.03);
+}
+
+.home-page .explore-copy {
+  display: grid;
+  align-self: center;
+  align-content: center;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.home-page .explore-copy strong {
+  color: var(--r-ink);
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.home-page .explore-copy small {
+  max-width: 36ch;
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  opacity: 1;
+}
+
+.home-page .explore-leaderboard .explore-copy {
+  align-self: stretch;
+  align-content: end;
+  padding-right: 42px;
+}
+
+.home-page .explore-leaderboard .explore-copy strong {
+  font-size: var(--fs-xl);
+  line-height: 1.15;
+}
+
+.home-page .explore-leaderboard .explore-copy small {
+  max-width: 30ch;
+  font-size: var(--fs-sm);
+}
+
+.home-page .explore-arrow {
+  flex: none;
+  align-self: center;
+  margin-left: auto;
+  color: var(--r-brand);
+  font-size: var(--fs-lg);
+  transition: transform 180ms var(--ease-out);
+}
+
+.home-page .explore-leaderboard .explore-arrow {
+  position: absolute;
+  right: 28px;
+  bottom: 26px;
+  margin-left: 0;
+  font-size: 24px;
+}
+
+.home-page .explore-card:hover .explore-arrow {
+  transform: translateX(3px);
+}
+
+/* --------------------------------------------------------------------------
+   6. 公告区：只留「最新公告」一个标签；LATEST 徽章保留（对比度由 base.css 修复）
+   -------------------------------------------------------------------------- */
+
+.home-page .announcement-community {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.28fr);
+  gap: clamp(28px, 5vw, 64px);
+  align-items: start;
+  background: #eef5f1;
+  border-top: 1px solid var(--r-line-soft);
+  box-shadow: none;
+}
+
+.home-page .announcement-intro h2 {
+  margin: 0 0 12px;
+  font-size: var(--fs-xl);
+  line-height: 1.15;
+}
+
+.home-page .announcement-intro > p {
+  margin: 0 0 14px;
+  color: var(--r-body);
+  font-size: var(--fs-sm);
+  line-height: 1.65;
+}
+
+.home-page .announcement-story {
+  min-width: 0;
+  padding: clamp(24px, 3vw, 36px);
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius-lg);
+  background: var(--r-surface);
+  box-shadow: var(--r-shadow-soft);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.home-page .announcement-story h3 {
+  margin: 14px 0 8px;
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.home-page .latest-badge {
+  padding: 5px 9px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+}
+
+.home-page .announcement-story .announcement-meta {
+  margin: 0;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+}
+
+.home-page .announcement-story .announcement-content {
+  margin: 16px 0 0;
+  color: var(--r-body);
+  font-size: var(--fs-base);
+  line-height: 1.72;
+  -webkit-line-clamp: 6;
+}
+
+.home-page .announcement-actions {
+  gap: 12px 20px;
+  justify-content: flex-start;
+  margin-top: 14px;
+}
+
+.home-page .announcement-expand {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.home-page .past-announcements {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--r-line-soft);
+}
+
+.home-page .past-announcements > summary {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--r-brand-dark);
+}
+
+.home-page .past-announcement-list > details {
+  border-top: 1px solid var(--r-line-soft);
+}
+
+.home-page .news-empty {
+  min-height: 180px;
+}
+
+/* --------------------------------------------------------------------------
+   7. 社群区：删掉与标题同义的眉标，只留标题
+   -------------------------------------------------------------------------- */
+
+.home-page .community-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+  gap: clamp(32px, 6vw, 80px);
+  align-items: center;
+  border-top: 1px solid var(--r-line-soft);
+  background: var(--r-surface);
+}
+
+.home-page .community-image {
+  min-height: 340px;
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius-lg);
+  background:
+    linear-gradient(rgba(227, 243, 237, 0.9), rgba(208, 232, 223, 0.86)),
+    repeating-linear-gradient(45deg, transparent 0 24px, rgba(255, 255, 255, 0.3) 24px 25px),
+    #dceee7;
+  box-shadow: var(--r-shadow-soft);
+}
+
+.home-page .community-image img {
+  width: 44%;
+  max-height: 220px;
+  opacity: 0.8;
+}
+
+.home-page .community-copy h2 {
+  margin: 0 0 14px;
+  font-size: var(--fs-xl);
+  line-height: 1.2;
+}
+
+.home-page .community-copy > p {
+  margin: 0 0 18px;
+  color: var(--r-body);
+  font-size: var(--fs-base);
+  line-height: 1.72;
+}
+
+.home-page .community-contacts {
+  margin-top: 20px;
+}
+
+/* --------------------------------------------------------------------------
+   8. 响应式：1160 收 hero，1080 收并列模块，760 移动端，480 紧凑
+   -------------------------------------------------------------------------- */
+
+/* 侧栏仍在、但主内容已放不下两栏 hero 时：牌组改为 hero 底部的静物带。 */
+@media (max-width: 1160px) {
+  .home-page .home-hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    padding-bottom: 0;
+  }
+
+  .home-page .home-hero-copy {
+    max-width: 640px;
+  }
+
+  .home-page .home-hero-visual {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    max-width: 520px;
+    min-height: 200px;
+    margin-inline: auto;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+
+  .home-page .hero-table-mark {
+    inset: 8px auto 8px 50%;
+    width: 210px;
+    height: auto;
+    transform: translateX(-50%) rotate(-4deg);
+  }
+
+  .home-page .hero-table-mark strong svg {
+    width: 62px;
+    height: 68px;
+  }
+
+  .home-page .hero-tile {
+    width: 56px;
+    height: 70px;
+    font-size: 27px;
+  }
+
+  .home-page .hero-tile-east {
+    top: 6px;
+    right: 8%;
+  }
+
+  .home-page .hero-tile-five {
+    left: 8%;
+    bottom: 2%;
+  }
+
+  .home-page .hero-stick {
+    right: 4%;
+    bottom: 18%;
+    width: 104px;
+  }
+
+  .home-page .season-overview {
+    margin-top: 18px;
+  }
+}
+
+/* 并列的两栏模块在窄主内容里改为单栏，避免文字被挤成窄条。 */
+@media (max-width: 1080px) {
+  .home-page .home-next {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-page .explore-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+
+  .home-page .explore-leaderboard {
+    grid-row: auto;
+  }
+
+  .home-page .explore-leaderboard .explore-icon {
+    align-self: center;
+    width: 78px;
+    height: 96px;
+  }
+
+  .home-page .explore-leaderboard .explore-copy {
+    align-self: center;
+    align-content: center;
+    padding-right: 0;
+  }
+
+  .home-page .explore-leaderboard .explore-copy strong {
+    font-size: var(--fs-lg);
+  }
+
+  .home-page .announcement-community,
+  .home-page .community-section {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-page .community-image {
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+  }
+}
+
+@media (max-width: 760px) {
+  .home-page {
+    --home-pad: 18px;
+    border-radius: 16px;
+  }
+
+  /* hero：H1 44px；牌组收进底部静物带，左右留安全边距（移动端专项 4） */
+  .home-page .home-hero {
+    gap: 14px;
+    padding: 24px var(--home-pad) 0;
+    justify-items: stretch;
+    text-align: left;
+  }
+
+  .home-page .home-hero-copy {
+    display: block;
+    max-width: none;
+    text-align: left;
+  }
+
+  .home-page .home-hero h1 {
+    max-width: none;
+    margin-bottom: 12px;
+    font-size: var(--fs-2xl);
+    line-height: 1.02;
+    text-align: left;
+  }
+
+  .home-page .home-hero h1 span {
+    font-size: 0.78em;
+    letter-spacing: 0.06em;
+  }
+
+  .home-page .home-hero-lead {
+    max-width: none;
+    margin: 0 0 16px;
+    font-size: var(--fs-base);
+    line-height: 1.6;
+    text-align: left;
+  }
+
+  .home-page .hero-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .home-page .hero-actions .home-button {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px;
+    gap: 6px;
+    font-size: var(--fs-xs);
+  }
+
+  /* 16:9 静物带：左右各留安全边距，牌不被裁切。 */
+  .home-page .home-hero-visual {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+    max-height: 210px;
+    margin: 6px 0 0;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+
+  .home-page .hero-table-mark {
+    display: grid;
+    top: 50%;
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    width: 148px;
+    height: 148px;
+    transform: translate(-50%, -50%) rotate(-4deg);
+  }
+
+  .home-page .hero-table-mark strong svg {
+    width: 48px;
+    height: 53px;
+  }
+
+  .home-page .hero-tile {
+    width: 44px;
+    height: 56px;
+    font-size: 21px;
+    border-radius: 8px;
+    box-shadow: 3px 4px 0 #cfe3dc, 0 12px 22px rgba(31, 66, 57, 0.11);
+  }
+
+  .home-page .hero-tile img {
+    width: 74%;
+    height: 80%;
+  }
+
+  .home-page .hero-tile-east {
+    top: 10px;
+    right: 0;
+    bottom: auto;
+    left: auto;
+  }
+
+  .home-page .hero-tile-five {
+    top: auto;
+    right: auto;
+    bottom: 8px;
+    left: 0;
+  }
+
+  .home-page .hero-stick {
+    display: none;
+  }
+
+  /* 赛季条：3 指标一行，赛季名转为无障碍标题，总高 ≤96 */
+  .home-page .season-overview {
+    width: calc(100% - 2 * var(--home-pad));
+    max-height: none;
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: 16px;
+    padding: 12px 10px;
+  }
+
+  .home-page .season-heading {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .home-page .season-stats > div {
+    padding: 0 6px;
+  }
+
+  .home-page .season-stats dd {
+    font-size: var(--fs-xl);
+  }
+
+  .home-page .season-status {
+    gap: 6px;
+    font-size: var(--fs-lg);
+  }
+
+  .home-page .season-status.is-active i {
+    height: 22px;
+  }
+
+  /* 下一场活动：日期块 + 信息两栏，按钮通栏 */
+  .home-page .home-next {
+    gap: 12px;
+    padding: 16px var(--home-pad) 0;
+    scroll-margin-top: 88px;
+  }
+
+  .home-page .next-panel {
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .home-page .next-body {
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .home-page .next-date {
+    min-width: 84px;
+    min-height: 0;
+    padding: 2px 14px 2px 0;
+    border-right: 1px solid var(--r-line-soft);
+  }
+
+  .home-page .next-date-day {
+    font-size: var(--fs-xl);
+  }
+
+  .home-page .next-name {
+    font-size: var(--fs-base);
+  }
+
+  .home-page .next-when {
+    display: grid;
+    gap: 1px;
+    font-size: var(--fs-sm);
+  }
+
+  .home-page .next-dot {
+    display: none;
+  }
+
+  .home-page .next-actions {
+    display: grid;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .home-page .next-actions .home-button {
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .home-page .next-actions .text-link {
+    min-height: 32px;
+  }
+
+  .home-page .first-visit {
+    gap: 8px;
+    padding: 16px;
+  }
+
+  .home-page .next-empty {
+    padding: 16px 12px 12px;
+  }
+
+  .home-page .next-facts > div {
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  /* 探索卡：改成横向行式列表，三张卡一样重 */
+  .home-page .home-section {
+    padding: 32px var(--home-pad);
+  }
+
+  .home-page .home-section-head {
+    display: grid;
+    justify-items: start;
+    justify-content: start;
+    gap: 6px;
+    margin-bottom: 18px;
+    text-align: left;
+  }
+
+  .home-page .explore-grid {
+    gap: 10px;
+  }
+
+  .home-page .explore-card,
+  .home-page .explore-leaderboard {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 14px;
+    padding: 12px 14px;
+    text-align: left;
+  }
+
+  .home-page .explore-icon,
+  .home-page .explore-leaderboard .explore-icon {
+    width: 52px;
+    height: 66px;
+  }
+
+  .home-page .explore-icon.explore-rank {
+    gap: 4px;
+    padding: 8px 6px;
+  }
+
+  .home-page .explore-leaderboard .explore-icon.explore-rank i {
+    width: 10px;
+  }
+
+  .home-page .explore-leaderboard .explore-icon.explore-rank i:nth-child(1) {
+    height: 26px;
+  }
+
+  .home-page .explore-leaderboard .explore-icon.explore-rank i:nth-child(2) {
+    height: 40px;
+  }
+
+  .home-page .explore-leaderboard .explore-icon.explore-rank i:nth-child(3) {
+    height: 18px;
+  }
+
+  .home-page .explore-copy {
+    margin-top: 0;
+    justify-items: start;
+    text-align: left;
+  }
+
+  .home-page .explore-copy strong,
+  .home-page .explore-leaderboard .explore-copy strong {
+    font-size: var(--fs-base);
+  }
+
+  .home-page .explore-leaderboard .explore-copy small {
+    font-size: var(--fs-xs);
+  }
+
+  .home-page .explore-arrow,
+  .home-page .explore-leaderboard .explore-arrow {
+    position: static;
+    align-self: center;
+    margin-left: auto;
+    font-size: var(--fs-lg);
+  }
+
+  /* 公告：单栏、左对齐 */
+  .home-page .announcement-intro,
+  .home-page .community-copy {
+    display: block;
+    justify-items: normal;
+    text-align: left;
+  }
+
+  .home-page .announcement-intro > p {
+    max-width: none;
+  }
+
+  .home-page .announcement-story {
+    padding: 18px;
+  }
+
+  .home-page .announcement-story h3 {
+    font-size: var(--fs-lg);
+  }
+
+  .home-page .announcement-story .announcement-content {
+    font-size: var(--fs-sm);
+    -webkit-line-clamp: 8;
+  }
+
+  .home-page .announcement-actions {
+    justify-content: flex-start;
+  }
+
+  /* 社群：单栏、左对齐 */
+  .home-page .community-section {
+    gap: 24px;
+  }
+
+  .home-page .community-image {
+    aspect-ratio: 4 / 3;
+  }
+
+  .home-page .community-image::after {
+    right: 14px;
+    left: auto;
+    transform: none;
+    font-size: 7px;
+  }
+
+  .home-page .community-copy > p {
+    max-width: none;
+    text-align: left;
+  }
+
+  .home-page .community-contacts,
+  .home-page .community-contacts .contact-block,
+  .home-page .community-contacts .contact-links {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-page {
+    border-radius: 14px;
+  }
+
+  .home-page .home-hero {
+    padding-top: 20px;
+  }
+
+  .home-page .hero-table-mark {
+    width: 132px;
+    height: 132px;
+  }
+
+  .home-page .hero-tile {
+    width: 40px;
+    height: 52px;
+  }
+
+  .home-page .next-body {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .home-page .next-date {
+    padding: 0 0 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--r-line-soft);
+  }
+
+  .home-page .next-date time {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .home-page .next-facts > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+}
+
+/* 动效尊重系统偏好（与其他页面一致）。 */
+@media (prefers-reduced-motion: reduce) {
+  .home-page .explore-card,
+  .home-page .explore-icon,
+  .home-page .explore-arrow {
+    transition: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   9. 评审修复（P1-1）：压缩移动端首屏，让「查看并报名」进入 844 首屏。
+   原状态：hero 装饰带 210px + 上下间距偏大，CTA 顶边在 870px（折线下 26px）。
+   只收比例与间距，不删品牌元素（雀环/麻将牌/H1 字号）。
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  .home-page .home-hero {
+    gap: 10px;
+    padding: 18px var(--home-pad) 0;
+  }
+
+  .home-page .home-hero-lead {
+    margin-bottom: 12px;
+  }
+
+  .home-page .home-hero-visual {
+    max-height: 150px;
+    margin-top: 2px;
+  }
+
+  .home-page .hero-table-mark {
+    width: 116px;
+    height: 116px;
+  }
+
+  .home-page .hero-table-mark strong svg {
+    width: 38px;
+    height: 42px;
+  }
+
+  .home-page .hero-tile {
+    width: 40px;
+    height: 51px;
+  }
+
+  .home-page .season-overview {
+    margin-top: 10px;
+    padding: 10px 8px;
+  }
+
+  .home-page .home-next {
+    padding-top: 10px;
+  }
+
+  .home-page .next-panel {
+    gap: 10px;
+    padding: 14px;
+  }
+}
+
+
+/* 公告卡：中英标题分层 + 英文原文标注（评审 P1-12） */
+.announcement-title-en {
+  margin: 2px 0 0;
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.announcement-lang {
+  display: inline-flex;
+  align-items: center;
+  margin: 6px 0 0;
+  padding: 2px 8px;
+  border: 1px solid var(--r-line);
+  border-radius: 999px;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+/* 首页公告摘要最多 4 行，完整内容在详情页（避免首页长文堆积） */
+.announcement-content.is-clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  overflow: hidden;
+}

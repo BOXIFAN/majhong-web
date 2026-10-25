@@ -259,7 +259,7 @@ def register_routes(app) -> None:
                 )
                 return redirect(url_for("board_new"))
             caption = request.form.get("caption", "").strip()[:CAPTION_MAX]
-            filename, error = save_board_image(request.files.get("image"))
+            filename, image_width, image_height, error = save_board_image(request.files.get("image"))
             if error:
                 flash(_image_error_message(error), "error")
                 return redirect(url_for("board_new"))
@@ -267,13 +267,15 @@ def register_routes(app) -> None:
             execute(
                 """
                 insert into board_posts
-                  (user_id, caption, image, created_at, updated_at, expires_at)
-                values (?, ?, ?, ?, ?, ?)
+                  (user_id, caption, image, image_width, image_height, created_at, updated_at, expires_at)
+                values (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     g.user["id"],
                     caption,
                     filename,
+                    image_width,
+                    image_height,
                     timestamp,
                     timestamp,
                     expires_at_from(timestamp),
@@ -309,14 +311,14 @@ def register_routes(app) -> None:
             uploaded = request.files.get("image")
             new_image = None
             if uploaded and uploaded.filename:
-                new_image, error = save_board_image(uploaded)
+                new_image, new_width, new_height, error = save_board_image(uploaded)
                 if error:
                     flash(_image_error_message(error), "error")
                     return redirect(url_for("board_post_edit", post_id=post_id))
             if new_image:
                 execute(
-                    "update board_posts set caption = ?, image = ?, updated_at = ? where id = ?",
-                    (caption, new_image, now(), post_id),
+                    "update board_posts set caption = ?, image = ?, image_width = ?, image_height = ?, updated_at = ? where id = ?",
+                    (caption, new_image, new_width, new_height, now(), post_id),
                 )
                 delete_board_image(post["image"])
             else:
@@ -372,12 +374,21 @@ def register_routes(app) -> None:
         )
         if existing:
             execute("delete from board_likes where id = ?", (existing["id"],))
+            liked = False
         else:
             execute(
                 "insert into board_likes (post_id, user_id, created_at) values (?, ?, ?)",
                 (post_id, g.user["id"], now()),
             )
-        return redirect(_safe_back(url_for("board")))
+            liked = True
+        like_count = query_one(
+            "select count(*) as c from board_likes where post_id = ?", (post_id,)
+        )["c"]
+        # 前端用 fetch 局部更新（不整页刷新、不丢滚动位置）；无 JS 时回退到带锚点的跳转。
+        if request.headers.get("X-Requested-With") == "fetch":
+            return {"liked": liked, "count": like_count}
+        back = _safe_back(url_for("board")).split("#", 1)[0]
+        return redirect(f"{back}#post-{post_id}")
 
     @app.route("/board/posts/<int:post_id>/comments", methods=("POST",))
     @login_required

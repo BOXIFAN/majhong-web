@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import re
 import sqlite3
+from urllib.parse import parse_qs, quote, urlsplit
 
 from flask import flash, g, redirect, render_template, request, send_from_directory, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -14,6 +16,12 @@ from brml.finance import fetch_transactions, member_income_stats, summary
 from brml.i18n import SUPPORTED_LOCALES, translate
 from brml.timeutils import now
 
+# 登录/注册共用的邮箱校验：与浏览器 type=email 一致的最低限度检查，
+# 服务端永远兜底（前端 novalidate + 自带提示，见模板）。
+EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+# 不回跳这些自身页面，避免登录/注册循环。
+NEXT_BLOCKLIST = ("/login", "/register", "/logout")
+
 
 def _active_users() -> list:
     """返回未删除用户（用于后台记账的会员下拉框）。"""
@@ -23,12 +31,65 @@ def _active_users() -> list:
 
 
 def register_routes(app) -> None:
+    def _same_site_path(candidate: str | None) -> str | None:
+        """把回跳候选值归一化为站内相对路径；站外地址一律拒绝。
+
+        接受 ``/board/new``、``/board/new?x=1`` 以及同站绝对 URL
+        （后者用于 Referer 兜底），拒绝 ``//evil.example.com`` 与其它协议。
+        """
+        if not candidate:
+            return None
+        candidate = candidate.strip()
+        if not candidate or candidate.startswith("//"):
+            return None
+        if candidate.startswith("/"):
+            path = candidate
+        else:
+            parsed = urlsplit(candidate)
+            if parsed.scheme not in ("http", "https") or parsed.netloc != request.host:
+                return None
+            path = parsed.path or "/"
+            if parsed.query:
+                path = f"{path}?{parsed.query}"
+        bare = path.split("?", 1)[0]
+        if bare in NEXT_BLOCKLIST or bare.startswith("/account/password"):
+            return None
+        return path
+
+    def _referer_next() -> str | None:
+        """从来源页推导回跳目标，作为入口没写 ``?next=`` 时的兜底。
+
+        - 来源页是站内普通页面 → 回该页；
+        - 来源页是 ``/login?next=...`` 或 ``/register?next=...`` → 继续沿用里面的 next，
+          这样 登录 ⇄ 注册 互跳时回跳地址不会丢。
+        """
+        referer = request.referrer
+        if not referer:
+            return None
+        parsed = urlsplit(referer)
+        if parsed.netloc != request.host:
+            return None
+        if parsed.path in ("/login", "/register"):
+            carried = (parse_qs(parsed.query).get("next") or [""])[0]
+            return _same_site_path(carried)
+        return _same_site_path(referer)
+
     def safe_next_url() -> str | None:
-        """登录后回跳地址：只接受站内相对路径，避免开放重定向。"""
-        candidate = (request.form.get("next") or request.args.get("next") or "").strip()
-        if candidate.startswith("/") and not candidate.startswith("//"):
-            return candidate
-        return None
+        """登录后回跳地址：优先表单/查询参数，其次同站来源页。
+
+        Referer 兜底让「由 login_required 触发的裸 /login 跳转」也能回到原页，
+        即使入口模板忘了写 ``?next=``（调研报告 A-3 / T7）。
+        """
+        explicit = request.form.get("next") or request.args.get("next")
+        target = _same_site_path(explicit)
+        if target:
+            return target
+        return _referer_next()
+
+    def _login_url(next_url: str | None) -> str:
+        """登录地址：带 next 时显式拼接（不依赖 url_for 对 None 的处理）。"""
+        base = url_for("login")
+        return f"{base}?next={quote(next_url, safe='')}" if next_url else base
 
     def safe_stay_url(endpoint: str) -> str:
         """表单处理后的回跳地址：带 next 时回到指定页面，否则回到默认端点。"""
@@ -38,26 +99,47 @@ def register_routes(app) -> None:
 
     @app.route("/register", methods=("GET", "POST"))
     def register():
+        next_url = safe_next_url()
+        form_values = {"display_name": "", "email": "", "invite_code": ""}
         if request.method == "POST":
-            display_name = request.form["display_name"].strip()
-            email = request.form["email"].strip().lower()
-            password = request.form["password"]
-            invite_code = request.form["invite_code"].strip().upper()
-            invite = query_one(
-                "select * from invite_codes where code = ? and used_by is null",
-                (invite_code,),
-            )
-            error = None
-            if not display_name or not email or not password:
-                error = translate("flash.register_missing")
-            elif not invite:
-                error = translate("flash.invite_invalid")
+            display_name = (request.form.get("display_name") or "").strip()
+            email = (request.form.get("email") or "").strip().lower()
+            password = request.form.get("password") or ""
+            invite_code = (request.form.get("invite_code") or "").strip().upper()
+            form_values = {
+                "display_name": display_name,
+                "email": email,
+                "invite_code": invite_code,
+            }
+            errors: dict[str, str] = {}
+            if not display_name:
+                errors["display_name"] = "auth2.err_display_name_required"
+            elif len(display_name) > 40:
+                errors["display_name"] = "auth2.err_display_name_long"
+            if not email:
+                errors["email"] = "auth2.err_email_required"
+            elif not EMAIL_PATTERN.match(email):
+                errors["email"] = "auth2.err_email_invalid"
             elif query_one("select id from users where email = ? and is_deleted = 0", (email,)):
-                error = translate("flash.email_registered")
+                errors["email"] = "auth2.err_email_registered"
+            if not password:
+                errors["password"] = "auth2.err_password_required"
+            elif len(password) < 8:
+                errors["password"] = "auth2.err_password_short"
+            elif len(password) > 128:
+                errors["password"] = "auth2.err_password_long"
+            invite = None
+            if not invite_code:
+                errors["invite_code"] = "auth2.err_invite_required"
+            elif "email" not in errors:
+                invite = query_one(
+                    "select * from invite_codes where code = ? and used_by is null",
+                    (invite_code,),
+                )
+                if not invite:
+                    errors["invite_code"] = "auth2.err_invite_invalid"
 
-            if error:
-                flash(error, "error")
-            else:
+            if not errors and invite:
                 db = get_db()
                 cur = db.execute(
                     """
@@ -78,26 +160,55 @@ def register_routes(app) -> None:
                 )
                 db.commit()
                 flash(translate("flash.register_success"), "success")
-                return redirect(url_for("login"))
-        return render_template("register.html")
+                return redirect(_login_url(next_url))
+            # 失败时保留已填内容（密码除外），错误逐字段显示在输入框下方。
+            return render_template(
+                "register.html",
+                next_url=next_url,
+                errors=errors,
+                form_values=form_values,
+            )
+        return render_template("register.html", next_url=next_url, errors={}, form_values=form_values)
 
     @app.route("/login", methods=("GET", "POST"))
     def login():
+        next_url = safe_next_url()
+        email = ""
         if request.method == "POST":
-            email = request.form["email"].strip().lower()
-            password = request.form["password"]
-            user = query_one("select * from users where email = ? and is_deleted = 0", (email,))
-            if user and check_password_hash(user["password_hash"], password):
-                selected_locale = session.get("locale")
-                session.clear()
-                session.permanent = request.form.get("remember") == "1"
-                if selected_locale in SUPPORTED_LOCALES:
-                    session["locale"] = selected_locale
-                session["user_id"] = user["id"]
-                flash(translate("flash.login_success"), "success")
-                return redirect(safe_next_url() or url_for("index"))
-            flash(translate("flash.login_invalid"), "error")
-        return render_template("login.html")
+            email = (request.form.get("email") or "").strip().lower()
+            password = request.form.get("password") or ""
+            errors: dict[str, str] = {}
+            if not email:
+                errors["email"] = "auth2.err_email_required"
+            elif not EMAIL_PATTERN.match(email):
+                errors["email"] = "auth2.err_email_invalid"
+            if not password:
+                errors["password"] = "auth2.err_password_required"
+            user = None
+            if not errors:
+                user = query_one("select * from users where email = ? and is_deleted = 0", (email,))
+                if not (user and check_password_hash(user["password_hash"], password)):
+                    # 不区分邮箱/密码哪个错；邮箱仍回填，密码不保留。
+                    errors["password"] = "auth2.err_credentials"
+            if errors:
+                return render_template(
+                    "login.html",
+                    next_url=next_url,
+                    email=email,
+                    errors=errors,
+                )
+            selected_locale = session.get("locale")
+            session.clear()
+            session.permanent = request.form.get("remember") == "1"
+            if selected_locale in SUPPORTED_LOCALES:
+                session["locale"] = selected_locale
+            session["user_id"] = user["id"]
+            flash(translate("flash.login_success"), "success")
+            return redirect(next_url or url_for("index"))
+        # 已登录用户不再展示登录表单，直接回到目标页（或首页）。
+        if getattr(g, "user", None):
+            return redirect(next_url or url_for("index"))
+        return render_template("login.html", next_url=next_url, email=email, errors={})
 
     @app.route("/logout")
     def logout():

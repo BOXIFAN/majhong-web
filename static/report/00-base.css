@@ -1,0 +1,733 @@
+/* ==========================================================================
+   BRML UI/UX 调研改造 · 基础层（全站生效）
+   --------------------------------------------------------------------------
+   本文件只做四类事情，页面级改造请写在 static/report/ 下的页面分片里：
+     1. 设计 token（字号/颜色/间距/圆角），新代码一律复用，不再新增近似值；
+     2. 可读性底线（功能文字 ≥12px、正文行高、对比度）；
+     3. 全站状态（焦点环、当前页导航、页脚、移动菜单抽屉）；
+     4. 内容表面（实底面板、品牌水印降级）。
+   证据见 report/review-report.md：P0-1、P0-6、P1-10、移动端专项 1。
+   ========================================================================== */
+
+:root {
+  /* --- 颜色：沿用现有浅绿/墨绿/米白的品牌关系，只补语义色 --- */
+  --r-page: #f4f6f2;
+  --r-surface: #fbfaf6;          /* 内容面板近实底（≥96% 不透明） */
+  --r-surface-sunken: #f7f5f0;   /* 归档/次级表面 */
+  --r-line: #e7e1d7;
+  --r-line-soft: #efeae0;
+  --r-ink: #172033;
+  --r-ink-2: #3f4a5a;
+  --r-body: #4b5563;
+  --r-muted: #5b6470;            /* 正文次级文字，白底 ≥5:1 */
+  --r-muted-soft: #667085;
+  --r-brand: #0f766e;
+  --r-brand-dark: #115e59;
+  --r-brand-soft: #e7f2ef;
+  --r-brand-line: #bfdcd6;
+  --r-focus: #0f766e;
+  --r-danger: #b42318;
+  --r-danger-soft: #fef3f2;
+  --r-warning: #9a5b00;          /* 「剩余 N 天」等时间提醒 */
+  --r-warning-soft: #fdf4e3;
+  --r-gold: #8a6a1f;
+  --r-gold-soft: #f7efdc;
+
+  /* --- 字号：收敛到 6 级（12/14/16/20/28/44）+ 首屏 display --- */
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-base: 16px;
+  --fs-lg: 20px;
+  --fs-xl: 28px;
+  --fs-2xl: 44px;
+  --fs-display: 72px;
+
+  /* --- 间距 --- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 56px;
+
+  /* --- 表面与阴影 --- */
+  --r-radius-sm: 10px;
+  --r-radius: 16px;
+  --r-radius-lg: 22px;
+  --r-shadow-soft: 0 12px 32px rgba(31, 45, 68, 0.07), 0 2px 6px rgba(31, 45, 68, 0.04);
+  --r-shadow: 0 18px 44px rgba(31, 45, 68, 0.1), 0 2px 8px rgba(31, 45, 68, 0.05);
+}
+
+/* --------------------------------------------------------------------------
+   1. 内容表面：固定品牌背景不再穿透磨砂面板（P0-1）
+   -------------------------------------------------------------------------- */
+
+/* 品牌水印从 body 的 background 里移除，改为单独的伪元素：
+   - 只出现在首屏与页面空白边缘，尺寸 320–480px，不透明度 8–10%；
+   - 深蓝 BRML 字标已从 SVG 中删除（static/report/brml-mark.svg）；
+   - 内容面板改为实底后，水印不会再随机穿过表格与长文。 */
+body {
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(231, 242, 239, 0.85), transparent 62%),
+    linear-gradient(180deg, #f3f6f1 0%, #f6f8f4 42%, #f4f6f2 100%);
+  background-attachment: fixed;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: url("/static/report/brml-mark.svg") center 36px / min(420px, 40vw) auto no-repeat;
+  opacity: 0.1;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 34%, transparent 58%);
+  mask-image: linear-gradient(to bottom, #000 0, #000 34%, transparent 58%);
+}
+
+/* 让 shell 盖在水印之上：水印只在页面空白边缘可见。 */
+.site-shell {
+  position: relative;
+  z-index: 1;
+}
+
+/* 内容面板改近实底：保留品牌渐变方向，但底层是不透明表面色。
+   注意：不要把 `.form` 这类布局容器加进来 —— 它没有圆角，会变成一个
+   直角边框把内部圆角卡片包住（录入比赛页曾出现「圆角 + 直角」）。 */
+.hero-stat-card,
+.panel,
+.auth-card,
+.metric,
+.action-card,
+.season-card,
+.entry-card,
+.announcement-featured,
+.announcement-story,
+.rules-document,
+.about-document,
+.leadership-card,
+.player-radar-card,
+.modal-card {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 255, 255, 0.7), transparent 44%),
+    var(--r-surface);
+  border-color: var(--r-line);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), var(--r-shadow-soft);
+}
+
+/* 表格与长文后面的内容区必须完全不透，避免滚动时任何背景穿过。 */
+.table-wrap,
+.board-table,
+.rules-param-list,
+.rules-prose-section,
+.about-section,
+.penalty-policy {
+  background-color: var(--r-surface);
+}
+
+/* --------------------------------------------------------------------------
+   2. 可读性底线（P0-6）
+   -------------------------------------------------------------------------- */
+
+/* 功能文字最小 12px；低于这个值只允许纯装饰（不承载信息的图形）。 */
+.eyebrow,
+.home-eyebrow,
+.site-footer,
+.latest-badge,
+.rank-avatar,
+.board-days,
+.meetup-status-badge,
+.archive-item small,
+.announcement-meta,
+.page-head-count,
+td small,
+th small,
+.muted,
+.empty {
+  font-size: max(12px, var(--fs-xs));
+}
+
+/* 正文行高统一，避免长页段落挤压。 */
+.about-section p,
+.rules-prose-section p,
+.announcement-content,
+.home-hero-lead,
+.community-copy p {
+  line-height: 1.72;
+}
+
+/* 眉标统一：小号、字距、次级色；每层只出现一个标签由模板层保证。 */
+.eyebrow,
+.home-eyebrow {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* LATEST 徽章对比度从 4.48:1 提到约 5.5:1（P1-9/评审说明）。 */
+.latest-badge {
+  background: #b5372f;
+  color: #fffaf7;
+}
+
+/* --------------------------------------------------------------------------
+   3. 全站状态：焦点、当前页、页脚
+   -------------------------------------------------------------------------- */
+
+/* 统一焦点环：2px 品牌绿 + 2px offset，替换浏览器默认蓝与内容区红。 */
+html body .site-shell :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--r-focus);
+  outline-offset: 2px;
+}
+
+html body .site-shell :is(a, button, summary):focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* 导航当前页：3px 左绿条 + 6% 绿底 + 700 字重（P1-10）。
+   base.html 通过 aria-current="page" 标记，模板无需再写 class。 */
+.nav a[aria-current="page"] {
+  position: relative;
+  background: rgba(15, 118, 110, 0.06);
+  box-shadow: inset 3px 0 0 var(--r-brand);
+  color: var(--r-brand-dark);
+  font-weight: 700;
+}
+
+/* 侧栏导航的 active 也要在移动菜单里成立（移动菜单是纵向单列）。 */
+.mobile-menu .nav a[aria-current="page"] {
+  box-shadow: inset 3px 0 0 var(--r-brand);
+}
+
+/* 页脚：从 11px / 2.2:1 的一行署名升级为结构化页脚（P1 提升 5）。 */
+.site-footer {
+  margin-top: var(--sp-8);
+  padding: var(--sp-6) var(--sp-5) var(--sp-5);
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  text-align: left;
+  border-top: 1px solid var(--r-line);
+}
+
+.site-footer-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--sp-5);
+  align-items: start;
+}
+
+.site-footer-brand {
+  display: grid;
+  gap: var(--sp-2);
+  justify-items: start;
+}
+
+.site-footer-brand .brand-mark {
+  width: 40px;
+  height: 40px;
+}
+
+.site-footer-brand strong {
+  font-size: var(--fs-sm);
+  color: var(--r-ink);
+}
+
+.site-footer-brand p {
+  margin: 0;
+  color: var(--r-muted);
+  line-height: 1.6;
+}
+
+.site-footer h2 {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--r-muted);
+}
+
+.site-footer-links {
+  display: grid;
+  gap: 6px;
+}
+
+.site-footer-links a {
+  color: var(--r-ink-2);
+  font-size: var(--fs-sm);
+  padding: 2px 0;
+}
+
+.site-footer-links a:hover,
+.site-footer-links a:focus-visible {
+  color: var(--r-brand-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-footer-credit {
+  margin: var(--sp-5) 0 0;
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--r-line-soft);
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-3);
+  justify-content: space-between;
+}
+
+/* --------------------------------------------------------------------------
+   4. 移动端菜单：全高抽屉 + 锁滚动 + 可聚焦性（移动端专项 1、P1-10/15）
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 960px) {
+  .mobile-menu {
+    position: fixed;
+    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    display: grid;
+    grid-template-rows: auto 1fr auto auto;
+    gap: var(--sp-4);
+    height: 100dvh;
+    max-height: 100dvh;
+    padding: max(18px, env(safe-area-inset-top)) var(--sp-4) max(18px, env(safe-area-inset-bottom));
+    border: 0;
+    border-radius: 0;
+    background: var(--r-surface);
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-10px);
+    transition: opacity 200ms ease, transform 200ms var(--ease-out), visibility 0s linear 200ms;
+  }
+
+  .mobile-menu.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    transition: opacity 200ms ease, transform 200ms var(--ease-out), visibility 0s;
+  }
+
+  /* 单列 48px 行高；当前页用左绿条标记。 */
+  .mobile-menu .nav {
+    grid-template-columns: 1fr;
+    gap: 2px;
+    align-content: start;
+  }
+
+  .mobile-menu .nav a {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0 var(--sp-3);
+    border-radius: var(--r-radius-sm);
+    font-size: var(--fs-base);
+  }
+
+  /* 菜单打开时锁住背景滚动（app.js 负责加 .menu-open）。 */
+  body.menu-open {
+    overflow: hidden;
+  }
+
+  /* 抽屉打开时隐藏顶部栏，避免与抽屉内容重叠。 */
+  body.menu-open .mobile-topbar {
+    visibility: hidden;
+  }
+}
+
+/* 移动端水印只允许出现在顶部，不压第一张卡。 */
+@media (max-width: 760px) {
+  body::before {
+    background-position: center 56px;
+    background-size: 210px auto;
+    opacity: 0.08;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 18%, transparent 34%);
+    mask-image: linear-gradient(to bottom, #000 0, #000 18%, transparent 34%);
+  }
+}
+
+@media (max-width: 760px) {
+  .site-footer-grid {
+    grid-template-columns: 1fr;
+    gap: var(--sp-4);
+  }
+
+  .site-footer {
+    padding: var(--sp-5) var(--sp-4) var(--sp-4);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   5. 通用组件（供页面分片复用）
+   -------------------------------------------------------------------------- */
+
+/* 状态胶囊 */
+.r-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.r-status.is-open {
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+}
+
+.r-status.is-closed {
+  background: var(--r-surface-sunken);
+  color: var(--r-muted);
+  border: 1px solid var(--r-line);
+}
+
+.r-status.is-archived {
+  background: #f2f1ed;
+  color: var(--r-muted);
+  border: 1px solid var(--r-line);
+}
+
+.r-status.is-warning {
+  background: var(--r-warning-soft);
+  color: var(--r-warning);
+}
+
+/* 表格图例（P0-3） */
+.r-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-4);
+  margin: 0 0 var(--sp-3);
+  padding: 0;
+  list-style: none;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+}
+
+.r-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.r-legend i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.r-legend .is-finals {
+  background: #dff0ea;
+  border-color: #b9d8ce;
+}
+
+.r-legend .is-bottom {
+  background: #fbe7e4;
+  border-color: #eec9c2;
+}
+
+.r-legend .is-line {
+  width: 18px;
+  height: 0;
+  border-radius: 0;
+  border-top: 1px dashed var(--r-line);
+}
+
+/* 次级文字与链接 */
+.r-meta {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+}
+
+.r-link {
+  color: var(--r-brand-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.r-link:hover {
+  color: var(--r-brand);
+}
+
+/* 表单内联错误（P1-10）：替代 Chrome 原生气泡 */
+.r-field-error {
+  display: block;
+  margin-top: 6px;
+  color: var(--r-danger);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.r-field-invalid,
+input.r-field-invalid,
+select.r-field-invalid,
+textarea.r-field-invalid {
+  border-color: var(--r-danger) !important;
+  box-shadow: 0 0 0 1px var(--r-danger) inset !important;
+}
+
+/* 空状态模板（P1 提升 5：鸟 + 一句人话 + 一个动作） */
+.r-empty {
+  display: grid;
+  gap: var(--sp-3);
+  justify-items: center;
+  padding: var(--sp-7) var(--sp-5);
+  text-align: center;
+  color: var(--r-muted);
+}
+
+.r-empty img {
+  width: 64px;
+  height: auto;
+  opacity: 0.5;
+}
+
+.r-empty strong {
+  color: var(--r-ink);
+  font-size: var(--fs-lg);
+}
+
+.r-empty p {
+  margin: 0;
+  max-width: 46ch;
+  line-height: 1.7;
+}
+
+/* 页面级排版基线：分区标题统一 28px，长页方向统一。 */
+.r-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-4);
+  margin: 0 0 var(--sp-4);
+}
+
+.r-section-head h2 {
+  margin: 0;
+  font-size: var(--fs-xl);
+}
+
+.r-section-head p {
+  margin: 0;
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+}
+
+/* --------------------------------------------------------------------------
+   6. 品牌状态页（404 / 实体不存在）：鸟 + 一句人话 + 几个动作
+   -------------------------------------------------------------------------- */
+
+.status-page {
+  display: grid;
+  place-items: center;
+  min-height: min(70vh, 720px);
+  padding: var(--sp-6) 0;
+}
+
+.status-card {
+  display: grid;
+  gap: var(--sp-3);
+  justify-items: center;
+  max-width: 560px;
+  padding: var(--sp-7) var(--sp-6);
+  text-align: center;
+}
+
+.status-visual {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 168px;
+  height: 168px;
+  margin-bottom: var(--sp-2);
+}
+
+.status-mark {
+  display: block;
+  width: 168px;
+  height: 168px;
+  opacity: 0.16;
+}
+
+.status-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.status-tile {
+  position: absolute;
+  right: -6px;
+  bottom: 10px;
+  width: 54px;
+  transform: rotate(9deg);
+  filter: drop-shadow(0 10px 18px rgba(31, 45, 68, 0.16));
+}
+
+.status-tile img {
+  display: block;
+  width: 100%;
+}
+
+.status-code {
+  position: absolute;
+  left: -4px;
+  top: 6px;
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--r-brand);
+  opacity: 0.72;
+}
+
+.status-card h1 {
+  margin: 0;
+  font-size: clamp(30px, 4.4vw, 44px);
+  letter-spacing: -0.03em;
+}
+
+.status-card > p {
+  margin: 0;
+  max-width: 40ch;
+  color: var(--r-body);
+  font-size: var(--fs-base);
+  line-height: 1.7;
+}
+
+.status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2) var(--sp-4);
+  margin-top: var(--sp-3);
+}
+
+/* 抽屉头：品牌 + 关闭按钮（全高抽屉需要自带关闭入口） */
+.mobile-menu-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--r-line);
+}
+
+.menu-close {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--r-line);
+  border-radius: 999px;
+  background: var(--r-surface-sunken);
+  color: var(--r-ink);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.menu-close:hover {
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+}
+
+/* --------------------------------------------------------------------------
+   7. 公告详情：正文阅读宽度（评审说明要求：公告正文每行 123 字符过长）
+   -------------------------------------------------------------------------- */
+
+.announcement-page-head {
+  display: grid;
+  gap: var(--sp-2);
+  justify-items: start;
+}
+
+.announcement-back {
+  margin-bottom: var(--sp-2);
+}
+
+.announcement-page .announcement-content {
+  max-width: 68ch;
+  font-size: var(--fs-base);
+  line-height: 1.8;
+}
+
+.announcement-page-actions {
+  margin-top: var(--sp-4);
+}
+
+/* 信息态提示：登录要求、实体缺失等非错误反馈不再用红色报错样式 */
+.flash.info {
+  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+  border-color: var(--r-brand-line);
+}
+
+.flash.success {
+  background: #edf7f1;
+  color: #166534;
+  border-color: #c6e3d1;
+}
+
+/* 访客卡里的「如何加入」链接：正文 12px 提示中唯一的可点入口 */
+.guest-join-link {
+  color: var(--r-brand-dark);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+.guest-join-link:hover,
+.guest-join-link:focus-visible {
+  color: var(--r-brand);
+}
+
+/* 侧栏账号卡：退出按钮在 280px 侧栏里占位过大，会把 8 个字符以内的名字挤成省略号 */
+.sidebar .account-card .logout-button {
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+/* --------------------------------------------------------------------------
+   8. 评审修复（P1-6）：移动端触控目标 ≥44px
+   语言切换是移动端唯一入口；桌面侧栏同步放宽，不影响视觉密度。
+   -------------------------------------------------------------------------- */
+.language-switch a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+@media (max-width: 960px) {
+  .language-switch {
+    gap: 4px;
+  }
+}

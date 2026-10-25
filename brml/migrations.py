@@ -2,9 +2,29 @@
 
 from __future__ import annotations
 
-from brml.config import ADMIN_PASSWORD_HASH, ADMIN_PASSWORD_MIGRATION, DEFAULT_MEETUP_VENUE
+import sqlite3
+from pathlib import Path
+
+from brml.config import ADMIN_PASSWORD_HASH, ADMIN_PASSWORD_MIGRATION, DATABASE, DEFAULT_MEETUP_VENUE
 from brml.db import get_db
 from brml.timeutils import now
+
+
+def _ensure_column(db, table: str, column: str, ddl: str) -> None:
+    """幂等新增列；并发部署时另一个进程可能已加过，捕获后继续。
+
+    Render 等平台在多实例滚动部署时，新旧实例可能几乎同时执行 before_request
+    迁移。SQLite 的 ``ALTER TABLE ADD COLUMN`` 是 O(1) 元数据操作，但并发下
+    后到者会收到 "duplicate column name"，这里吞掉该错误，保证请求不 500。
+    """
+    columns = {row["name"] for row in db.execute(f"pragma table_info({table})").fetchall()}
+    if column in columns:
+        return
+    try:
+        db.execute(f"alter table {table} add column {ddl}")
+    except sqlite3.Error as error:  # pragma: no cover - 依赖并发时序
+        if "duplicate column" not in str(error).lower():
+            raise
 
 
 def ensure_user_soft_delete_columns() -> None:
@@ -64,7 +84,7 @@ def ensure_meetups_tables() -> None:
           id integer primary key autoincrement,
           meetup_at text not null,
           signup_deadline text not null,
-          venue text not null default 'upc 8 Gillingham street, QLD4102',
+          venue text not null default 'UPC · 8 Gillingham Street, QLD 4102',
           archived_at text,
           archived_by integer,
           created_by integer not null,
@@ -79,12 +99,17 @@ def ensure_meetups_tables() -> None:
         db.execute("alter table meetups add column signup_deadline text")
     if "venue" not in columns:
         db.execute(
-            "alter table meetups add column venue text not null default 'upc 8 Gillingham street, QLD4102'"
+            "alter table meetups add column venue text not null default 'UPC · 8 Gillingham Street, QLD 4102'"
         )
     if "archived_at" not in columns:
         db.execute("alter table meetups add column archived_at text")
     if "archived_by" not in columns:
         db.execute("alter table meetups add column archived_by integer")
+    # 调研报告 P1-7：活动详情 H1 只有日期。补一个可选的活动名与人数上限，
+    # 旧记录保持 null，模板层回退到「周六例行对局」这类默认文案。
+    _ensure_column(db, "meetups", "title", "title text")
+    _ensure_column(db, "meetups", "capacity", "capacity integer")
+    _ensure_column(db, "meetups", "note", "note text")
     db.execute("update meetups set signup_deadline = meetup_at where signup_deadline is null")
     db.execute(
         "update meetups set venue = ? where venue is null or trim(venue) = ''",
@@ -201,6 +226,36 @@ def ensure_transactions_table() -> None:
     db.commit()
 
 
+def _backfill_board_image_sizes(db) -> None:
+    """为旧留言回填图片原始宽高。
+
+    模板据此按图片真实比例渲染（``aspect-ratio``），避免 4:3 容器把横构图
+    大牌照片裁掉两侧牌面；读不到文件时保持 null，模板回退 4:3。
+    """
+    try:
+        from PIL import Image
+    except Exception:  # pragma: no cover - Pillow 缺失时跳过
+        return
+    from flask import current_app
+
+    database_path = Path(current_app.config.get("DATABASE_PATH", DATABASE))
+    directory = database_path.parent / "board_uploads"
+    rows = db.execute(
+        "select id, image from board_posts"
+        " where image is not null and (image_width is null or image_height is null)"
+    ).fetchall()
+    for row in rows:
+        try:
+            with Image.open(directory / Path(row["image"]).name) as image:
+                width, height = image.size
+        except Exception:
+            continue
+        db.execute(
+            "update board_posts set image_width = ?, image_height = ? where id = ?",
+            (width, height, row["id"]),
+        )
+
+
 def ensure_board_tables() -> None:
     """为部署中的旧数据库补建留言板相关表（幂等）。"""
     db = get_db()
@@ -221,6 +276,10 @@ def ensure_board_tables() -> None:
         )
         """
     )
+    # 图片原始尺寸：模板用它设置 aspect-ratio，横/竖构图都完整显示，不再被 4:3 容器裁切。
+    _ensure_column(db, "board_posts", "image_width", "image_width integer")
+    _ensure_column(db, "board_posts", "image_height", "image_height integer")
+    _backfill_board_image_sizes(db)
     db.execute(
         """
         create table if not exists board_comments (

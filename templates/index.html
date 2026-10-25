@@ -1,78 +1,172 @@
 {% extends "base.html" %}
 {% block title %}{{ t('nav.home') }} · Brisbane Riichi{% endblock %}
+{% block report_css %}<link rel="stylesheet" href="{{ url_for('static', filename='report/10-home.css') }}">{% endblock %}
 {% block content %}
+{%- macro weekday_name(value) -%}
+  {%- set months = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4] -%}
+  {%- set y = value[0:4]|int -%}
+  {%- set m = value[5:7]|int -%}
+  {%- set d = value[8:10]|int -%}
+  {%- set yy = y - 1 if m < 3 else y -%}
+  {%- set w = (yy + (yy // 4) - (yy // 100) + (yy // 400) + months[m - 1] + d) % 7 -%}
+  {{- t('home.weekday.' ~ ((w + 6) % 7)) -}}
+{%- endmacro -%}
 <div class="home-page">
+  {# 品牌首屏：保留「大号紧缩英文标题 + 麻将牌 + 雀字圆环」构图，只收字号与层级（P1-9）。 #}
   <section class="home-hero" aria-labelledby="home-hero-title">
     <div class="home-hero-copy">
-      <p class="home-eyebrow">Brisbane Riichi Mahjong</p>
       <h1 id="home-hero-title">Brisbane Riichi Mahjong <span>League</span></h1>
-      <p class="home-season-name">{{ current_season.name if current_season else t('home.title_fallback') }}</p>
       <p class="home-hero-lead">{{ t('home.portal_subtitle') }}</p>
       <div class="hero-actions">
-        <a class="home-button home-button-primary" href="{{ url_for('leaderboard') }}">{{ t('home.view_leaderboard') }} <span aria-hidden="true">→</span></a>
-        <a class="home-button home-button-ghost" href="{{ url_for('matches') }}">{{ t('home.recent_matches') }} <span aria-hidden="true">→</span></a>
+        <a class="home-button home-button-primary" href="#next-meetup">{{ t('home.next_title_open') if next_meetup and next_meetup.status == 'open' else t('home.next_title') }} <span aria-hidden="true">→</span></a>
+        <a class="home-button home-button-ghost" href="{{ url_for('leaderboard') }}">{{ t('home.cta_leaderboard') }} <span aria-hidden="true">→</span></a>
       </div>
     </div>
     <div class="home-hero-visual" aria-hidden="true">
       <span class="hero-tile hero-tile-east"><img src="{{ url_for('static', filename='mj-east.svg') }}" alt=""></span>
       <span class="hero-tile hero-tile-five"><img src="{{ url_for('static', filename='mj-five-wan.svg') }}" alt=""></span>
       <span class="hero-stick"></span>
-      <div class="hero-table-mark"><span>PLAY</span><strong><svg class="hero-que" viewBox="38 371.52 851.75 865.48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M862 1181Q825 1189 797 1186Q769 1183 738 1178Q735 1178 732 1177.5Q729 1177 726 1176Q676 1181 622 1183.5Q568 1186 516 1190Q464 1194 420 1205Q418 1207 417 1218.5Q416 1230 411 1237Q390 1235 376 1221Q362 1207 351.5 1188Q341 1169 329 1152Q345 1103 347 1046Q349 989 348 940Q348 924 348 910Q348 896 348 883Q336 887 328.5 895.5Q321 904 313 911.5Q305 919 290 921Q252 964 198 988Q144 1012 82 1029Q62 1025 56.5 1014.5Q51 1004 38 996Q124 965 192 916.5Q260 868 323 816Q322 802 322 792Q322 782 321 770Q358 776 386.5 760Q415 744 414 710Q389 681 335 681Q345 673 361 672Q377 671 393 672Q408 672 421.5 671.5Q435 671 444 665Q449 586 444.5 521Q440 456 407 413Q397 409 391 401Q385 393 385 378Q404 369 431 372.5Q458 376 484 387.5Q510 399 528 417Q546 435 548 455Q548 459 546.5 462.5Q545 466 543 470Q539 476 538 480Q533 501 532.5 524Q532 547 533 571Q533 579 533 586.5Q533 594 533 602Q551 597 557.5 580.5Q564 564 563 550Q580 536 599 538.5Q618 541 634.5 554Q651 567 659.5 584Q668 601 662 616Q631 638 596 659Q561 680 538 710Q538 734 525 746.5Q512 759 494 766.5Q476 774 461 785Q494 792 524.5 786.5Q555 781 574 765Q592 751 598 730Q604 709 590 684Q600 679 618 679Q636 679 655 684Q674 689 686.5 699Q699 709 699 725Q699 736 692 741.5Q685 747 677 752Q669 757 664 768Q717 758 768 766.5Q819 775 847 813Q823 819 790.5 820Q758 821 723.5 821.5Q689 822 660 829Q654 842 654.5 849.5Q655 857 658 866Q659 871 660.5 876.5Q662 882 663 889Q692 877 720 882Q748 887 772.5 901Q797 915 814 932Q788 939 764.5 940Q741 941 716 941.5Q691 942 659 949Q655 957 654.5 966.5Q654 976 654 985Q655 990 655 994.5Q655 999 654 1002Q705 994 748 1006.5Q791 1019 816 1048Q796 1055 773.5 1056Q751 1057 727 1057Q709 1057 690 1057.5Q671 1058 653 1062Q650 1068 650.5 1076.5Q651 1085 651 1094Q652 1102 652 1110Q652 1118 650 1124Q665 1131 684 1125Q703 1119 709 1109Q738 1109 770.5 1118Q803 1127 828.5 1142.5Q854 1158 862 1181ZM292 602Q291 615 279 632.5Q267 650 251.5 668.5Q236 687 224 704.5Q212 722 210 736Q174 742 160.5 724.5Q147 707 138 684Q135 677 132 669.5Q129 662 125 656Q126 652 130 648Q133 646 135 643Q137 640 135 634Q164 629 181.5 610.5Q199 592 213.5 568.5Q228 545 246 527Q265 537 279 561Q293 585 292 602ZM862 674Q834 668 814.5 654Q795 640 777.5 625Q760 610 738 602Q734 577 721 561.5Q708 546 693.5 533Q679 520 667 503Q665 497 670 495Q687 491 713.5 498.5Q740 506 769 520Q798 534 823 551.5Q848 569 861 586Q874 601 883 619Q892 637 889 651.5Q886 666 862 674ZM590 1130Q591 1115 590.5 1097Q590 1079 583 1063Q570 1064 558.5 1066Q547 1068 536 1070Q508 1075 482 1078Q456 1081 425 1073Q422 1079 422 1087.5Q422 1096 422 1105Q423 1114 423 1123Q423 1132 420 1138ZM579 900Q578 877 576 865.5Q574 854 566 837Q523 841 492 843.5Q461 846 425 854Q425 857 424 862Q422 873 420.5 885Q419 897 420 911Q440 913 471.5 910.5Q503 908 537 904Q547 903 558 902Q569 901 579 900ZM585 1013Q583 1007 583 1000.5Q583 994 583 988Q583 979 582.5 970Q582 961 578 953Q569 954 559.5 955Q550 956 540 958Q513 961 484 964.5Q455 968 423 967L426 1020Q470 1021 506 1019.5Q542 1018 585 1013Z"/></svg></strong><span>CONNECT</span></div>
+      <div class="hero-table-mark"><strong><svg class="hero-que" viewBox="38 371.52 851.75 865.48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M862 1181Q825 1189 797 1186Q769 1183 738 1178Q735 1178 732 1177.5Q729 1177 726 1176Q676 1181 622 1183.5Q568 1186 516 1190Q464 1194 420 1205Q418 1207 417 1218.5Q416 1230 411 1237Q390 1235 376 1221Q362 1207 351.5 1188Q341 1169 329 1152Q345 1103 347 1046Q349 989 348 940Q348 924 348 910Q348 896 348 883Q336 887 328.5 895.5Q321 904 313 911.5Q305 919 290 921Q252 964 198 988Q144 1012 82 1029Q62 1025 56.5 1014.5Q51 1004 38 996Q124 965 192 916.5Q260 868 323 816Q322 802 322 792Q322 782 321 770Q358 776 386.5 760Q415 744 414 710Q389 681 335 681Q345 673 361 672Q377 671 393 672Q408 672 421.5 671.5Q435 671 444 665Q449 586 444.5 521Q440 456 407 413Q397 409 391 401Q385 393 385 378Q404 369 431 372.5Q458 376 484 387.5Q510 399 528 417Q546 435 548 455Q548 459 546.5 462.5Q545 466 543 470Q539 476 538 480Q533 501 532.5 524Q532 547 533 571Q533 579 533 586.5Q533 594 533 602Q551 597 557.5 580.5Q564 564 563 550Q580 536 599 538.5Q618 541 634.5 554Q651 567 659.5 584Q668 601 662 616Q631 638 596 659Q561 680 538 710Q538 734 525 746.5Q512 759 494 766.5Q476 774 461 785Q494 792 524.5 786.5Q555 781 574 765Q592 751 598 730Q604 709 590 684Q600 679 618 679Q636 679 655 684Q674 689 686.5 699Q699 709 699 725Q699 736 692 741.5Q685 747 677 752Q669 757 664 768Q717 758 768 766.5Q819 775 847 813Q823 819 790.5 820Q758 821 723.5 821.5Q689 822 660 829Q654 842 654.5 849.5Q655 857 658 866Q659 871 660.5 876.5Q662 882 663 889Q692 877 720 882Q748 887 772.5 901Q797 915 814 932Q788 939 764.5 940Q741 941 716 941.5Q691 942 659 949Q655 957 654.5 966.5Q654 976 654 985Q655 990 655 994.5Q655 999 654 1002Q705 994 748 1006.5Q791 1019 816 1048Q796 1055 773.5 1056Q751 1057 727 1057Q709 1057 690 1057.5Q671 1058 653 1062Q650 1068 650.5 1076.5Q651 1085 651 1094Q652 1102 652 1110Q652 1118 650 1124Q665 1131 684 1125Q703 1119 709 1109Q738 1109 770.5 1118Q803 1127 828.5 1142.5Q854 1158 862 1181ZM292 602Q291 615 279 632.5Q267 650 251.5 668.5Q236 687 224 704.5Q212 722 210 736Q174 742 160.5 724.5Q147 707 138 684Q135 677 132 669.5Q129 662 125 656Q126 652 130 648Q133 646 135 643Q137 640 135 634Q164 629 181.5 610.5Q199 592 213.5 568.5Q228 545 246 527Q265 537 279 561Q293 585 292 602ZM862 674Q834 668 814.5 654Q795 640 777.5 625Q760 610 738 602Q734 577 721 561.5Q708 546 693.5 533Q679 520 667 503Q665 497 670 495Q687 491 713.5 498.5Q740 506 769 520Q798 534 823 551.5Q848 569 861 586Q874 601 883 619Q892 637 889 651.5Q886 666 862 674ZM590 1130Q591 1115 590.5 1097Q590 1079 583 1063Q570 1064 558.5 1066Q547 1068 536 1070Q508 1075 482 1078Q456 1081 425 1073Q422 1079 422 1087.5Q422 1096 422 1105Q423 1114 423 1123Q423 1132 420 1138ZM579 900Q578 877 576 865.5Q574 854 566 837Q523 841 492 843.5Q461 846 425 854Q425 857 424 862Q422 873 420.5 885Q419 897 420 911Q440 913 471.5 910.5Q503 908 537 904Q547 903 558 902Q569 901 579 900ZM585 1013Q583 1007 583 1000.5Q583 994 583 988Q583 979 582.5 970Q582 961 578 953Q569 954 559.5 955Q550 956 540 958Q513 961 484 964.5Q455 968 423 967L426 1020Q470 1021 506 1019.5Q542 1018 585 1013Z"/></svg></strong></div>
     </div>
   </section>
 
+  {# 赛季条：只留 3 项（会员 / 对局 / 状态），版本号在页脚；数值 28 / 标签 12，总高 ≤96（P1-9）。 #}
   <section class="season-overview" aria-labelledby="season-overview-title">
     <div class="season-heading">
-      <p class="home-eyebrow">{{ t('home.current_season') }}</p>
       <h2 id="season-overview-title">{{ current_season.name if current_season else t('home.not_enabled') }}</h2>
-      <span class="season-status {{ 'is-active' if current_season and current_season.status == 'active' else '' }}"><i aria-hidden="true"></i>{{ current_season.status|capitalize if current_season else t('home.not_enabled') }}</span>
     </div>
     <dl class="season-stats">
-      <div><dt>{{ t('home.members') }}</dt><dd data-countup>{{ current_member_count }}</dd></div>
-      <div><dt>{{ t('home.matches') }}</dt><dd data-countup>{{ season_match_count }}</dd></div>
-      <div><dt>{{ t('home.site_version') }}</dt><dd>{{ site_version }}</dd></div>
+      <div><dt>{{ t('home.stat_members') }}</dt><dd data-countup>{{ current_member_count }}</dd></div>
+      <div><dt>{{ t('home.stat_matches') }}</dt><dd data-countup>{{ season_match_count }}</dd></div>
+      <div class="season-stat-status">
+        <dt>{{ t('home.stat_status') }}</dt>
+        <dd>
+          {% if current_season and current_season.status == 'active' %}
+            <span class="season-status is-active"><i aria-hidden="true"></i>{{ t('home.status_active') }}</span>
+          {% else %}
+            <span class="season-status">{{ t('home.status_inactive') }}</span>
+          {% endif %}
+        </dd>
+      </div>
     </dl>
   </section>
 
+  {# 下一场活动 / 第一次来：访客在首屏就能回答「下一场什么时候、在哪、怎么参加」（A-1，最高杠杆 #1）。 #}
+  <section class="home-next" id="next-meetup" aria-labelledby="next-meetup-title">
+    <div class="next-panel">
+      <header class="next-head">
+        <h2 id="next-meetup-title">{{ t('home.next_title_open') if next_meetup and next_meetup.status == 'open' else t('home.next_title') }}</h2>
+        {% if next_meetup %}
+          {% set status_class = 'is-open' if next_meetup.status == 'open' else ('is-archived' if next_meetup.status == 'archived' else 'is-closed') %}
+          <span class="r-status {{ status_class }}">{{ t('home.next_status_' ~ next_meetup.status) }}</span>
+        {% endif %}
+      </header>
+      {% if next_meetup %}
+        <div class="next-body">
+          <div class="next-date">
+            <time datetime="{{ next_meetup.meetup_at.replace(' ', 'T') }}">
+              <span class="next-date-day">{{ next_meetup.meetup_at[5:10] }}</span>
+              <span class="next-date-weekday">{{ weekday_name(next_meetup.meetup_at) }}</span>
+            </time>
+          </div>
+          <div class="next-info">
+            <p class="next-name">{{ next_meetup.display_title }}</p>
+            <p class="next-when"><time datetime="{{ next_meetup.meetup_at.replace(' ', 'T') }}">{{ next_meetup.meetup_at[11:16] }}</time><span class="next-dot" aria-hidden="true">·</span>{{ next_meetup.venue }}</p>
+            <p class="next-meta">
+              {% if next_meetup.status == 'open' and next_meetup.signup_deadline %}<span>{{ t('home.next_deadline', date=next_meetup.signup_deadline[5:16]) }}</span>{% endif %}
+              {% if next_meetup.capacity %}<span>{{ t('home.next_capacity', count=next_meetup.attendee_count, capacity=next_meetup.capacity) }}</span>{% elif next_meetup.attendee_count %}<span>{{ t('home.next_signups', count=next_meetup.attendee_count) }}</span>{% endif %}
+            </p>
+            <div class="next-actions">
+              <a class="home-button home-button-primary" href="{{ url_for('meetup_detail', meetup_id=next_meetup.id) }}">{{ t('home.next_cta_open') if next_meetup.status == 'open' else t('home.next_cta_detail') }} <span aria-hidden="true">→</span></a>
+              <a class="text-link" href="{{ url_for('meetups') }}">{{ t('home.next_all') }} <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="r-empty next-empty">
+          <img src="{{ url_for('static', filename='report/brml-mark.svg') }}" alt="">
+          <strong>{{ t('home.next_empty_title') }}</strong>
+          <p>{{ t('home.next_empty_body') }}</p>
+          <dl class="next-facts">
+            <div><dt>{{ t('home.next_cadence_label') }}</dt><dd>{{ t('home.next_cadence_value') }}</dd></div>
+            <div><dt>{{ t('home.next_venue_label') }}</dt><dd>{{ default_meetup_venue }}</dd></div>
+            <div><dt>{{ t('home.next_contact_label') }}</dt><dd><a class="r-link" href="mailto:contact@bneriichi.com">contact@bneriichi.com</a></dd></div>
+          </dl>
+          <div class="next-empty-actions">
+            <a class="home-button home-button-ghost" href="mailto:contact@bneriichi.com">{{ t('home.next_contact_cta') }}</a>
+            <a class="text-link" href="https://x.com/bneriichi" target="_blank" rel="noopener noreferrer">{{ t('home.next_follow_x') }}</a>
+            <a class="text-link" href="https://xhslink.cn/o/1YX4phhFyRu" target="_blank" rel="noopener noreferrer">{{ t('home.next_follow_xhs') }}</a>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+    <aside class="first-visit" aria-labelledby="first-visit-title">
+      <h3 id="first-visit-title">{{ t('home.first_visit_title') }}</h3>
+      <p class="first-visit-intro">{{ t('home.first_visit_intro') }}</p>
+      <ul class="first-visit-list">
+        <li>{{ t('home.first_visit_1') }}</li>
+        <li>{{ t('home.first_visit_2') }}</li>
+        <li>{{ t('home.first_visit_3') }}</li>
+      </ul>
+      {% if next_meetup %}
+        <div class="first-visit-contact">
+          <span class="first-visit-label">{{ t('home.first_visit_contact_label') }}</span>
+          <div class="first-visit-links">
+            <a class="text-link" href="mailto:contact@bneriichi.com">contact@bneriichi.com</a>
+            <a class="text-link" href="https://x.com/bneriichi" target="_blank" rel="noopener noreferrer">X · @bneriichi</a>
+            <a class="text-link" href="https://xhslink.cn/o/1YX4phhFyRu" target="_blank" rel="noopener noreferrer">{{ t('contact.xiaohongshu') }}</a>
+          </div>
+        </div>
+      {% endif %}
+      <a class="text-link first-visit-about" href="{{ url_for('about') }}">{{ t('home.about_brml') }} <span aria-hidden="true">→</span></a>
+    </aside>
+  </section>
+
+  {# 探索区：每层只留一个标签，三张卡统一底色；排行榜卡实际更大（P1-9）。 #}
   <section class="home-section explore-section" aria-labelledby="explore-title">
     <header class="home-section-head">
-      <div><p class="home-eyebrow">{{ t('home.explore_eyebrow') }}</p><h2 id="explore-title">{{ t('home.explore_title') }}</h2></div>
+      <h2 id="explore-title">{{ t('home.explore_title') }}</h2>
       <p>{{ t('home.explore_intro') }}</p>
     </header>
     <div class="explore-grid">
       <a class="explore-card explore-leaderboard" href="{{ url_for('leaderboard') }}">
-        <span class="explore-number">01</span><span class="explore-icon explore-rank" aria-hidden="true"><i data-rank="2"></i><i data-rank="1"></i><i data-rank="3"></i></span>
+        <span class="explore-icon explore-rank" aria-hidden="true"><i data-rank="2"></i><i data-rank="1"></i><i data-rank="3"></i></span>
         <span class="explore-copy"><strong>{{ t('nav.leaderboard') }}</strong><small>{{ t('home.leaderboard_desc') }}</small></span><span class="explore-arrow" aria-hidden="true">→</span>
       </a>
       <a class="explore-card explore-matches" href="{{ url_for('matches') }}">
-        <span class="explore-number">02</span><span class="explore-icon explore-red-dragon" aria-hidden="true"><img src="{{ url_for('static', filename='mj-red-dragon.svg') }}" alt=""></span>
+        <span class="explore-icon explore-red-dragon" aria-hidden="true"><img src="{{ url_for('static', filename='mj-red-dragon.svg') }}" alt=""></span>
         <span class="explore-copy"><strong>{{ t('home.recent_matches') }}</strong><small>{{ t('home.matches_desc') }}</small></span><span class="explore-arrow" aria-hidden="true">→</span>
       </a>
       <a class="explore-card explore-rules" href="{{ url_for('seasons') }}">
-        <span class="explore-number">03</span><span class="explore-icon" aria-hidden="true"><img src="{{ url_for('static', filename='mj-south.svg') }}" alt=""></span>
+        <span class="explore-icon" aria-hidden="true"><img src="{{ url_for('static', filename='mj-south.svg') }}" alt=""></span>
         <span class="explore-copy"><strong>{{ t('nav.rules') }}</strong><small>{{ t('home.rules_desc') }}</small></span><span class="explore-arrow" aria-hidden="true">→</span>
       </a>
     </div>
   </section>
 
+  {# 公告区：只留「最新公告」一个标签；LATEST 徽章保留对比度修复（P0-6 / P1-9）。 #}
   <section class="home-section announcement-community" aria-labelledby="announcement-title">
     <div class="announcement-intro">
-      <span class="news-kicker">BRML NEWS</span><p class="home-eyebrow">{{ t('home.from_community') }}</p>
-      <h2 id="announcement-title">{{ t('announcement.latest') }}</h2><p>{{ t('home.news_intro') }}</p>
-      {% if current_user and current_user.role == 'super_admin' %}<a class="text-link" href="{{ url_for('announcements') }}">{{ t('announcement.manage') }} <span>→</span></a>{% endif %}
+      <h2 id="announcement-title">{{ t('announcement.latest') }}</h2>
+      <p>{{ t('home.news_intro') }}</p>
+      {% if current_user and current_user.role == 'super_admin' %}<a class="text-link" href="{{ url_for('announcements') }}">{{ t('announcement.manage') }} <span aria-hidden="true">→</span></a>{% endif %}
     </div>
     <article class="announcement-story">
       {% if latest_announcement %}
-        <span class="latest-badge">LATEST</span><h3>{{ latest_announcement.title }}</h3>
-        <p class="announcement-meta">{{ t('announcement.published_by', date=latest_announcement.created_at, name=(latest_announcement.author_name or t('home.system'))) }}</p>
-        <div class="announcement-content" id="latest-announcement-content">{{ latest_announcement.content }}</div>
+        {# 中文标题与英文标题分两层，不再用「/」拼在一行导致窄屏断在品牌词中间。 #}
+        {% set title_parts = latest_announcement.title.split(' / ') %}
+        <span class="latest-badge">LATEST</span>
+        <h3>{{ title_parts[0] }}</h3>
+        {% if title_parts|length > 1 %}<p class="announcement-title-en">{{ title_parts[1:]|join(' / ') }}</p>{% endif %}
+        <p class="announcement-meta">{{ t('announcement.published_by', date=latest_announcement.created_at[:16], name=(latest_announcement.author_name or t('home.system'))) }}</p>
+        {% if latest_announcement.is_english and locale == 'zh' %}<p class="announcement-lang">{{ t('announcement.english_only') }}</p>{% endif %}
+        <div class="announcement-content is-clamped" id="latest-announcement-content">{{ latest_announcement.content }}</div>
         <div class="announcement-actions">
-          <button class="announcement-expand" type="button" data-expand-target="latest-announcement-content" data-label-expand="{{ t('announcement.read_more') }}" data-label-collapse="{{ t('announcement.read_less') }}">{{ t('announcement.read_more') }}</button>
           <a class="text-link" href="{{ url_for('announcement_view', announcement_id=latest_announcement.id) }}">{{ t('announcement.view_full') }} <span aria-hidden="true">→</span></a>
         </div>
         {% if past_announcements %}
           <details class="past-announcements"><summary>{{ t('home.more_announcements') }} <span>{{ past_announcements|length }}</span></summary>
-            <div class="past-announcement-list">{% for announcement in past_announcements %}<details><summary><strong>{{ announcement.title }}</strong><small>{{ announcement.created_at }}</small></summary><div class="announcement-content compact">{{ announcement.content }}</div><a class="text-link past-announcement-open" href="{{ url_for('announcement_view', announcement_id=announcement.id) }}">{{ t('announcement.view_full') }} <span aria-hidden="true">→</span></a></details>{% endfor %}</div>
+            <div class="past-announcement-list">{% for announcement in past_announcements %}<details><summary><strong>{{ announcement.title }}</strong><small>{{ announcement.created_at[:16] }}</small></summary><div class="announcement-content compact">{{ announcement.content }}</div><a class="text-link past-announcement-open" href="{{ url_for('announcement_view', announcement_id=announcement.id) }}">{{ t('announcement.view_full') }} <span aria-hidden="true">→</span></a></details>{% endfor %}</div>
           </details>
         {% endif %}
       {% else %}
@@ -81,12 +175,13 @@
     </article>
   </section>
 
+  {# 社群区：删掉与标题同义的眉标，只留标题（P0-6）。 #}
   <section class="home-section community-section" aria-labelledby="community-title">
     <div class="community-image" role="img" aria-label="{{ t('home.community_image_alt') }}">
       <img src="{{ url_for('static', filename='brml-background.svg') }}" alt="">
     </div>
     <div class="community-copy">
-      <p class="home-eyebrow">{{ t('home.community_eyebrow') }}</p><h2 id="community-title">{{ t('home.community_title') }}</h2>
+      <h2 id="community-title">{{ t('home.community_title') }}</h2>
       <p>{{ t('home.community_body') }}</p><a class="text-link" href="{{ url_for('about') }}">{{ t('home.about_brml') }} <span>→</span></a>
       <div class="community-contacts">{% set contact_compact = true %}{% include "_contact_links.html" %}</div>
     </div>

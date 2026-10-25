@@ -42,3 +42,20 @@ def parse_local_datetime(value: str) -> str | None:
 def brisbane_local_now() -> datetime:
     """返回无时区标记的布里斯班时间，以匹配数据库中的本地时间文本。"""
     return datetime.now(ZoneInfo("Australia/Brisbane")).replace(tzinfo=None)
+
+
+# 列表页按日期分组时使用的星期标签；集中在这里，避免各路由各自维护一份。
+WEEKDAY_LABELS = {
+    "zh": ("周一", "周二", "周三", "周四", "周五", "周六", "周日"),
+    "en": ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"),
+}
+
+
+def weekday_label(date_text: str, locale: str = "zh") -> str:
+    """把 ``YYYY-MM-DD`` 文本转成当前语言的星期；非法日期返回空串。"""
+    try:
+        weekday = datetime.strptime(date_text[:10], "%Y-%m-%d").weekday()
+    except (ValueError, TypeError):
+        return ""
+    labels = WEEKDAY_LABELS.get(locale, WEEKDAY_LABELS["zh"])
+    return labels[weekday]

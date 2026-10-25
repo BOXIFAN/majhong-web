@@ -1,51 +1,134 @@
 {% extends "base.html" %}
-{% block title %}{{ t('match.unknown_title', id=match.id) }} · Brisbane Riichi{% endblock %}
+{% block title %}{{ date_label[5:] }} {{ weekday_label }} · {{ table_label }} · Brisbane Riichi{% endblock %}
+{% block report_css %}<link rel="stylesheet" href="{{ url_for('static', filename='report/40-matches.css') }}">{% endblock %}
 {% block content %}
-<section class="page-head">
-  <p class="eyebrow">{{ match.season_name }}</p>
-  <h1>{{ match_type_label(match.table_name) if match.table_name else t('match.unknown_title', id=match.id) }}</h1>
-  <p>{{ t('match.meta', time=match.played_at, referee=(match.referee_name or t('home.system'))) }}</p>
-</section>
-<section class="panel" data-vt="match-{{ match.id }}">
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>{{ t('table.placement') }}</th><th>{{ t('table.player') }}</th><th>{{ t('table.final_score') }}</th><th>{{ t('table.rank_points') }}</th><th>{{ t('table.penalty_points') }}</th></tr></thead>
-      <tbody>
-        {% for entry in entries %}
-          <tr>
-            <td>{{ entry.placement }}</td>
-            <td><a href="{{ url_for('player_profile', user_id=entry.user_id) }}">{{ entry.display_name }}</a></td>
-            <td>{{ entry.final_score }}</td>
-            <td class="strong">{{ entry.rank_points }}</td>
-            <td>{{ entry.penalty_points }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</section>
-<section class="panel penalty-section">
-  <h2>{{ t('match.penalty_records') }}</h2>
-  {% if penalties %}
-    <div class="match-list">
-      {% for item in penalties %}
-        <div class="match-card">
-          <span>{{ item.display_name }} · {{ item.penalty_type }}</span>
-          <strong>-{{ item.points }}</strong>
-          <small>{{ item.reason }}</small>
-        </div>
-      {% endfor %}
+<article class="match-detail-page">
+  <nav class="match-detail-nav" aria-label="{{ t('match.detail.nav_label') }}">
+    <a class="match-back" data-back href="{{ url_for('matches', season_id=match.season_id) }}"><span aria-hidden="true">←</span> {{ t('match.detail.back') }}</a>
+    <div class="match-step-links">
+      {% if prev_match %}
+        <a class="match-step" href="{{ url_for('match_detail', match_id=prev_match.id) }}">
+          <span class="match-step-dir" aria-hidden="true">←</span>
+          <span class="match-step-text">
+            <span class="match-step-label">{{ t('match.detail.prev') }}</span>
+            <time class="match-step-time" datetime="{{ prev_match.played_at|replace(' ', 'T') }}">{{ prev_match.played_at[5:10] }} {{ prev_match.played_at[11:16] }}</time>
+          </span>
+        </a>
+      {% else %}
+        <span class="match-step is-disabled" aria-disabled="true">
+          <span class="match-step-dir" aria-hidden="true">←</span>
+          <span class="match-step-text"><span class="match-step-label">{{ t('match.detail.prev') }}</span></span>
+        </span>
+      {% endif %}
+      {% if next_match %}
+        <a class="match-step" href="{{ url_for('match_detail', match_id=next_match.id) }}">
+          <span class="match-step-text">
+            <span class="match-step-label">{{ t('match.detail.next') }}</span>
+            <time class="match-step-time" datetime="{{ next_match.played_at|replace(' ', 'T') }}">{{ next_match.played_at[5:10] }} {{ next_match.played_at[11:16] }}</time>
+          </span>
+          <span class="match-step-dir" aria-hidden="true">→</span>
+        </a>
+      {% else %}
+        <span class="match-step is-disabled" aria-disabled="true">
+          <span class="match-step-text"><span class="match-step-label">{{ t('match.detail.next') }}</span></span>
+          <span class="match-step-dir" aria-hidden="true">→</span>
+        </span>
+      {% endif %}
     </div>
-  {% else %}
-    <div class="empty">{{ t('match.no_penalty_records') }}</div>
-  {% endif %}
+  </nav>
+
+  <header class="match-detail-head">
+    <h1>{{ date_label[5:] }} {{ weekday_label }} · {{ table_label }}</h1>
+    <p class="match-detail-sub"><time datetime="{{ match.played_at|replace(' ', 'T') }}">{{ match.played_at[:16] }}</time></p>
+  </header>
+
+  <dl class="match-facts">
+    <div class="match-fact">
+      <dt>{{ t('match.detail.table') }}</dt>
+      <dd>{{ table_label }}</dd>
+    </div>
+    <div class="match-fact">
+      <dt>{{ t('match.detail.players') }}</dt>
+      <dd>{{ t('match.detail.player_count', count=entry_count) }}</dd>
+    </div>
+    <div class="match-fact">
+      <dt>{{ t('match.detail.season') }}</dt>
+      <dd>{{ match.season_name }}</dd>
+    </div>
+    <div class="match-fact">
+      <dt>{{ t('match.detail.referee') }}</dt>
+      <dd>{{ match.referee_name or t('home.system') }}</dd>
+    </div>
+  </dl>
+
+  <section class="match-score-card" aria-labelledby="match-score-title">
+    <div class="match-card-head">
+      <h2 id="match-score-title">{{ t('match.detail.results') }}</h2>
+      <span class="match-unit-chip">{{ t('match.detail.unit') }}</span>
+    </div>
+    <div class="table-wrap">
+      <table class="match-score-table">
+        <thead>
+          <tr>
+            <th scope="col">{{ t('table.placement') }}</th>
+            <th scope="col">{{ t('table.player') }}</th>
+            <th scope="col">{{ t('table.final_score') }}</th>
+            <th scope="col">{{ t('table.rank_points') }}</th>
+            <th scope="col">{{ t('table.penalty_points') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in entries %}
+            <tr{% if entry.placement == 1 %} class="is-winner"{% endif %}>
+              <td class="match-placement">{% if entry.placement == 1 %}<span class="match-placement-badge">{{ '%g'|format(entry.placement) }}</span>{% else %}{{ '%g'|format(entry.placement) }}{% endif %}</td>
+              <td><a class="match-player" href="{{ url_for('player_profile', user_id=entry.user_id) }}">{{ entry.display_name }}</a></td>
+              <td class="match-final-score">{{ '{:,}'.format(entry.final_score) }}</td>
+              <td class="match-points{% if entry.rank_points > 0 %} is-positive{% elif entry.rank_points < 0 %} is-negative{% endif %}">{{ '%+.1f'|format(entry.rank_points) }}</td>
+              <td class="match-penalty-cell">{% if entry.penalty_points %}<span class="match-penalty-amount">−{{ entry.penalty_points }}</span>{% else %}<span class="match-none">0</span>{% endif %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="match-score-note">{{ t('match.detail.points_note') }}</p>
+  </section>
+
+  <section class="match-penalty-card" aria-labelledby="match-penalty-title">
+    <div class="match-card-head">
+      <h2 id="match-penalty-title">{{ t('match.detail.penalties') }}</h2>
+      {% if penalties %}<span class="match-unit-chip is-warning">{{ t('match.detail.penalty_count', count=penalties|length) }}</span>{% endif %}
+    </div>
+    {% if penalties %}
+      <ul class="match-penalty-list">
+        {% for item in penalties %}
+          <li class="match-penalty-item">
+            <span class="match-penalty-who">
+              <strong>{{ item.display_name }}</strong>
+              <span>{{ item.penalty_type }}</span>
+            </span>
+            <span class="match-penalty-reason">{{ item.reason }}</span>
+            <span class="match-penalty-amount">−{{ item.points }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="match-penalty-empty">
+        <span class="match-penalty-empty-icon" aria-hidden="true">✓</span>
+        <div>
+          <strong>{{ t('match.detail.no_penalty_title') }}</strong>
+          <p>{{ t('match.detail.no_penalty_body') }}</p>
+        </div>
+      </div>
+    {% endif %}
+  </section>
+
   {% if current_user and current_user.role == 'super_admin' %}
-    <div class="penalty-actions">
-      <a class="button secondary" href="{{ url_for('match_edit', match_id=match.id) }}">{{ t('match.edit') }}</a>
+    <section class="match-detail-admin" aria-label="{{ t('match.detail.admin') }}">
+      <a class="secondary-button" href="{{ url_for('match_edit', match_id=match.id) }}">{{ t('match.edit') }}</a>
       <form method="post" action="{{ url_for('match_delete', match_id=match.id) }}" onsubmit="return confirm({{ t('match.delete_confirm')|tojson }});">
         <button class="danger-button" type="submit">{{ t('match.delete') }}</button>
       </form>
-    </div>
+    </section>
   {% endif %}
-</section>
+</article>
 {% endblock %}
