@@ -995,3 +995,38 @@
 .player-page .trend-point[data-tip]:focus-visible::after {
   max-width: min(220px, 62vw);
 }
+
+/* --------------------------------------------------------------------------
+   评审修复：删掉指标卡内的说明小字后，卡片变矮、5 个指标并排显得拥挤。
+   这里把指标区间距放大到 16px，并让内容在卡片内部分散对齐，
+   避免 label/value 挤在卡片顶部、卡片之间贴成一片。
+   -------------------------------------------------------------------------- */
+
+.player-metrics {
+  gap: var(--sp-4);
+}
+
+.player-more-grid {
+  gap: var(--sp-4);
+}
+
+.player-metric {
+  align-content: space-between;
+  min-height: 104px;
+  padding: var(--sp-4) 18px;
+}
+
+.player-metric.is-primary {
+  min-height: 104px;
+}
+
+@media (max-width: 760px) {
+  .player-metrics {
+    gap: 10px;
+  }
+
+  .player-metric {
+    min-height: 0;
+    padding: 14px var(--sp-4);
+  }
+}
