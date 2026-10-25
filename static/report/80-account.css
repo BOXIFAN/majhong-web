@@ -403,7 +403,7 @@
    -------------------------------------------------------------------------- */
 
 .player-back-nav {
-  margin-bottom: var(--sp-3);
+  margin-bottom: var(--sp-4);
 }
 
 .player-back {
@@ -429,7 +429,7 @@
 }
 
 .player-page .player-page-head {
-  margin-bottom: var(--sp-4);
+  margin-bottom: var(--sp-5);
 }
 
 .player-page .player-head-name h1 {
@@ -437,24 +437,27 @@
 }
 
 /* 指标卡：当前积分强调卡 + 场（半庄）/平均顺位 + 两张双率卡。
-   双率卡的两个百分比用 1px 竖线分隔、值 24px、标签在值上方、禁止换行。 */
+   双率卡的两个百分比用 1px 竖线分隔、值 24px、标签在值上方、禁止换行。
+   五张并排只在宽屏（≥1440）成立，更窄的宽度改由下方媒体查询换成 3+2 两行。 */
 .player-metrics {
   display: grid;
   grid-template-columns:
     minmax(0, 1.2fr)
-    minmax(0, 0.85fr)
-    minmax(0, 1.05fr)
-    minmax(0, 2.5fr);
-  gap: var(--sp-3);
+    minmax(0, 0.88fr)
+    minmax(0, 1.1fr)
+    minmax(0, 2.82fr);
+  gap: var(--sp-5);
+  margin-bottom: var(--sp-5);
   align-items: stretch;
 }
 
 .player-metric {
   display: grid;
-  align-content: start;
-  gap: 6px;
+  align-content: space-between;
+  gap: var(--sp-2);
   min-width: 0;
-  padding: var(--sp-4);
+  min-height: 112px;
+  padding: 18px 20px;
   border: 1px solid var(--r-line);
   border-radius: var(--r-radius);
   background:
@@ -512,6 +515,7 @@
 .player-metric-pair {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--sp-3);
   min-width: 0;
 }
@@ -557,7 +561,7 @@
    display:contents 无法把子卡铺进父网格，所以让它自己承载 2×1 内网格）。
    summary 只在移动端出现，桌面端由页面内联脚本保持 open。 */
 .player-more {
-  grid-column: 4 / 6;
+  grid-column: 4 / -1;
   min-width: 0;
 }
 
@@ -568,7 +572,7 @@
 .player-more-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--sp-3);
+  gap: var(--sp-5);
   height: 100%;
 }
 
@@ -794,8 +798,8 @@
   }
 }
 
-@media (max-width: 1199px) and (min-width: 761px) {
-  /* 中等宽度：指标 3 列，双率卡整行换到第二行。 */
+@media (max-width: 1439px) and (min-width: 761px) {
+  /* 中窄屏：5 张卡并排会让双率卡挤到互相压住，改成 3 列 + 双率卡整行。 */
   .player-metrics {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -826,13 +830,16 @@
     margin: 4px 0 var(--sp-3);
   }
 
-  /* 移动端默认只露 3 个核心数字（当前积分/场次/平均顺位），其余折叠。 */
+  /* 移动端默认只露 3 个核心数字（当前积分/场次/平均顺位），其余折叠。
+     三张核心卡等高，避免主卡单独撑高、数值吊在底部。 */
   .player-metrics {
     grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
+    gap: var(--sp-3);
   }
 
   .player-metric {
+    /* 88px 让主卡的 28px 数字也能落在同一高度，三张核心卡严格等高。 */
+    min-height: 88px;
     padding: 14px var(--sp-4);
   }
 
@@ -885,7 +892,7 @@
   .player-more-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
+    gap: var(--sp-3);
     padding: 10px;
   }
 
@@ -994,39 +1001,4 @@
 .player-page .trend-point[data-tip]:hover::after,
 .player-page .trend-point[data-tip]:focus-visible::after {
   max-width: min(220px, 62vw);
-}
-
-/* --------------------------------------------------------------------------
-   评审修复：删掉指标卡内的说明小字后，卡片变矮、5 个指标并排显得拥挤。
-   这里把指标区间距放大到 16px，并让内容在卡片内部分散对齐，
-   避免 label/value 挤在卡片顶部、卡片之间贴成一片。
-   -------------------------------------------------------------------------- */
-
-.player-metrics {
-  gap: var(--sp-4);
-}
-
-.player-more-grid {
-  gap: var(--sp-4);
-}
-
-.player-metric {
-  align-content: space-between;
-  min-height: 104px;
-  padding: var(--sp-4) 18px;
-}
-
-.player-metric.is-primary {
-  min-height: 104px;
-}
-
-@media (max-width: 760px) {
-  .player-metrics {
-    gap: 10px;
-  }
-
-  .player-metric {
-    min-height: 0;
-    padding: 14px var(--sp-4);
-  }
 }
