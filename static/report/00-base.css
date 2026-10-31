@@ -809,3 +809,35 @@ textarea.r-field-invalid {
     max-height: 180px;
   }
 }
+
+/* --------------------------------------------------------------------------
+   10. iOS Safari 真机适配（2026-10-31，iPhone 16 Pro / 402×874 实测）
+   - 输入控件字号 < 16px 时，iOS 聚焦会自动放大页面。表单 label 字号是 12–14px，
+     input 通过 font: inherit 继承了它，所以这里把输入控件固定到 16px。
+   - iOS 对 datetime-local 的原生控件会多出内边距/固定字号，iPhone 16 Pro 实测约 50pt，
+     比同表单的普通输入框（约 45pt）高一截；显式 height + appearance:none 让它服从 CSS。
+   - 只在 iOS 生效（-webkit-touch-callout 仅 iOS Safari 支持），桌面与 Android 不受影响。
+   -------------------------------------------------------------------------- */
+@supports (-webkit-touch-callout: none) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  input[type="datetime-local"] {
+    height: 44px;
+    min-height: 44px;
+    padding-block: 0;
+    font-size: 16px;
+    line-height: normal;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  /* 表单页小字提示在 iOS 上放大过小的问题一并收到 13px。 */
+  .meetup-form label,
+  .meetup-admin-create label {
+    font-size: 13px;
+  }
+}

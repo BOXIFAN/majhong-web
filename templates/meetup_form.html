@@ -21,7 +21,7 @@
       <input name="venue" type="text" required value="{{ request.form.get('venue', meetup_venue) }}">
     </label>
     <label>{{ t('meetup2.field_title') }}
-      <input name="title" type="text" maxlength="80" placeholder="{{ t('meetup2.field_title_hint') }}" value="{{ request.form.get('title', meetup['title'] or '') }}">
+      <input name="title" type="text" maxlength="80" placeholder="{{ t('meetup2.field_title_example') }}" value="{{ request.form.get('title', meetup['title'] or '') }}">
       <small>{{ t('meetup2.field_title_hint') }}</small>
     </label>
     <label>{{ t('meetup2.field_capacity') }}
