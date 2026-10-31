@@ -612,12 +612,26 @@
   padding-bottom: 0;
 }
 
+/* 成员行：头像+名字占剩余宽度，右侧「移除」保持紧凑小按钮（移动端不再整宽压窄姓名）。 */
 .meetup-detail .meetup-attendee-row form {
+  flex: 0 0 auto;
+  width: auto;
   margin: 0;
+}
+
+.meetup-detail .meetup-attendee-row .danger-button,
+.meetup-detail .meetup-attendee-row .danger-button.compact {
+  width: auto;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 .meetup-detail .meetup-attendee {
   display: inline-flex;
+  flex: 1 1 auto;
   align-items: center;
   gap: 10px;
   min-width: 0;
@@ -926,6 +940,29 @@
 
   .meetup-panel {
     padding: var(--sp-4);
+  }
+
+  /* 报名成员行（iPhone 真机实测）：头像与姓名同一行左对齐，移除按钮保持 44px 触控、
+     不再占满整行，避免姓名被挤成每行两个字符的竖排。 */
+  .meetup-detail .meetup-attendee-row {
+    gap: 10px;
+    padding: 8px 0;
+  }
+
+  .meetup-detail .meetup-attendee {
+    font-size: 15px;
+  }
+
+  .meetup-detail .meetup-attendee b {
+    width: 34px;
+    height: 34px;
+    font-size: 13px;
+  }
+
+  .meetup-detail .meetup-attendee-row .danger-button,
+  .meetup-detail .meetup-attendee-row .danger-button.compact {
+    min-height: 44px;
+    padding: 0 16px;
   }
 
   .meetup-facts {
