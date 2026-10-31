@@ -471,6 +471,19 @@ a.match-page-number:hover {
   .match-row-sep {
     font-size: var(--fs-xs);
   }
+
+  /* 窄屏 4 人局时摘要单行放不下最后一位玩家名，改为允许换行，避免省略号截断。 */
+  .match-row-summary {
+    flex-wrap: wrap;
+    row-gap: 2px;
+    white-space: normal;
+  }
+
+  .match-row-others {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
 }
 
 /* --------------------------------------------------------------------------

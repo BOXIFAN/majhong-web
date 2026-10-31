@@ -30,15 +30,15 @@
   <section class="player-metrics" aria-label="{{ t('player.radar_details') }}">
     <div class="player-metric is-primary">
       <span class="player-metric-label">{{ t('player2.points_label') }}</span>
-      <strong class="player-metric-value" data-countup>{{ '{:,.1f}'.format(stats.total_points) if stats else '-' }}</strong>
+      <strong class="player-metric-value{% if not stats %} is-empty{% endif %}" data-countup>{{ '{:,.1f}'.format(stats.total_points) if stats else '—' }}</strong>
     </div>
     <div class="player-metric">
       <span class="player-metric-label">{{ t('player2.matches_label') }}</span>
-      <strong class="player-metric-value" data-countup>{{ stats.matches if stats else '-' }}</strong>
+      <strong class="player-metric-value{% if not stats %} is-empty{% endif %}" data-countup>{{ stats.matches if stats else '—' }}</strong>
     </div>
     <div class="player-metric">
       <span class="player-metric-label">{{ t('player2.avg_place_label') }}</span>
-      <strong class="player-metric-value">{{ '%.2f'|format(stats.avg_place) if stats else '-' }}</strong>
+      <strong class="player-metric-value{% if not stats %} is-empty{% endif %}">{{ '%.2f'|format(stats.avg_place) if stats else '—' }}</strong>
     </div>
 
     {% if stats %}

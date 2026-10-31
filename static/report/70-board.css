@@ -897,12 +897,20 @@
   }
 
   .board-fab {
+    display: none;
     width: 48px;
     height: 48px;
   }
 
   .board-fab.is-visible {
     display: grid;
+  }
+
+  /* 管理卡片 meta 信息（发布时间 · 保留至 · 赞 · 评论）太长，
+     移动端允许换行，避免在卡片右缘被裁切。 */
+  .board-admin-card .board-author-meta small {
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   /* 评论表单在窄屏保持单行：输入框 + 紧凑按钮，不再整宽大按钮。

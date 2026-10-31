@@ -103,7 +103,7 @@ T = {
         "player.placement_detail": "第 {placement} 位 · {score}",
         "player.no_matches": "本赛季还没有场（半庄）记录。",
         "player.radar_details": "赛季数据（积分·场次·顺位）",
-        "player.radar_empty": "当前赛季暂无足够数据，完成 1 场（半庄）后会生成六维图。",
+        "player.radar_empty": "当前赛季暂无足够数据，完成 1 场半庄后会生成六维图。",
         "player.radar_scale_note": "图形比例：平均打点以 50,000 点、火力以 60,000 点为满值；各轴统计范围为本赛季全部场（半庄）。",
         "player.first_rate_desc": "取得一位的场（半庄）数 ÷ 本赛季总场数",
         "player.positive_rate_desc": "赛季积分为正的场（半庄）数 ÷ 本赛季总场数",

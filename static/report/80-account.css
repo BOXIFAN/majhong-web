@@ -320,7 +320,8 @@
 }
 
 .auth-field input::placeholder {
-  color: #98a2b3;
+  /* 原 #98a2b3 在白底约 2.6:1，浅到看不清；换到约 4.6:1 的中灰。 */
+  color: #667085;
 }
 
 .auth-field-hint {
@@ -483,6 +484,12 @@
   white-space: nowrap;
 }
 
+/* 空数据显示「—」时降低视觉权重，避免被当成装饰短线（评论 P2）。 */
+.player-metric-value.is-empty {
+  opacity: 0.55;
+  font-weight: 500;
+}
+
 .player-metric-hint {
   color: var(--r-muted);
   font-size: var(--fs-xs);
@@ -500,7 +507,8 @@
 }
 
 .player-metric.is-primary .player-metric-label {
-  color: rgba(244, 250, 248, 0.78);
+  /* 深绿渐变亮端上 0.78 透明度只有约 3.8:1，提到 0.9 保证 12px 标签可读。 */
+  color: rgba(244, 250, 248, 0.9);
 }
 
 .player-metric.is-primary .player-metric-value {

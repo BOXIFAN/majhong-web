@@ -52,7 +52,7 @@
   </section>
   <div class="score-meter">
     <span>{{ t('match.current_total') }}<strong id="score-total">{{ score_total }}</strong></span>
-    <span>{{ t('match.target_total', total=score_total) }}</span>
+    <span>{{ t('match.target_total', total='{:,}'.format(score_total)) }}</span>
   </div>
   <button class="button sticky-save" type="submit">{{ t('match.submit') }}</button>
 </form>

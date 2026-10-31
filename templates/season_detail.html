@@ -61,6 +61,11 @@
           </ol>
         </nav>
 
+        {# 移动端英文术语默认收起，需要时一键展开（与 /seasons 一致）。 #}
+        <button class="rules-terms-toggle" type="button" data-terms-toggle aria-pressed="false">
+          <span aria-hidden="true">EN</span>{{ t('rules.terms_toggle') }}
+        </button>
+
         <section class="rules-archive" aria-labelledby="rules-version-title">
           <div class="rules-archive__head">
             <h2 id="rules-version-title">{{ t('rules.version_title') }}</h2>

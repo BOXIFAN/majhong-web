@@ -5,8 +5,11 @@
   <header class="page-head announcement-page-head">
     <a class="ghost-link announcement-back" href="{{ url_for('index') }}">← {{ t('announcement.back') }}</a>
     <p class="eyebrow">BRML News</p>
-    <h1>{{ announcement.title }}</h1>
-    <p class="announcement-meta">{{ t('announcement.published_by', date=announcement.created_at, name=(announcement.author_name or t('home.system'))) }}</p>
+    {# 中英标题分层，窄屏不在品牌词中间断开（与首页公告卡一致）。 #}
+    {% set title_parts = announcement.title.split(' / ') %}
+    <h1>{{ title_parts[0] }}</h1>
+    {% if title_parts|length > 1 %}<p class="announcement-title-en">{{ title_parts[1:]|join(' / ') }}</p>{% endif %}
+    <p class="announcement-meta">{{ t('announcement.published_by', date=announcement.created_at[:16], name=(announcement.author_name or t('home.system'))) }}</p>
   </header>
   <section class="panel announcement-detail">
     <div class="announcement-content">{{ announcement.content }}</div>

@@ -731,3 +731,81 @@ textarea.r-field-invalid {
     gap: 4px;
   }
 }
+
+/* --------------------------------------------------------------------------
+   9. 移动端检查修复（2026-10-31）
+   文本链接 / 次级按钮在 390 下点击区只有 20–38px，统一抬到 44px；
+   页脚链接密度高，用 40px 兼顾触控与紧凑。
+   404 状态页原 70vh 最小高度在手机上留下大片空档，收到 52vh。
+   -------------------------------------------------------------------------- */
+@media (max-width: 760px) {
+  .text-link,
+  .secondary-button,
+  .ghost-link {
+    min-height: 44px;
+  }
+
+  .ghost-link {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .site-footer-links {
+    gap: 0;
+  }
+
+  .site-footer-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0;
+  }
+
+  .status-page {
+    min-height: min(52vh, 560px);
+  }
+
+  /* 管理页常用按钮（保存/添加/重置密码/删除/回填 tab）与下拉框触控区抬到 44px。 */
+  .button,
+  .button.slim,
+  .secondary-button,
+  .danger-button,
+  .admin-tabs a,
+  .r-link {
+    min-height: 44px;
+  }
+
+  .admin-tabs a,
+  .r-link {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  select {
+    min-height: 44px;
+  }
+
+  /* 表格容器右缘渐隐，提示可以横向滑动查看后面的列。 */
+  .table-wrap {
+    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 20px), transparent 100%);
+    mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 20px), transparent 100%);
+  }
+
+  /* 记账统计卡在窄屏改成 2×2，避免首屏被四张卡占满（管理页 P2）。 */
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* 表单尾部操作按钮在纵向堆叠时撑满宽度，主操作不再比危险操作更小。 */
+  .form-actions .button,
+  .form-actions .secondary-button,
+  .form-actions .danger-button {
+    width: 100%;
+  }
+
+  /* 留言板管理的整宽缩略图压低高度，缩短单条记录（管理页 P2）。 */
+  .board-admin-thumb {
+    aspect-ratio: 16 / 9;
+    max-height: 180px;
+  }
+}

@@ -211,7 +211,8 @@
       if (!fab) return;
       if (mobile.matches) {
         // 移动端首屏不压第一张卡；滚过页头后再出现。
-        fab.classList.toggle("is-visible", top > 240);
+        // 出现位置若与评论表单重叠（FAB 在右下角，评论按钮同侧），先隐藏避免遮挡。
+        fab.classList.toggle("is-visible", top > 240 && !fabOverlapsCommentForm());
         fab.classList.remove("is-compact");
       } else {
         // 桌面端滚动后缩到 44px。
@@ -219,6 +220,21 @@
         fab.classList.add("is-visible");
       }
       ticking = false;
+    }
+
+    function fabOverlapsCommentForm() {
+      // FAB 固定：right 18px / bottom 18px / 48px（与 70-board.css 移动端一致）。
+      var size = 48;
+      var fabLeft = window.innerWidth - 18 - size;
+      var fabTop = window.innerHeight - 18 - size;
+      var forms = document.querySelectorAll(".board-page .board-comment-form");
+      for (var i = 0; i < forms.length; i += 1) {
+        var rect = forms[i].getBoundingClientRect();
+        if (!rect.width || !rect.height) continue;
+        if (rect.bottom <= 0 || rect.top >= window.innerHeight) continue;
+        if (rect.right > fabLeft - 8 && rect.bottom > fabTop - 8) return true;
+      }
+      return false;
     }
 
     function requestFabSync() {
