@@ -533,12 +533,33 @@ document.querySelectorAll("form[data-like-form]").forEach((form) => {
 });
 
 // 页内返回：有来源页时用 history.back()，能恢复原来的滚动位置；否则走 href。
+// 带 data-back-exact 的链接（例如详情页的「返回最近对局」）要求来源地址与目标地址
+// 完全一致（同源、同路径、同查询串）才回退，否则按 href 直达目标页，避免从首页、
+// 玩家页或其它详情页进入后「返回」落回无关的上一页。
 document.querySelectorAll("[data-back]").forEach((link) => {
   link.addEventListener("click", (event) => {
-    if (window.history.length > 1 && document.referrer) {
-      event.preventDefault();
-      window.history.back();
+    if (event.defaultPrevented || event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (window.history.length <= 1 || !document.referrer) return;
+    if (link.hasAttribute("data-back-exact")) {
+      let target;
+      let referrer;
+      try {
+        target = new URL(link.href, window.location.href);
+        referrer = new URL(document.referrer);
+      } catch (error) {
+        return;
+      }
+      if (
+        referrer.origin !== target.origin ||
+        referrer.pathname !== target.pathname ||
+        referrer.search !== target.search
+      ) {
+        return;
+      }
     }
+    event.preventDefault();
+    window.history.back();
   });
 });
 

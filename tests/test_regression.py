@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import html
 import io
 import json
+import re
 import sqlite3
 import tempfile
 import unittest
@@ -248,6 +250,46 @@ class PublicPageSmokeTests(unittest.TestCase):
                 ).fetchone()[0]
             default_body = self.client.get("/matches").get_data(as_text=True)
             self.assertEqual(default_body.count('class="match-row"'), min(expected_default, 20))
+
+    def test_match_detail_back_link_targets_matches_list(self) -> None:
+        """「返回最近对局」必须回到列表本身，而不是浏览器的上一页。"""
+        application.app.config["SEED_DEMO_DATA"] = True
+        with application.app.app_context():
+            application.init_db(force=True)
+
+        list_body = self.client.get("/matches").get_data(as_text=True)
+        row_link = re.search(r'class="match-row" href="([^"]+)"', list_body)
+        self.assertIsNotNone(row_link)
+        self.assertIn("back=", row_link.group(1), "列表行需要把当前列表地址传给详情页")
+
+        detail_body = self.client.get(row_link.group(1)).get_data(as_text=True)
+        self.assertIn("data-back-exact", detail_body)
+        back_href = re.search(r'class="match-back"[^>]*href="([^"]+)"', detail_body).group(1)
+        self.assertEqual(back_href, "/matches")
+
+        # 带赛季筛选时，返回目标要保留筛选条件。
+        with sqlite3.connect(self.database) as db:
+            season_id = db.execute("select season_id from matches order by id limit 1").fetchone()[0]
+        filtered_list = self.client.get(f"/matches?season_id={season_id}").get_data(as_text=True)
+        filtered_row = re.search(r'class="match-row" href="([^"]+)"', filtered_list).group(1)
+        filtered_detail = self.client.get(filtered_row).get_data(as_text=True)
+        filtered_back = html.unescape(
+            re.search(r'class="match-back"[^>]*href="([^"]+)"', filtered_detail).group(1)
+        )
+        self.assertEqual(filtered_back, f"/matches?season_id={season_id}")
+
+        # 没有合法来源（直接访问、外部地址、其它站内路径）时回退到该对局所属赛季的列表。
+        match_id = re.search(r"/matches/(\d+)", row_link.group(1)).group(1)
+        for bad_back in ("//evil.example/matches", "https://evil.example/matches", "/about", "/leaderboard"):
+            with self.subTest(back=bad_back):
+                response = self.client.get(f"/matches/{match_id}?back={bad_back}")
+                self.assertEqual(response.status_code, 200)
+                body = response.get_data(as_text=True)
+                back = html.unescape(
+                    re.search(r'class="match-back"[^>]*href="([^"]+)"', body).group(1)
+                )
+                self.assertTrue(back.startswith("/matches"), back)
+                self.assertNotIn("evil", back)
 
     def test_language_switch_is_stored_in_session(self) -> None:
         response = self.client.get("/language/en")

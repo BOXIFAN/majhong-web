@@ -119,6 +119,9 @@ def register_routes(app) -> None:
             "next_page": page + 1,
             "page_numbers": list(range(max(1, page - 2), min(pages, page + 2) + 1)),
         }
+        # 详情页的「返回最近对局」要精确回到这个列表地址（含分页与赛季筛选），
+        # 否则会退到浏览器上一页（可能来自首页或玩家页），或者掉回第一页。
+        list_back_href = request.full_path.rstrip("?")
         return render_template(
             "matches.html",
             matches=rows,
@@ -127,6 +130,7 @@ def register_routes(app) -> None:
             seasons=seasons_data,
             selected_season=selected_season,
             season_id=season_param,
+            list_back_href=list_back_href,
         )
 
     @app.route("/announcements/<int:announcement_id>")

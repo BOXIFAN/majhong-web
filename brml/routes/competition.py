@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+from urllib.parse import urlsplit
 
 from flask import Response, flash, g, redirect, render_template, request, url_for
 
@@ -27,6 +28,24 @@ from brml.match_service import (
 )
 from brml.rules import normalize_rules
 from brml.timeutils import current_match_time, weekday_label
+
+
+def _match_list_back_href(match) -> str:
+    """计算详情页「返回最近对局」的目标地址。
+
+    列表页点进详情时会把当前列表地址（含分页、赛季筛选）放进 back 参数，
+    这样返回时能精确回到「最近对局」本身，而不是浏览器上一页（可能是首页
+    或玩家页）。只接受站内的 /matches 路径，避免被外部参数当作跳板；
+    没有合法来源时回退到该对局所属赛季的列表页。
+    """
+    fallback = url_for("matches", season_id=match["season_id"])
+    raw = (request.args.get("back") or "").strip()
+    if not raw:
+        return fallback
+    parsed = urlsplit(raw)
+    if parsed.scheme or parsed.netloc or parsed.path != "/matches":
+        return fallback
+    return raw
 
 
 def register_routes(app) -> None:
@@ -115,6 +134,7 @@ def register_routes(app) -> None:
             weekday_label=date_weekday,
             table_label=match_type_label(match["table_name"]),
             entry_count=len(entries),
+            back_href=_match_list_back_href(match),
         )
 
     @app.route("/matches/<int:match_id>/edit", methods=("GET", "POST"))

@@ -33,7 +33,7 @@
           <ul class="match-day-rows">
             {% for match in group.matches %}
               <li>
-                <a class="match-row" href="{{ url_for('match_detail', match_id=match.id) }}">
+                <a class="match-row" href="{{ url_for('match_detail', match_id=match.id, back=list_back_href) }}">
                   <span class="match-row-time"><time datetime="{{ match.played_at|replace(' ', 'T') }}">{{ match.time_label }}</time></span>
                   <span class="match-row-type{% if match.table_name and match.table_name|lower == 'meetup' %} is-meetup{% endif %}">{{ match_type_label(match.table_name) }}</span>
                   <span class="match-row-summary">

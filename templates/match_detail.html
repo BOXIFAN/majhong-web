@@ -4,7 +4,7 @@
 {% block content %}
 <article class="match-detail-page">
   <nav class="match-detail-nav" aria-label="{{ t('match.detail.nav_label') }}">
-    <a class="match-back" data-back href="{{ url_for('matches', season_id=match.season_id) }}"><span aria-hidden="true">←</span> {{ t('match.detail.back') }}</a>
+    <a class="match-back" data-back data-back-exact href="{{ back_href }}"><span aria-hidden="true">←</span> {{ t('match.detail.back') }}</a>
     <div class="match-step-links">
       {% if prev_match %}
         <a class="match-step" href="{{ url_for('match_detail', match_id=prev_match.id) }}">
