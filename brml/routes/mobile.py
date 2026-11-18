@@ -99,7 +99,7 @@ def _recent_matches(season_id: int, limit: int = 12) -> list[dict]:
     entry_rows = query_all(
         f"""
         select me.match_id, me.user_id, me.final_score, me.placement, me.rank_points,
-               me.penalty_points, u.display_name
+               me.penalty_points, me.seat, u.display_name
         from match_entries me join users u on u.id = me.user_id
         where me.match_id in ({placeholders})
         order by me.placement asc, me.final_score desc
@@ -199,6 +199,7 @@ def _match_details(matches: list[dict], rules: dict | None) -> dict:
                 {
                     "user_id": entry["user_id"],
                     "name": entry["display_name"],
+                    "seat": entry.get("seat"),
                     "score": entry["final_score"],
                     "placement": placement,
                     "base": round(base_points, 1),
@@ -380,12 +381,6 @@ def _shell_context(*, entry_errors=None, form_values=None) -> dict:
         "entry_errors": entry_errors or [],
         "form_values": form_values or {},
         "locale": get_locale(),
-        "seats": [
-            translate("mobile.seat_east"),
-            translate("mobile.seat_south"),
-            translate("mobile.seat_west"),
-            translate("mobile.seat_north"),
-        ],
         "active_view": "entry" if entry_errors else "leaderboard",
     }
 

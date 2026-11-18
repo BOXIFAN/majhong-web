@@ -520,12 +520,14 @@ html[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
 
 .seat-chip {
   flex: none;
-  width: 24px;
+  min-width: 42px;
   height: 24px;
+  padding: 0 7px;
   border-radius: 8px;
   display: grid;
   place-items: center;
   font-size: 12px;
+  white-space: nowrap;
   background: var(--panel-quiet);
   color: var(--muted);
   border: 1px solid var(--line);

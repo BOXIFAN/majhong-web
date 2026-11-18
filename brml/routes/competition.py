@@ -172,6 +172,10 @@ def register_routes(app) -> None:
         if request.method == "POST":
             result = parse_match_result_form(match, request.form)
             if result["ok"]:
+                # 历史场次没有座位记录，编辑备注时按卡片位置补写会猜错座次；
+                # 保持 NULL，等它们只作为「未记录」参与统计。
+                if not any(entry["seat"] for entry in entries):
+                    result["seats"] = [None, None, None, None]
                 update_match_from_result(match_id, match, request.form, result)
                 flash(translate("flash.match_updated"), "success")
                 return redirect(url_for("match_detail", match_id=match_id))

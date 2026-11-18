@@ -72,6 +72,7 @@
           <tr>
             <th scope="col">{{ t('table.placement') }}</th>
             <th scope="col">{{ t('table.player') }}</th>
+            <th scope="col" class="match-seat-head">{{ t('table.seat') }}</th>
             <th scope="col">{{ t('table.final_score') }}</th>
             <th scope="col">{{ t('table.rank_points') }}</th>
             <th scope="col">{{ t('table.penalty_points') }}</th>
@@ -82,6 +83,7 @@
             <tr{% if entry.placement == 1 %} class="is-winner"{% endif %}>
               <td class="match-placement">{% if entry.placement == 1 %}<span class="match-placement-badge">{{ '%g'|format(entry.placement) }}</span>{% else %}{{ '%g'|format(entry.placement) }}{% endif %}</td>
               <td><a class="match-player" href="{{ url_for('player_profile', user_id=entry.user_id) }}">{{ entry.display_name }}</a></td>
+              <td class="match-seat">{% if entry.seat %}{{ t('match.seat_' ~ entry.seat) }}{% else %}<span class="match-none">—</span>{% endif %}</td>
               <td class="match-final-score">{{ '{:,}'.format(entry.final_score) }}</td>
               <td class="match-points{% if entry.rank_points > 0 %} is-positive{% elif entry.rank_points < 0 %} is-negative{% endif %}">{{ '%+.1f'|format(entry.rank_points) }}</td>
               <td class="match-penalty-cell">{% if entry.penalty_points %}<span class="match-penalty-amount">−{{ entry.penalty_points }}</span>{% else %}<span class="match-none">0</span>{% endif %}</td>

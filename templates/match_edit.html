@@ -21,7 +21,7 @@
   </section>
 
   <section class="player-entry-grid">
-    {% set seats = [('东', 'East'), ('南', 'South'), ('西', 'West'), ('北', 'North')] %}
+    {% set seat_keys = ['match.seat_east', 'match.seat_south', 'match.seat_west', 'match.seat_north'] %}
     {% for idx in range(4) %}
       {% set row = rows[idx] if rows|length > idx else none %}
       {% set entry = row.entry if row else none %}
@@ -29,7 +29,7 @@
       <article class="entry-card">
         <h2 class="seat-heading">
           <span>{{ t('match.player_n', number=idx + 1) }}</span>
-          <small>{{ seats[idx][0] }} / {{ seats[idx][1] }}</small>
+          <small>{{ t(seat_keys[idx]) }}</small>
         </h2>
         <label>{{ t('table.player') }}
           <select name="player_{{ idx }}" required data-filterable-select id="player_{{ idx }}"

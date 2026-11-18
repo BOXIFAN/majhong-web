@@ -200,9 +200,14 @@ create table match_entries (
   placement real not null,
   rank_points real not null,
   penalty_points integer not null default 0,
+  -- 四家初始坐次；历史数据没有记录时保持 NULL，统计时单独归为「未记录」。
+  seat text check (seat in ('east', 'south', 'west', 'north')),
   foreign key (match_id) references matches(id),
   foreign key (user_id) references users(id)
 );
+
+-- 同一场里一个座位只能坐一个人；NULL 表示该场未记录座位，不受唯一约束限制。
+create unique index ux_match_entries_seat on match_entries(match_id, seat) where seat is not null;
 
 -- 罚则独立存档便于审计，同时 penalty_points 会写入 match_entries 并计入 rank_points。
 create table penalties (

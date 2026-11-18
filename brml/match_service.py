@@ -13,6 +13,10 @@ from brml.rules import normalize_rules
 from brml.scoring import calculate_placements, calculate_rank_points
 from brml.timeutils import current_match_time, normalize_datetime, now
 
+# 四家初始坐次，顺序固定为东南西北，供录入、校验与后续统计复用。
+SEAT_ORDER = ("east", "south", "west", "north")
+
+
 def normalize_match_type(value: str) -> str:
     """把表单和历史别名转换为数据库使用的 ``meetup``/``casual``。"""
     normalized = value.strip().lower()
@@ -69,6 +73,8 @@ def parse_match_result_form(season, form) -> dict:
         "rules": rules,
         "players": players,
         "scores": scores,
+        # 固定座次：表单第 1 格是东家，依次南、西、北，不接收自定义座位。
+        "seats": list(SEAT_ORDER),
         "penalty_values": penalty_values,
         "penalty_types": penalty_types,
         "penalty_reasons": penalty_reasons,
@@ -127,8 +133,10 @@ def insert_match_result_rows(db: sqlite3.Connection, match_id: int, season_id: i
     for idx, user_id in enumerate(result["players"]):
         db.execute(
             """
-            insert into match_entries (match_id, user_id, final_score, placement, rank_points, penalty_points)
-            values (?, ?, ?, ?, ?, ?)
+            insert into match_entries (
+              match_id, user_id, final_score, placement, rank_points, penalty_points, seat
+            )
+            values (?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 match_id,
@@ -137,6 +145,7 @@ def insert_match_result_rows(db: sqlite3.Connection, match_id: int, season_id: i
                 result["placements"][idx],
                 result["rank_points"][idx],
                 result["penalty_values"][idx],
+                result["seats"][idx],
             ),
         )
         if result["penalty_values"][idx]:

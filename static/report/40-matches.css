@@ -747,6 +747,14 @@ a.match-page-number:hover {
   font-weight: 600;
 }
 
+.match-score-table th.match-seat-head,
+.match-score-table td.match-seat {
+  width: 1%;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--r-muted);
+}
+
 .match-player:hover {
   color: var(--r-brand-dark);
   text-decoration: underline;

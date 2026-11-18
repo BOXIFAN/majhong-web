@@ -544,12 +544,13 @@
                     <span class="chip-total" id="totalChip"></span>
                   </div>
 
+                  {% set seat_labels = [t('match.seat_east'), t('match.seat_south'), t('match.seat_west'), t('match.seat_north')] %}
                   {% for idx in range(4) %}
                     {% set score_value = form_values.get('score_' ~ idx) or (start_total // 4) %}
                     {% set penalty_value = form_values.get('penalty_' ~ idx) or 0 %}
                     <div class="seat" data-seat="{{ idx }}">
                       <div class="seat-top">
-                        <span class="seat-chip">{{ seats[idx] }}</span>
+                        <span class="seat-chip">{{ seat_labels[idx] }}</span>
                         <span class="place" data-out="place"></span>
                         <span class="pts" data-out="points"></span>
                       </div>

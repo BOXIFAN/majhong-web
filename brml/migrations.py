@@ -199,6 +199,28 @@ def ensure_match_type_values() -> None:
     db.commit()
 
 
+def ensure_match_seat_column() -> None:
+    """为比赛成绩补记四家初始坐次；历史行保持 NULL，不参与座位统计。
+
+    同时补建部分唯一索引，保证同一场里一个座位只有一个人。索引使用
+    ``where seat is not null``，因此全部历史行（seat 为 NULL）可以共存。
+    """
+    db = get_db()
+    _ensure_column(
+        db,
+        "match_entries",
+        "seat",
+        "seat text check (seat in ('east', 'south', 'west', 'north'))",
+    )
+    db.execute(
+        """
+        create unique index if not exists ux_match_entries_seat
+        on match_entries(match_id, seat) where seat is not null
+        """
+    )
+    db.commit()
+
+
 def ensure_transactions_table() -> None:
     """为部署中的旧数据库补建记账表（幂等）。"""
     db = get_db()

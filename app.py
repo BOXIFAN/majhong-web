@@ -24,6 +24,7 @@ from brml.migrations import (
     ensure_admin_password,
     ensure_announcements_table,
     ensure_board_tables,
+    ensure_match_seat_column,
     ensure_match_type_values,
     ensure_meetups_tables,
     ensure_transactions_table,
@@ -85,6 +86,7 @@ def create_app() -> Flask:
         ensure_board_tables()
         ensure_admin_password()
         ensure_match_type_values()
+        ensure_match_seat_column()
         ensure_transactions_table()
         user_id = session.get("user_id")
         g.user = query_one("select * from users where id = ? and is_deleted = 0", (user_id,)) if user_id else None
