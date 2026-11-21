@@ -17,7 +17,12 @@ from brml.config import (
 from brml.db import execute, get_db, query_all, query_one
 from brml.i18n import translate
 from brml.match_service import current_season
-from brml.meetup_service import auto_archive_expired_meetups, meetup_status, signup_member
+from brml.meetup_service import (
+    MEETUP_ARRIVAL_VALUES,
+    auto_archive_expired_meetups,
+    meetup_status,
+    signup_member,
+)
 from brml.timeutils import brisbane_local_now, now, parse_local_datetime
 
 
@@ -122,12 +127,12 @@ def register_routes(app) -> None:
             order by m.meetup_at asc, m.id asc
             """
         )
-        signed_up_ids: set[int] = set()
+        signed_arrivals: dict[int, str | None] = {}
         if g.user:
-            signed_up_ids = {
-                row["meetup_id"]
+            signed_arrivals = {
+                row["meetup_id"]: row["arrival"]
                 for row in query_all(
-                    "select meetup_id from meetup_signups where user_id = ?",
+                    "select meetup_id, arrival from meetup_signups where user_id = ?",
                     (g.user["id"],),
                 )
             }
@@ -135,7 +140,8 @@ def register_routes(app) -> None:
         for meetup in meetup_rows:
             item = _with_status(meetup)
             item["attendee_count"] = meetup["attendee_count"]
-            item["signed_up"] = meetup["id"] in signed_up_ids
+            item["signed_up"] = meetup["id"] in signed_arrivals
+            item["my_arrival"] = signed_arrivals.get(meetup["id"])
             items.append(item)
         # 报名页分「即将开始 / 已结束」两段：过期活动不再与可报名活动抢注意力，
         # 且每段都有明确的状态与 CTA（调研报告 A-1、P0-2、移动端专项 5）。
@@ -180,7 +186,7 @@ def register_routes(app) -> None:
             return render_template("404.html", not_found_kind="meetup"), 404
         attendees = query_all(
             """
-            select ms.user_id, ms.created_at, u.display_name, u.role
+            select ms.user_id, ms.arrival, ms.created_at, u.display_name, u.role
             from meetup_signups ms join users u on u.id = ms.user_id
             where ms.meetup_id = ?
             order by ms.created_at asc, ms.id asc
@@ -203,9 +209,15 @@ def register_routes(app) -> None:
                 (meetup_id,),
             )
         status = meetup_status(meetup)
-        is_signed_up = g.user is not None and any(
-            attendee["user_id"] == g.user["id"] for attendee in attendees
+        my_attendance = next(
+            (
+                attendee
+                for attendee in attendees
+                if g.user is not None and attendee["user_id"] == g.user["id"]
+            ),
+            None,
         )
+        is_signed_up = my_attendance is not None
         return render_template(
             "meetup_detail.html",
             meetup=meetup,
@@ -213,6 +225,7 @@ def register_routes(app) -> None:
             eligible_users=eligible_users,
             status=status,
             is_signed_up=is_signed_up,
+            my_attendance=my_attendance,
             display_title=meetup["title"] or MEETUP_DEFAULT_TITLE,
             fee_note=translate("meetup2.fee_value"),
             map_url=MEETUP_MAP_URL,
@@ -297,12 +310,17 @@ def register_routes(app) -> None:
     @app.route("/meetups/<int:meetup_id>/signup", methods=("POST",))
     @login_required
     def meetup_signup(meetup_id: int):
-        result = signup_member(meetup_id, g.user["id"])
+        result = signup_member(
+            meetup_id, g.user["id"], request.form.get("arrival", "").strip()
+        )
         if result == "missing":
             flash(translate("meetup.missing"), "error")
             return redirect(url_for("meetups"))
         if result == "closed":
             flash(translate("meetup.signup_closed"), "error")
+            return redirect(url_for("meetup_detail", meetup_id=meetup_id))
+        if result == "arrival_required":
+            flash(translate("meetup.arrival.required"), "error")
             return redirect(url_for("meetup_detail", meetup_id=meetup_id))
         if result == "duplicate":
             # 已经报名过：不是失败操作，给中性提示而不是红色报错。
@@ -365,16 +383,19 @@ def register_routes(app) -> None:
         meetup = query_one("select id from meetups where id = ?", (meetup_id,))
         user_id = request.form.get("user_id", type=int)
         user = query_one("select id from users where id = ? and is_deleted = 0", (user_id,)) if user_id else None
+        arrival = request.form.get("arrival", "").strip()
         if not meetup:
             flash(translate("meetup.missing"), "error")
             return redirect(url_for("meetups"))
         if not user:
             flash(translate("meetup.member_missing"), "error")
+        elif arrival not in MEETUP_ARRIVAL_VALUES:
+            flash(translate("meetup.arrival.required"), "error")
         else:
             try:
                 execute(
-                    "insert into meetup_signups (meetup_id, user_id, created_at) values (?, ?, ?)",
-                    (meetup_id, user_id, now()),
+                    "insert into meetup_signups (meetup_id, user_id, arrival, created_at) values (?, ?, ?, ?)",
+                    (meetup_id, user_id, arrival, now()),
                 )
                 flash(translate("meetup.member_added"), "success")
             except sqlite3.IntegrityError:

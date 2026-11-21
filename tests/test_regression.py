@@ -360,7 +360,12 @@ class PublicPageSmokeTests(unittest.TestCase):
         self.assertEqual(meetup_create.status_code, 302)
         with sqlite3.connect(self.database) as db:
             meetup_id = db.execute("select id from meetups where venue = 'Delete-flow test venue'").fetchone()[0]
-        self.assertEqual(self.client.post(f"/meetups/{meetup_id}/signup").status_code, 302)
+        self.assertEqual(
+            self.client.post(
+                f"/meetups/{meetup_id}/signup", data={"arrival": "before_start"}
+            ).status_code,
+            302,
+        )
         self.assertEqual(self.client.post(f"/admin/meetups/{meetup_id}/delete").status_code, 302)
         self.assertEqual(self.client.post(f"/matches/{match_id}/delete").status_code, 302)
         self.assertEqual(

@@ -128,6 +128,12 @@ def ensure_meetups_tables() -> None:
         )
         """
     )
+    _ensure_column(
+        db,
+        "meetup_signups",
+        "arrival",
+        "arrival text check (arrival in ('before_start', 'by_14', 'by_15', 'by_16'))",
+    )
     db.commit()
 
 

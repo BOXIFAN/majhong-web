@@ -93,15 +93,14 @@
                 <div class="meetup-row-actions">
                   {% if meetup.status == 'open' %}
                     {% if current_user and meetup.signed_up %}
+                      <span class="meetup-arrival-chip">{{ t('meetup.arrival.' ~ meetup.my_arrival) if meetup.my_arrival else t('meetup.arrival.unknown') }}</span>
                       <a class="meetup-cta is-quiet" href="{{ url_for('meetup_detail', meetup_id=meetup.id) }}">{{ t('meetup2.cta_view') }}</a>
                       <form method="post" action="{{ url_for('meetup_signup_cancel', meetup_id=meetup.id) }}"
                             onsubmit="return confirm({{ t('meetup2.cancel_confirm')|tojson }});">
                         <button class="meetup-cancel" type="submit">{{ t('meetup2.cancel_action') }}</button>
                       </form>
                     {% elif current_user %}
-                      <form method="post" action="{{ url_for('meetup_signup', meetup_id=meetup.id) }}">
-                        <button class="meetup-cta" type="submit">{{ t('meetup2.cta_signup') }}</button>
-                      </form>
+                      <a class="meetup-cta" href="{{ url_for('meetup_detail', meetup_id=meetup.id) }}">{{ t('meetup2.cta_signup_time') }}</a>
                     {% else %}
                       <a class="meetup-cta" href="{{ url_for('login', next=url_for('meetup_detail', meetup_id=meetup.id)) }}">{{ t('meetup2.cta_signup') }}</a>
                     {% endif %}

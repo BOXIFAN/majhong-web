@@ -8,20 +8,26 @@ from datetime import datetime, timedelta
 from brml.db import get_db
 from brml.timeutils import brisbane_local_now, now
 
+# 报名预计到达档位；顺序与页面展示一致。
+MEETUP_ARRIVALS = ("before_start", "by_14", "by_15", "by_16")
+MEETUP_ARRIVAL_VALUES = frozenset(MEETUP_ARRIVALS)
 
-def signup_member(meetup_id: int, user_id: int) -> str:
-    """为成员报名活动，返回 ``ok`` / ``missing`` / ``closed`` / ``duplicate``。"""
+
+def signup_member(meetup_id: int, user_id: int, arrival: str | None) -> str:
+    """为成员报名活动，返回 ``ok`` / ``missing`` / ``closed`` / ``duplicate`` / ``arrival_required``。"""
     auto_archive_expired_meetups()
     meetup = get_db().execute("select * from meetups where id = ?", (meetup_id,)).fetchone()
     if not meetup:
         return "missing"
     if meetup_status(meetup) != "open":
         return "closed"
+    if arrival not in MEETUP_ARRIVAL_VALUES:
+        return "arrival_required"
     try:
         db = get_db()
         db.execute(
-            "insert into meetup_signups (meetup_id, user_id, created_at) values (?, ?, ?)",
-            (meetup_id, user_id, now()),
+            "insert into meetup_signups (meetup_id, user_id, arrival, created_at) values (?, ?, ?, ?)",
+            (meetup_id, user_id, arrival, now()),
         )
         db.commit()
         return "ok"

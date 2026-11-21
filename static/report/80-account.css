@@ -404,29 +404,35 @@
    -------------------------------------------------------------------------- */
 
 .player-back-nav {
-  margin-bottom: var(--sp-4);
+  margin-bottom: var(--sp-3);
 }
 
 .player-back {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  padding: 8px 14px 8px 10px;
-  border: 1px solid var(--r-line);
-  border-radius: 999px;
-  background: var(--r-surface);
-  color: var(--r-brand-dark);
+  gap: 6px;
+  min-height: 40px;
+  color: var(--r-muted);
   font-size: var(--fs-sm);
   font-weight: 700;
   text-decoration: none;
-  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.player-back span[aria-hidden="true"] {
+  color: var(--r-brand);
+  font-size: 16px;
+  line-height: 1;
+  transition: transform 140ms ease;
 }
 
 .player-back:hover,
 .player-back:focus-visible {
-  transform: translateX(-2px);
-  border-color: var(--r-brand-line);
-  background: var(--r-brand-soft);
+  color: var(--r-brand-dark);
+}
+
+.player-back:hover span[aria-hidden="true"],
+.player-back:focus-visible span[aria-hidden="true"] {
+  transform: translateX(-3px);
 }
 
 .player-page .player-page-head {
@@ -763,6 +769,280 @@
   padding: var(--sp-6) var(--sp-4);
 }
 
+/* 个人页数据范围切换：默认当前赛季，可切到指定赛季或全赛季。 */
+.player-range-form {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.player-range-form label {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.player-range-control {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+}
+
+.player-range-control::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--r-muted);
+  border-bottom: 2px solid var(--r-muted);
+  transform: translateY(-65%) rotate(45deg);
+  pointer-events: none;
+}
+
+.player-range-form select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: auto;
+  min-width: 210px;
+  max-width: 290px;
+  min-height: 40px;
+  padding: 8px 38px 8px 12px;
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius-sm);
+  background: var(--r-surface);
+  color: var(--r-ink);
+  font: inherit;
+  font-size: var(--fs-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.player-range-form select:hover {
+  border-color: var(--r-brand-line);
+}
+
+.player-range-form select:focus-visible {
+  border-color: var(--r-brand);
+  outline: 3px solid rgba(15, 118, 110, 0.18);
+  outline-offset: 1px;
+}
+
+/* 风向起始：按开局座位拆分的 1-4 位率与平均终局点数。 */
+.player-seat-card {
+  display: grid;
+  gap: var(--sp-4);
+  margin-top: var(--sp-5);
+}
+
+.player-seat-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.player-seat-head h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+}
+
+.player-seat-sample {
+  flex: none;
+  padding: 6px 12px;
+  border: 1px solid var(--r-brand-line);
+  border-radius: 999px;
+  color: var(--r-brand-dark);
+  background: var(--r-brand-soft);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.player-seat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-3);
+}
+
+.player-seat-item {
+  --seat-color: var(--r-brand);
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: var(--sp-3);
+  padding: calc(var(--sp-4) + 2px) var(--sp-4) var(--sp-4);
+  border: 1px solid var(--r-line);
+  border-radius: var(--r-radius);
+  background: var(--r-surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+}
+
+.player-seat-item::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--seat-color);
+}
+
+.player-seat-item[data-seat="south"] { --seat-color: var(--r-danger); }
+.player-seat-item[data-seat="west"] { --seat-color: var(--r-muted); }
+.player-seat-item[data-seat="north"] { --seat-color: var(--r-ink); }
+
+.player-seat-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.player-seat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--r-ink);
+  font-size: var(--fs-sm);
+  font-weight: 900;
+}
+
+.player-seat-badge::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--seat-color);
+}
+
+.player-seat-games {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.player-seat-rates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-3) var(--sp-3);
+  margin: 0;
+}
+
+.player-seat-rate {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.player-seat-rate dt {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.player-seat-rate dd {
+  margin: 0;
+  color: var(--r-ink);
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.player-seat-rate dd small {
+  margin-left: 1px;
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.player-seat-rate.is-first dd { color: var(--r-brand); }
+.player-seat-rate.is-fourth dd { color: var(--r-danger); }
+
+.player-seat-score {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin: 0;
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--r-line-soft);
+}
+
+.player-seat-score span {
+  color: var(--r-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.player-seat-score strong {
+  color: var(--r-ink);
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.player-seat-empty {
+  margin: 0;
+  padding: var(--sp-4) 0;
+  color: var(--r-muted);
+  font-size: var(--fs-sm);
+}
+
+@media (max-width: 1100px) {
+  .player-seat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .player-range-form {
+    gap: 6px;
+  }
+
+  .player-range-form select {
+    min-width: 0;
+    max-width: none;
+  }
+
+  .player-seat-card {
+    margin-top: var(--sp-4);
+  }
+
+  .player-seat-head {
+    align-items: flex-start;
+  }
+
+  .player-seat-grid {
+    gap: var(--sp-2);
+  }
+
+  .player-seat-item {
+    padding: 14px;
+    gap: var(--sp-2);
+  }
+
+  .player-seat-rate dd {
+    font-size: 18px;
+  }
+
+  .player-seat-score {
+    display: grid;
+    gap: 2px;
+  }
+
+  .player-seat-score strong {
+    font-size: var(--fs-lg);
+  }
+}
+
 .player-page .player-password-card {
   margin-top: var(--sp-5);
 }
@@ -1009,4 +1289,27 @@
 .player-page .trend-point[data-tip]:hover::after,
 .player-page .trend-point[data-tip]:focus-visible::after {
   max-width: min(220px, 62vw);
+}
+
+@media (max-width: 560px) {
+  .player-page-head .page-head-actions {
+    flex: 1 1 100%;
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+
+  .player-range-form {
+    width: 100%;
+  }
+
+  .player-range-control {
+    flex: 1 1 auto;
+  }
+
+  .player-range-form select {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
 }

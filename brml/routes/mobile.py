@@ -270,12 +270,12 @@ def _meetups(user_id: int | None, past_limit: int = 6) -> dict:
         order by m.meetup_at desc
         """
     )
-    signed_ids = set()
+    signed_arrivals: dict[int, str | None] = {}
     if user_id:
-        signed_ids = {
-            row["meetup_id"]
+        signed_arrivals = {
+            row["meetup_id"]: row["arrival"]
             for row in query_all(
-                "select meetup_id from meetup_signups where user_id = ?", (user_id,)
+                "select meetup_id, arrival from meetup_signups where user_id = ?", (user_id,)
             )
         }
     upcoming, past = [], []
@@ -283,7 +283,8 @@ def _meetups(user_id: int | None, past_limit: int = 6) -> dict:
         item = dict(row)
         item.update(_format_when(row["meetup_at"]))
         item["status"] = meetup_status(row)
-        item["signed_up"] = row["id"] in signed_ids
+        item["signed_up"] = row["id"] in signed_arrivals
+        item["my_arrival"] = signed_arrivals.get(row["id"])
         (upcoming if item["status"] == "open" else past).append(item)
     upcoming.sort(key=lambda item: item["meetup_at"])
     return {"upcoming": upcoming, "past": past[:past_limit]}
@@ -416,11 +417,15 @@ def register_routes(app) -> None:
     @login_required
     def mobile_meetup_signup(meetup_id: int):
         """活动报名：复用与网页端相同的报名服务，仅把回跳指向 App。"""
-        result = signup_member(meetup_id, g.user["id"])
+        result = signup_member(
+            meetup_id, g.user["id"], request.form.get("arrival", "").strip()
+        )
         if result == "missing":
             flash(translate("meetup.missing"), "error")
         elif result == "closed":
             flash(translate("meetup.signup_closed"), "error")
+        elif result == "arrival_required":
+            flash(translate("meetup.arrival.required"), "error")
         elif result == "duplicate":
             flash(translate("meetup.signup_duplicate"), "error")
         else:

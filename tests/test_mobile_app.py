@@ -188,7 +188,9 @@ class MobileAppTests(unittest.TestCase):
             )
             meetup_id = cursor.lastrowid
 
-        response = self.client.post(f"/app/meetups/{meetup_id}/signup")
+        response = self.client.post(
+            f"/app/meetups/{meetup_id}/signup", data={"arrival": "before_start"}
+        )
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.headers["Location"].endswith("/app#/meetups"))
         with sqlite3.connect(self.database) as db:

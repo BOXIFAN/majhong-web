@@ -13,6 +13,8 @@ from brml.analytics import (
     build_finals_status,
     build_placement_trend,
     build_player_radar,
+    build_player_summary,
+    build_seat_stats,
     get_leaderboard,
     season_radar_median,
 )
@@ -260,48 +262,82 @@ def register_routes(app) -> None:
         user = query_one("select * from users where id = ? and is_deleted = 0", (user_id,))
         if not user:
             return render_template("404.html", not_found_kind="player"), 404
-        season = current_season()
-        leaderboard = get_leaderboard(season["id"]) if season else []
-        player_stats = next((row for row in leaderboard if row["user_id"] == user_id), None)
+        current = current_season()
+        seasons = query_all("select * from seasons order by start_date desc, id desc")
+        raw_range = (request.args.get("season") or "").strip().lower()
+        if raw_range == "all":
+            view_season = None
+            range_key = "all"
+        elif raw_range.isdigit():
+            view_season = query_one("select * from seasons where id = ?", (int(raw_range),))
+            if view_season is None:
+                view_season = current
+                range_key = str(current["id"]) if current else "all"
+            else:
+                range_key = str(view_season["id"])
+        else:
+            view_season = current
+            range_key = str(current["id"]) if current else "all"
+
+        season_clause = "and m.season_id = ?" if view_season else ""
+        scope_params = (user_id, view_season["id"]) if view_season else (user_id,)
+
         per_page = 5
         page = max(request.args.get("page", 1, type=int), 1)
         history_total = query_one(
-            "select count(*) as c from match_entries where user_id = ?",
-            (user_id,),
+            f"""
+            select count(*) as c
+            from match_entries me join matches m on m.id = me.match_id
+            where me.user_id = ? {season_clause}
+            """,
+            scope_params,
         )["c"]
         history_pages = max((history_total + per_page - 1) // per_page, 1)
         if page > history_pages:
-            return redirect(url_for("player_profile", user_id=user_id, page=history_pages))
+            return redirect(
+                url_for("player_profile", user_id=user_id, page=history_pages, season=range_key)
+            )
         history = query_all(
-            """
+            f"""
             select m.id as match_id, m.played_at, me.final_score, me.placement, me.rank_points
             from match_entries me join matches m on m.id = me.match_id
-            where me.user_id = ?
+            where me.user_id = ? {season_clause}
             order by m.played_at desc, m.id desc limit ? offset ?
             """,
-            (user_id, per_page, (page - 1) * per_page),
+            scope_params + (per_page, (page - 1) * per_page),
         )
         trend_history = query_all(
-            """
+            f"""
             select m.id as match_id, m.played_at, me.final_score, me.placement, me.rank_points
             from match_entries me join matches m on m.id = me.match_id
-            where me.user_id = ?
+            where me.user_id = ? {season_clause}
             order by m.played_at desc, m.id desc limit 10
             """,
-            (user_id,),
+            scope_params,
         )
-        season_entries = query_all(
-            """
-            select me.final_score, me.placement, me.rank_points, m.played_at, m.id as match_id
+        scope_entries = query_all(
+            f"""
+            select me.final_score, me.placement, me.rank_points, me.seat,
+                   m.played_at, m.id as match_id
             from match_entries me join matches m on m.id = me.match_id
-            where me.user_id = ? and m.season_id = ?
+            where me.user_id = ? {season_clause}
             order by m.played_at asc, m.id asc
             """,
-            (user_id, season["id"]),
-        ) if season else []
+            scope_params,
+        )
+        player_stats = build_player_summary(scope_entries)
         trend = build_placement_trend(trend_history)
-        radar = build_player_radar(season_entries)
-        radar_median = season_radar_median(season["id"]) if season else {"has_data": False, "points": "", "nodes": [], "display": []}
+        radar = build_player_radar(scope_entries)
+        seat_stats = build_seat_stats(scope_entries)
+        radar_median = (
+            season_radar_median(view_season["id"])
+            if view_season
+            else {"has_data": False, "points": "", "nodes": [], "display": []}
+        )
+        season_options = [
+            {"value": str(row["id"]), "label": row["name"]} for row in seasons
+        ]
+        season_options.append({"value": "all", "label": translate("player.range_all")})
         pagination = {
             "page": page,
             "pages": history_pages,
@@ -332,6 +368,9 @@ def register_routes(app) -> None:
             trend=trend,
             radar=radar,
             radar_median=radar_median,
+            seat_stats=seat_stats,
+            season_options=season_options,
+            range_key=range_key,
             pagination=pagination,
         )
 

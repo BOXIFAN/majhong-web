@@ -15,6 +15,12 @@
 {% block content %}
 {% set meeting_at = meetup.meetup_at %}
 {% set deadline_at = meetup.signup_deadline %}
+{% set arrival_options = [
+  ('before_start', 'meetup.arrival.before_start'),
+  ('by_14', 'meetup.arrival.by_14'),
+  ('by_15', 'meetup.arrival.by_15'),
+  ('by_16', 'meetup.arrival.by_16'),
+] %}
 <div class="meetup-detail is-{{ status }}">
   <header class="meetup-detail-head">
     <a class="meetup-back" data-back href="{{ url_for('meetups') }}">{{ t('meetup2.back') }}</a>
@@ -46,20 +52,35 @@
       {% if status == 'open' %}
         {% if is_signed_up %}
           <span class="meetup-signed">✓ {{ t('meetup2.badge_signed') }}</span>
+          <span class="meetup-arrival-chip">{{ t('meetup.arrival.' ~ my_attendance.arrival) if my_attendance and my_attendance.arrival else t('meetup.arrival.unknown') }}</span>
           <form method="post" action="{{ url_for('meetup_signup_cancel', meetup_id=meetup.id) }}"
                 onsubmit="return confirm({{ t('meetup2.cancel_confirm')|tojson }});">
             <button class="meetup-cancel" type="submit">{{ t('meetup2.cancel_action') }}</button>
           </form>
-        {% elif current_user %}
-          <form method="post" action="{{ url_for('meetup_signup', meetup_id=meetup.id) }}">
-            <button class="button" type="submit">{{ t('meetup2.signup') }}</button>
-          </form>
-        {% else %}
+        {% elif not current_user %}
           <a class="button" href="{{ url_for('login', next=url_for('meetup_detail', meetup_id=meetup.id)) }}">{{ t('meetup2.login_to_signup') }}</a>
         {% endif %}
       {% endif %}
     </div>
   </div>
+
+  {% if status == 'open' and current_user and not is_signed_up %}
+    <form class="meetup-signup-panel" method="post" action="{{ url_for('meetup_signup', meetup_id=meetup.id) }}">
+      <div class="meetup-signup-copy">
+        <h2>{{ t('meetup.arrival.label') }}</h2>
+        <p>{{ t('meetup.arrival.hint') }}</p>
+      </div>
+      <div class="meetup-arrival-options">
+        {% for value, key in arrival_options %}
+          <label class="meetup-arrival-option">
+            <input type="radio" name="arrival" value="{{ value }}" required>
+            <span>{{ t(key) }}</span>
+          </label>
+        {% endfor %}
+      </div>
+      <button class="button" type="submit">{{ t('meetup2.signup') }}</button>
+    </form>
+  {% endif %}
 
   <div class="meetup-detail-grid">
     <section class="meetup-panel meetup-info" aria-labelledby="meetup-info-title">
@@ -116,6 +137,7 @@
                 <b>{{ attendee.display_name[:1] }}</b>
                 {{ attendee.display_name }}
               </span>
+              <span class="meetup-arrival-chip">{{ t('meetup.arrival.' ~ attendee.arrival) if attendee.arrival else t('meetup.arrival.unknown') }}</span>
               {% if current_user and current_user.role == 'super_admin' %}
                 <form method="post" action="{{ url_for('meetup_attendee_remove', meetup_id=meetup.id, user_id=attendee.user_id) }}" onsubmit="return confirm({{ t('meetup.remove_confirm', name=attendee.display_name)|tojson }});">
                   <button class="danger-button compact" type="submit">{{ t('meetup2.remove_member') }}</button>
@@ -143,6 +165,13 @@
                   <option value="">{{ t('meetup2.choose_member') }}</option>
                   {% for user in eligible_users %}
                     <option value="{{ user.id }}">{{ user.display_name }} · {{ roles[user.role] }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <label>{{ t('meetup.arrival.label') }}
+                <select name="arrival" required>
+                  {% for value, key in arrival_options %}
+                    <option value="{{ value }}"{% if value == 'before_start' %} selected{% endif %}>{{ t(key) }}</option>
                   {% endfor %}
                 </select>
               </label>

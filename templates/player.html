@@ -6,7 +6,7 @@
 {% set role_label = t('player2.role_member') if user.role == 'user' else (t('player2.role_referee') if user.role == 'referee' else t('player2.role_admin')) %}
 <div class="player-page">
   <nav class="player-back-nav" aria-label="{{ back_label or t('nav.leaderboard') }}">
-    <a class="player-back" data-back href="{{ back_href or url_for('leaderboard') }}">{{ back_label or t('player2.back') }}</a>
+    <a class="player-back" data-back href="{{ back_href or url_for('leaderboard') }}"><span aria-hidden="true">←</span>{{ back_label or t('player2.back') }}</a>
   </nav>
 
   <section class="page-head row player-page-head">
@@ -21,6 +21,17 @@
       </div>
     </div>
     <div class="page-head-actions">
+      <form class="player-range-form" method="get" action="{{ url_for('player_profile', user_id=user.id) }}">
+        <label for="player-range">{{ t('player.range_label') }}</label>
+        <span class="player-range-control">
+          <select id="player-range" name="season" onchange="this.form.submit()">
+            {% for option in season_options %}
+              <option value="{{ option.value }}"{% if option.value == range_key %} selected{% endif %}>{{ option.label }}</option>
+            {% endfor %}
+          </select>
+        </span>
+        <noscript><button class="secondary-button" type="submit">{{ t('player.range_apply') }}</button></noscript>
+      </form>
       {% if current_user and current_user.id == user.id %}
         <a class="secondary-button" href="{{ url_for('account_avatar') }}">{{ t('avatar.edit') }}</a>
       {% endif %}
@@ -125,9 +136,9 @@
         </div>
         {% if pagination.pages > 1 %}
           <nav class="pagination" aria-label="{{ t('pagination.player_matches') }}">
-            {% if pagination.has_prev %}<a href="{{ url_for('player_profile', user_id=user.id, page=pagination.prev_page) }}">{{ t('pagination.prev') }}</a>{% else %}<span class="disabled">{{ t('pagination.prev') }}</span>{% endif %}
+            {% if pagination.has_prev %}<a href="{{ url_for('player_profile', user_id=user.id, page=pagination.prev_page, season=range_key) }}">{{ t('pagination.prev') }}</a>{% else %}<span class="disabled">{{ t('pagination.prev') }}</span>{% endif %}
             <strong>{{ pagination.page }} / {{ pagination.pages }}</strong>
-            {% if pagination.has_next %}<a href="{{ url_for('player_profile', user_id=user.id, page=pagination.next_page) }}">{{ t('pagination.next') }}</a>{% else %}<span class="disabled">{{ t('pagination.next') }}</span>{% endif %}
+            {% if pagination.has_next %}<a href="{{ url_for('player_profile', user_id=user.id, page=pagination.next_page, season=range_key) }}">{{ t('pagination.next') }}</a>{% else %}<span class="disabled">{{ t('pagination.next') }}</span>{% endif %}
           </nav>
         {% endif %}
       {% else %}
@@ -191,6 +202,55 @@
         </div>
       {% endif %}
     </div>
+  </section>
+
+  <section class="panel player-seat-card" aria-labelledby="player-seat-title">
+    <div class="player-seat-head">
+      <h2 id="player-seat-title">{{ t('player.seat_title') }}</h2>
+      {% if seat_stats.has_data %}
+        <span class="player-seat-sample">{{ t('player.seat_sample', count=seat_stats.games) }}</span>
+      {% endif %}
+    </div>
+    {% if seat_stats.has_data %}
+      <div class="player-seat-grid">
+        {% for row in seat_stats.rows %}
+          <article class="player-seat-item" data-seat="{{ row.seat }}">
+            <header class="player-seat-item-head">
+              <span class="player-seat-badge">{{ t('match.seat_' ~ row.seat) }}</span>
+              <span class="player-seat-games">{{ t('player.seat_games', count=row.games) }}</span>
+            </header>
+            {% if row.games %}
+              <dl class="player-seat-rates">
+                <div class="player-seat-rate is-first">
+                  <dt>{{ t('player2.first') }}</dt>
+                  <dd>{{ '%.1f'|format(row.first_rate) }}<small>%</small></dd>
+                </div>
+                <div class="player-seat-rate">
+                  <dt>{{ t('player2.second') }}</dt>
+                  <dd>{{ '%.1f'|format(row.second_rate) }}<small>%</small></dd>
+                </div>
+                <div class="player-seat-rate">
+                  <dt>{{ t('player2.third') }}</dt>
+                  <dd>{{ '%.1f'|format(row.third_rate) }}<small>%</small></dd>
+                </div>
+                <div class="player-seat-rate is-fourth">
+                  <dt>{{ t('player2.fourth') }}</dt>
+                  <dd>{{ '%.1f'|format(row.fourth_rate) }}<small>%</small></dd>
+                </div>
+              </dl>
+              <p class="player-seat-score">
+                <span>{{ t('player.seat_avg_score') }}</span>
+                <strong>{{ '{:,}'.format(row.avg_score) }}</strong>
+              </p>
+            {% else %}
+              <p class="player-seat-empty">{{ t('player.seat_no_sample') }}</p>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="r-empty"><p>{{ t('player.seat_empty') }}</p></div>
+    {% endif %}
   </section>
 
   {% if current_user and current_user.id == user.id %}

@@ -81,6 +81,8 @@ create table meetup_signups (
   id integer primary key autoincrement,
   meetup_id integer not null,
   user_id integer not null,
+  -- 预计到达时间；历史报名没有记录时保持 NULL，页面显示「未填写」。
+  arrival text check (arrival in ('before_start', 'by_14', 'by_15', 'by_16')),
   created_at text not null,
   unique (meetup_id, user_id),
   foreign key (meetup_id) references meetups(id),

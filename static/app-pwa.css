@@ -970,3 +970,77 @@ html[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
   .hero-points strong { font-size: 34px; }
   .dock { gap: 8px; }
 }
+
+/* 活动报名：展开后选择预计到达时间。 */
+.meetup-row {
+  flex-wrap: wrap;
+}
+
+.meetup-my-arrival {
+  color: var(--accent) !important;
+}
+
+.meetup-join {
+  flex: none;
+}
+
+.meetup-join[open] {
+  flex: 1 1 100%;
+}
+
+.meetup-join summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  list-style: none;
+  cursor: pointer;
+}
+
+.meetup-join summary::-webkit-details-marker {
+  display: none;
+}
+
+.meetup-join-form {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  padding-top: 10px;
+}
+
+.meetup-join-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.meetup-join-option {
+  position: relative;
+  display: block;
+}
+
+.meetup-join-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.meetup-join-option span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-quiet);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.meetup-join-option input:checked + span {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: transparent;
+}

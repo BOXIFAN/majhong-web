@@ -434,6 +434,12 @@
               <section class="card">
                 <div class="card-head"><strong>{{ t('mobile.upcoming') }}</strong><span>{{ meetups.upcoming|length }}</span></div>
                 {% if meetups.upcoming %}
+                  {% set arrival_options = [
+                    ('before_start', 'meetup.arrival.before_start'),
+                    ('by_14', 'meetup.arrival.by_14'),
+                    ('by_15', 'meetup.arrival.by_15'),
+                    ('by_16', 'meetup.arrival.by_16'),
+                  ] %}
                   {% for item in meetups.upcoming %}
                     <div class="meetup-row">
                       <span class="meetup-when">
@@ -443,13 +449,27 @@
                       <span class="meetup-info">
                         <strong>{{ item.weekday }} {{ item.time_label }}</strong>
                         <small>{{ item.venue }} · {{ t('meetup.attendee_count', count=item.attendee_count) }}</small>
+                        {% if item.signed_up %}
+                          <small class="meetup-my-arrival">{{ t('meetup.arrival.signed', arrival=t('meetup.arrival.' ~ item.my_arrival) if item.my_arrival else t('meetup.arrival.unknown')) }}</small>
+                        {% endif %}
                       </span>
                       {% if item.signed_up %}
                         <span class="btn-quiet">{{ t('meetup.signed_up') }}</span>
                       {% elif current_user %}
-                        <form method="post" action="{{ url_for('mobile_meetup_signup', meetup_id=item.id) }}">
-                          <button class="btn" type="submit">{{ t('meetup.signup') }}</button>
-                        </form>
+                        <details class="meetup-join">
+                          <summary class="btn">{{ t('meetup.signup') }}</summary>
+                          <form class="meetup-join-form" method="post" action="{{ url_for('mobile_meetup_signup', meetup_id=item.id) }}">
+                            <div class="meetup-join-options">
+                              {% for value, key in arrival_options %}
+                                <label class="meetup-join-option">
+                                  <input type="radio" name="arrival" value="{{ value }}" required>
+                                  <span>{{ t(key) }}</span>
+                                </label>
+                              {% endfor %}
+                            </div>
+                            <button class="btn" type="submit">{{ t('meetup.arrival.confirm') }}</button>
+                          </form>
+                        </details>
                       {% else %}
                         <a class="btn" href="{{ url_for('login') }}?next=%2Fapp">{{ t('mobile.login') }}</a>
                       {% endif %}

@@ -8,6 +8,7 @@ import sqlite3
 
 from brml.db import query_all
 from brml.i18n import translate
+from brml.match_service import SEAT_ORDER
 from brml.rules import normalize_rules
 
 def build_placement_trend(history: list[sqlite3.Row]) -> dict:
@@ -419,6 +420,83 @@ def build_finals_status(season: sqlite3.Row, rows: list[dict], user: sqlite3.Row
         "championship_gap": championship_gap,
         "yakitori_gap": yakitori_gap,
     }
+
+
+def build_player_summary(entries: list[sqlite3.Row]) -> dict | None:
+    """从成绩明细聚合个人概览；无场次时返回 None，由页面显示空值。"""
+    games = len(entries)
+    if not games:
+        return None
+    placements = [float(entry["placement"]) for entry in entries]
+    return {
+        "matches": games,
+        "total_points": round(sum(float(entry["rank_points"]) for entry in entries), 1),
+        "avg_place": round(sum(placements) / games, 2),
+        "first_rate": round(sum(1 for value in placements if value == 1) * 100 / games, 1),
+        "second_rate": round(sum(1 for value in placements if value == 2) * 100 / games, 1),
+        "third_rate": round(sum(1 for value in placements if value == 3) * 100 / games, 1),
+        "fourth_rate": round(sum(1 for value in placements if value == 4) * 100 / games, 1),
+    }
+
+
+def build_seat_stats(entries: list[sqlite3.Row]) -> dict:
+    """按起家座位汇总 1-4 位率与平均终局点数。
+
+    只统计 seat 已记录的场次；并列顺位（1.5/2.5/3.5）不计入任何单一位次，
+    因此四档比率之和可能低于 100%。没有样本的座位仍返回一行，供页面占位。
+    """
+    buckets = {
+        seat: {"games": 0, "first": 0, "second": 0, "third": 0, "fourth": 0, "score_total": 0}
+        for seat in SEAT_ORDER
+    }
+    for entry in entries:
+        seat = entry["seat"]
+        bucket = buckets.get(seat)
+        if bucket is None:
+            continue
+        bucket["games"] += 1
+        bucket["score_total"] += int(entry["final_score"])
+        placement = float(entry["placement"])
+        if placement == 1:
+            bucket["first"] += 1
+        elif placement == 2:
+            bucket["second"] += 1
+        elif placement == 3:
+            bucket["third"] += 1
+        elif placement == 4:
+            bucket["fourth"] += 1
+
+    rows = []
+    total = 0
+    for seat in SEAT_ORDER:
+        bucket = buckets[seat]
+        games = bucket["games"]
+        total += games
+        if not games:
+            rows.append(
+                {
+                    "seat": seat,
+                    "games": 0,
+                    "first_rate": None,
+                    "second_rate": None,
+                    "third_rate": None,
+                    "fourth_rate": None,
+                    "avg_score": None,
+                }
+            )
+            continue
+        rows.append(
+            {
+                "seat": seat,
+                "games": games,
+                "first_rate": round(bucket["first"] * 100 / games, 1),
+                "second_rate": round(bucket["second"] * 100 / games, 1),
+                "third_rate": round(bucket["third"] * 100 / games, 1),
+                "fourth_rate": round(bucket["fourth"] * 100 / games, 1),
+                "avg_score": round(bucket["score_total"] / games),
+            }
+        )
+    return {"has_data": total > 0, "games": total, "rows": rows}
 
 
 def get_penalty_records(season_id: int) -> list[sqlite3.Row]:
